@@ -1,0 +1,9 @@
+- [x] RED cycle prediction test
+- [x] GREEN cycle model and predictor
+- [x] Local store and encrypted backup
+- [x] Health Connect and reminder integration
+- [x] Material 3 UI and localization
+- [x] Unit, lint, build, emulator QA
+- [x] Hostile diff review
+- [ ] GitHub repository and Pages
+- [ ] Google Play Closed testing
