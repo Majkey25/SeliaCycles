@@ -5,7 +5,19 @@
     <string name="nav_calendar">Kalendář</string>
     <string name="nav_history">Historie</string>
     <string name="nav_settings">Nastavení</string>
-    <string name="today_heading">Tvůj cyklus</string>
+    <string name="today_heading">Dnes</string>
+    <string name="add_entry">Přidat záznam</string>
+    <string name="cycle_day">Den cyklu</string>
+    <string name="cycle_day_value">%1$d. den</string>
+    <string name="estimated_window">%1$s – %2$s</string>
+    <plurals name="based_on_periods"><item quantity="one">Podle %d zaznamenané menstruace</item><item quantity="few">Podle %d zaznamenaných menstruací</item><item quantity="many">Podle %d zaznamenané menstruace</item><item quantity="other">Podle %d zaznamenaných menstruací</item></plurals>
+    <string name="week_heading">Tvůj týden</string>
+    <string name="today_summary">Dnešní záznam</string>
+    <string name="nothing_logged">Dnes zatím nic není. Klepni na + a přidej záznam.</string>
+    <string name="flow_none">Bez krvácení</string>
+    <string name="flow_summary">Intenzita: %1$s</string>
+    <string name="mood_summary">Nálada: %1$s</string>
+    <plurals name="symptom_count"><item quantity="one">%d příznak</item><item quantity="few">%d příznaky</item><item quantity="many">%d příznaku</item><item quantity="other">%d příznaků</item></plurals>
     <string name="next_period">Další menstruace</string>
     <string name="predicted_today">Očekává se dnes</string>
     <plurals name="days_until_period"><item quantity="one">Za %d den</item><item quantity="few">Za %d dny</item><item quantity="many">Za %d dne</item><item quantity="other">Za %d dní</item></plurals>
@@ -27,6 +39,18 @@
     <string name="no_history">Zatím není dost historie menstruace.</string>
     <string name="period_started">Začátek menstruace</string>
     <string name="settings_heading">Nastavení</string>
+    <string name="settings_intro">Tady jsou jen hlavní oblasti. Podrobnosti otevři až tehdy, když je potřebuješ.</string>
+    <string name="settings_back">Nastavení</string>
+    <string name="settings_cycle">Cyklus a sledování</string>
+    <string name="settings_cycle_summary">Odhady, délky cyklu, týden a denní měření</string>
+    <string name="settings_appearance">Vzhled a jazyk</string>
+    <string name="settings_appearance_summary">Systémový motiv a jazyk aplikace</string>
+    <string name="settings_reminders_summary">Volitelná soukromá připomínka menstruace</string>
+    <string name="settings_data">Záloha a import</string>
+    <string name="settings_data_summary">Záloha Selia, My Calendar a Health Connect</string>
+    <string name="settings_privacy_summary">Soukromí, informace o zdraví a lékařské limity</string>
+    <string name="daily_measurements">Denní měření</string>
+    <string name="daily_measurements_body">Hmotnost, bazální teplota, spánek a intimita jsou volitelné v části Další údaje každého denního záznamu.</string>
     <string name="section_tracking">Sledování</string>
     <string name="predictions">Odhady menstruace</string>
     <string name="default_cycle_length">Výchozí délka cyklu</string>
@@ -85,7 +109,7 @@
     <string name="edit_day">Denní záznam</string>
     <string name="bleeding">Menstruační krvácení</string>
     <string name="flow">Intenzita</string>
-    <string name="flow_unknown">Neuvedeno</string>
+    <string name="flow_unknown">Menstruace</string>
     <string name="flow_light">Slabá</string>
     <string name="flow_medium">Střední</string>
     <string name="flow_heavy">Silná</string>
@@ -106,6 +130,16 @@
     <string name="symptom_backache">Bolest zad</string>
     <string name="note">Poznámka</string>
     <string name="note_hint">Volitelná soukromá poznámka</string>
+    <string name="more_details">Další údaje</string>
+    <string name="fewer_details">Skrýt další údaje</string>
+    <string name="weight_kg">Hmotnost (kg)</string>
+    <string name="temperature_c">Bazální teplota (°C)</string>
+    <string name="sleep_hours">Spánek (hodiny)</string>
+    <string name="intimacy">Intimita</string>
+    <string name="intimacy_sex">Sex</string>
+    <string name="intimacy_protected">Chráněný sex</string>
+    <string name="imported_details">Zachované údaje z My Calendar</string>
+    <string name="invalid_measurement">Zadej hodnotu v podporovaném rozsahu.</string>
     <string name="cancel">Zrušit</string>
     <string name="save">Uložit</string>
     <string name="delete_record">Smazat záznam</string>

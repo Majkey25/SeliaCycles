@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
@@ -34,6 +35,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -45,8 +47,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
@@ -68,6 +72,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -77,6 +82,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -101,6 +108,14 @@ private enum class Screen(@param:StringRes val label: Int, val icon: ImageVector
 }
 
 private enum class InfoDialog { PRIVACY, CYCLE }
+
+private enum class SettingsPage(@param:StringRes val title: Int, @param:StringRes val summary: Int) {
+    CYCLE(R.string.settings_cycle, R.string.settings_cycle_summary),
+    APPEARANCE(R.string.settings_appearance, R.string.settings_appearance_summary),
+    REMINDERS(R.string.section_reminders, R.string.settings_reminders_summary),
+    DATA(R.string.settings_data, R.string.settings_data_summary),
+    PRIVACY(R.string.section_about, R.string.settings_privacy_summary),
+}
 
 @Composable
 fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
@@ -150,6 +165,17 @@ fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
+        floatingActionButton = {
+            if (!state.loading && screen != Screen.SETTINGS) {
+                LargeFloatingActionButton(onClick = { selectedDay = LocalDate.now() }) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_entry),
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+            }
+        },
         bottomBar = {
             NavigationBar {
                 Screen.entries.forEach { item ->
@@ -168,7 +194,7 @@ fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             } else {
                 when (screen) {
-                    Screen.TODAY -> TodayScreen(state, onEdit = { selectedDay = LocalDate.now() })
+                    Screen.TODAY -> TodayScreen(state, onEdit = { selectedDay = it })
                     Screen.CALENDAR -> CalendarScreen(state, onEdit = { selectedDay = it })
                     Screen.HISTORY -> HistoryScreen(state)
                     Screen.SETTINGS -> SettingsScreen(
@@ -265,45 +291,162 @@ fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
 }
 
 @Composable
-private fun TodayScreen(state: AppState, onEdit: () -> Unit) {
+private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
     val today = LocalDate.now()
     val prediction = state.prediction
     val next = prediction.nextPeriodStart.takeIf { state.backup.settings.predictionsEnabled }
     val distance = next?.let { ChronoUnit.DAYS.between(today, it).toInt() }
     val locale = currentLocale()
     val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale) }
+    val shortDateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
+    val latestStart = prediction.periodStarts.lastOrNull()
+    val cycleDay = latestStart?.let { ChronoUnit.DAYS.between(it, today).toInt() + 1 }?.takeIf { it > 0 }
+    val predictedDays = next?.let { start ->
+        (0 until prediction.averagePeriodLength).mapTo(mutableSetOf()) { start.plusDays(it.toLong()) }
+    }.orEmpty()
+    val todayLog = state.logsByDay[today]
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 12.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        Text(stringResource(R.string.today_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
-        Column(
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer).padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+        Text(stringResource(R.string.today_heading), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+        Box(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))
+                .background(Brush.linearGradient(listOf(CycleGradientStart, CycleGradientEnd))).padding(24.dp),
         ) {
-            Text(stringResource(R.string.next_period), style = MaterialTheme.typography.labelLarge)
-            Text(
-                next?.format(dateFormat) ?: stringResource(R.string.no_period_data),
-                style = if (next == null) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.headlineMedium,
-                fontWeight = if (next == null) FontWeight.Normal else FontWeight.SemiBold,
-            )
-            when {
-                distance == null -> Unit
-                distance > 0 -> Text(pluralStringResource(R.plurals.days_until_period, distance, distance))
-                distance == 0 -> Text(stringResource(R.string.predicted_today))
-                else -> Text(pluralStringResource(R.plurals.period_late, -distance, -distance))
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.cycle_day), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelLarge)
+                Text(
+                    cycleDay?.let { stringResource(R.string.cycle_day_value, it) } ?: "—",
+                    color = Color.White,
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                )
+                HorizontalDivider(color = Color.White.copy(alpha = 0.24f))
+                Text(stringResource(R.string.next_period), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelLarge)
+                Text(
+                    when {
+                        next == null -> stringResource(R.string.no_period_data)
+                        prediction.earliestPeriodStart == prediction.latestPeriodStart -> next.format(dateFormat)
+                        else -> stringResource(
+                            R.string.estimated_window,
+                            prediction.earliestPeriodStart?.format(shortDateFormat).orEmpty(),
+                            prediction.latestPeriodStart?.format(shortDateFormat).orEmpty(),
+                        )
+                    },
+                    color = Color.White,
+                    style = if (next == null) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleLarge,
+                    fontWeight = if (next == null) FontWeight.Normal else FontWeight.SemiBold,
+                )
+                when {
+                    distance == null -> Unit
+                    distance > 0 -> Text(pluralStringResource(R.plurals.days_until_period, distance, distance), color = Color.White)
+                    distance == 0 -> Text(stringResource(R.string.predicted_today), color = Color.White)
+                    else -> Text(pluralStringResource(R.plurals.period_late, -distance, -distance), color = Color.White)
+                }
+                if (prediction.periodStarts.isNotEmpty()) {
+                    Text(
+                        pluralStringResource(
+                            R.plurals.based_on_periods,
+                            prediction.periodStarts.size,
+                            prediction.periodStarts.size,
+                        ),
+                        color = Color.White.copy(alpha = 0.72f),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
             }
         }
-        Button(onClick = onEdit, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-            Text(if (state.logsByDay.containsKey(today)) stringResource(R.string.today_logged) else stringResource(R.string.log_today))
+        Text(stringResource(R.string.week_heading), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Row(Modifier.fillMaxWidth()) {
+            (-3L..3L).forEach { offset ->
+                val day = today.plusDays(offset)
+                WeekDay(
+                    day = day,
+                    recorded = state.logsByDay[day]?.bleeding == true,
+                    predicted = day in predictedDays,
+                    onClick = { onEdit(day) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+        Text(stringResource(R.string.today_summary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        if (todayLog == null) {
+            Text(stringResource(R.string.nothing_logged), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            Column(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant).clickable { onEdit(today) }.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(stringResource(R.string.today_logged), fontWeight = FontWeight.SemiBold)
+                if (todayLog.bleeding) {
+                    Text(stringResource(R.string.flow_summary, stringResource(flowLabel(todayLog.flow))))
+                }
+                todayLog.mood?.let { Text(stringResource(R.string.mood_summary, stringResource(moodLabel(it)))) }
+                if (todayLog.symptoms.isNotEmpty()) {
+                    Text(pluralStringResource(R.plurals.symptom_count, todayLog.symptoms.size, todayLog.symptoms.size))
+                }
+            }
         }
         if (next != null) Text(
             stringResource(R.string.estimate_notice),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall,
         )
+        Spacer(Modifier.height(88.dp))
     }
+}
+
+@Composable
+private fun WeekDay(
+    day: LocalDate,
+    recorded: Boolean,
+    predicted: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val locale = currentLocale()
+    val background = when {
+        recorded -> MaterialTheme.colorScheme.primary
+        predicted -> MaterialTheme.colorScheme.secondaryContainer
+        else -> Color.Transparent
+    }
+    val foreground = when {
+        recorded -> MaterialTheme.colorScheme.onPrimary
+        predicted -> MaterialTheme.colorScheme.onSecondaryContainer
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+    Column(
+        modifier = modifier.clip(RoundedCornerShape(18.dp)).background(background)
+            .then(if (day == LocalDate.now()) Modifier.border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(18.dp)) else Modifier)
+            .clickable(onClick = onClick).padding(vertical = 12.dp, horizontal = 2.dp)
+            .semantics { contentDescription = day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)) },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(day.dayOfWeek.getDisplayName(TextStyle.NARROW, locale), color = foreground, style = MaterialTheme.typography.labelSmall)
+        Text(day.dayOfMonth.toString(), color = foreground, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@StringRes
+private fun flowLabel(flow: Flow): Int = when (flow) {
+    Flow.NONE -> R.string.flow_none
+    Flow.UNKNOWN -> R.string.flow_unknown
+    Flow.LIGHT -> R.string.flow_light
+    Flow.MEDIUM -> R.string.flow_medium
+    Flow.HEAVY -> R.string.flow_heavy
+}
+
+@StringRes
+private fun moodLabel(mood: Mood): Int = when (mood) {
+    Mood.GREAT -> R.string.mood_great
+    Mood.GOOD -> R.string.mood_good
+    Mood.OKAY -> R.string.mood_okay
+    Mood.LOW -> R.string.mood_low
+    Mood.BAD -> R.string.mood_bad
 }
 
 @Composable
@@ -394,7 +537,11 @@ private fun CalendarDay(
         predicted -> MaterialTheme.colorScheme.secondaryContainer
         else -> Color.Transparent
     }
-    val foreground = if (recorded) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    val foreground = when {
+        recorded -> MaterialTheme.colorScheme.onPrimary
+        predicted -> MaterialTheme.colorScheme.onSecondaryContainer
+        else -> MaterialTheme.colorScheme.onSurface
+    }
     val date = day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(currentLocale()))
     Box(
         modifier = modifier.padding(3.dp).clip(CircleShape).background(background)
@@ -466,54 +613,99 @@ private fun SettingsScreen(
     onDeleteAll: () -> Unit,
 ) {
     val settings = state.backup.settings
+    var pageName by rememberSaveable { mutableStateOf<String?>(null) }
+    val page = pageName?.let(SettingsPage::valueOf)
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text(stringResource(R.string.settings_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
-        SectionTitle(R.string.section_tracking)
-        SwitchRow(R.string.predictions, settings.predictionsEnabled) { onSave(settings.copy(predictionsEnabled = it)) }
-        Stepper(R.string.default_cycle_length, settings.cycleLength, 15..90) { onSave(settings.copy(cycleLength = it)) }
-        Stepper(R.string.default_period_length, settings.periodLength, 1..14) { onSave(settings.copy(periodLength = it)) }
-        ChoiceRow(
-            label = R.string.first_day_of_week,
-            choices = listOf(DayOfWeek.MONDAY to R.string.monday, DayOfWeek.SUNDAY to R.string.sunday),
-            selected = settings.firstDayOfWeek,
-        ) { onSave(settings.copy(firstDayOfWeek = it)) }
-
-        SectionTitle(R.string.section_appearance)
-        ChoiceRow(
-            label = R.string.theme,
-            choices = listOf(AppTheme.SYSTEM to R.string.theme_system, AppTheme.LIGHT to R.string.theme_light, AppTheme.DARK to R.string.theme_dark),
-            selected = settings.theme,
-        ) { onSave(settings.copy(theme = it)) }
-        LanguageRow()
-
-        SectionTitle(R.string.section_reminders)
-        SwitchRow(R.string.period_reminder, settings.reminderEnabled, onReminderChange)
-        if (settings.reminderEnabled) {
-            Stepper(R.string.remind_before, settings.reminderDays, 0..14) { onSave(settings.copy(reminderDays = it)) }
+        if (page == null) {
+            Text(stringResource(R.string.settings_heading), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.settings_intro), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+            SettingsPage.entries.forEach { item ->
+                SettingsCategoryRow(item.title, item.summary) { pageName = item.name }
+            }
+        } else {
+            TextButton(onClick = { pageName = null }) { Text("‹  ${stringResource(R.string.settings_back)}") }
+            Text(stringResource(page.title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+            when (page) {
+                SettingsPage.CYCLE -> {
+                    SwitchRow(R.string.predictions, settings.predictionsEnabled) { onSave(settings.copy(predictionsEnabled = it)) }
+                    Stepper(R.string.default_cycle_length, settings.cycleLength, 15..90) { onSave(settings.copy(cycleLength = it)) }
+                    Stepper(R.string.default_period_length, settings.periodLength, 1..14) { onSave(settings.copy(periodLength = it)) }
+                    ChoiceRow(
+                        label = R.string.first_day_of_week,
+                        choices = listOf(DayOfWeek.MONDAY to R.string.monday, DayOfWeek.SUNDAY to R.string.sunday),
+                        selected = settings.firstDayOfWeek,
+                    ) { onSave(settings.copy(firstDayOfWeek = it)) }
+                    InfoBlock(R.string.daily_measurements, R.string.daily_measurements_body)
+                }
+                SettingsPage.APPEARANCE -> {
+                    ChoiceRow(
+                        label = R.string.theme,
+                        choices = listOf(
+                            AppTheme.SYSTEM to R.string.theme_system,
+                            AppTheme.LIGHT to R.string.theme_light,
+                            AppTheme.DARK to R.string.theme_dark,
+                        ),
+                        selected = settings.theme,
+                    ) { onSave(settings.copy(theme = it)) }
+                    LanguageRow()
+                }
+                SettingsPage.REMINDERS -> {
+                    SwitchRow(R.string.period_reminder, settings.reminderEnabled, onReminderChange)
+                    if (settings.reminderEnabled) {
+                        Stepper(R.string.remind_before, settings.reminderDays, 0..14) {
+                            onSave(settings.copy(reminderDays = it))
+                        }
+                    }
+                }
+                SettingsPage.DATA -> {
+                    InfoBlock(R.string.cloud_backup, R.string.cloud_backup_body)
+                    Button(onClick = onCreateBackup, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
+                        Text(stringResource(R.string.create_backup))
+                    }
+                    OutlinedButton(onClick = onRestoreBackup, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
+                        Text(stringResource(R.string.restore_backup))
+                    }
+                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    InfoBlock(R.string.my_calendar_import, R.string.my_calendar_import_body)
+                    OutlinedButton(onClick = onMyCalendarImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
+                        Text(stringResource(R.string.my_calendar_import_action))
+                    }
+                    InfoBlock(R.string.health_connect, R.string.health_connect_body)
+                    OutlinedButton(onClick = onHealthImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
+                        Text(stringResource(R.string.import_data))
+                    }
+                    InfoBlock(R.string.other_apps, R.string.other_apps_body)
+                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    OutlinedButton(onClick = onDeleteAll, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
+                        Text(stringResource(R.string.delete_all_data), color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                SettingsPage.PRIVACY -> {
+                    SettingsLink(R.string.privacy) { onInfo(InfoDialog.PRIVACY) }
+                    SettingsLink(R.string.about_cycle) { onInfo(InfoDialog.CYCLE) }
+                }
+            }
         }
-
-        SectionTitle(R.string.section_data)
-        InfoBlock(R.string.cloud_backup, R.string.cloud_backup_body)
-        Button(onClick = onCreateBackup, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(stringResource(R.string.create_backup)) }
-        OutlinedButton(onClick = onRestoreBackup, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(stringResource(R.string.restore_backup)) }
-        InfoBlock(R.string.my_calendar_import, R.string.my_calendar_import_body)
-        OutlinedButton(onClick = onMyCalendarImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-            Text(stringResource(R.string.my_calendar_import_action))
-        }
-        InfoBlock(R.string.health_connect, R.string.health_connect_body)
-        OutlinedButton(onClick = onHealthImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(stringResource(R.string.import_data)) }
-        InfoBlock(R.string.other_apps, R.string.other_apps_body)
-        OutlinedButton(onClick = onDeleteAll, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-            Text(stringResource(R.string.delete_all_data), color = MaterialTheme.colorScheme.error)
-        }
-
-        SectionTitle(R.string.section_about)
-        SettingsLink(R.string.privacy) { onInfo(InfoDialog.PRIVACY) }
-        SettingsLink(R.string.about_cycle) { onInfo(InfoDialog.CYCLE) }
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun SettingsCategoryRow(@StringRes title: Int, @StringRes summary: Int, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(stringResource(title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(summary), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        }
+        Text("›", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -632,24 +824,42 @@ private fun SettingsLink(@StringRes label: Int, onClick: () -> Unit) {
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit, onSave: (DayLog) -> Unit) {
-    var bleeding by remember(day, initial) { mutableStateOf(initial?.bleeding == true) }
-    var flow by remember(day, initial) { mutableStateOf(initial?.flow ?: Flow.UNKNOWN) }
+    var flow by remember(day, initial) { mutableStateOf(initial?.flow?.takeIf { initial.bleeding } ?: Flow.NONE) }
     var mood by remember(day, initial) { mutableStateOf(initial?.mood) }
     var symptoms by remember(day, initial) { mutableStateOf(initial?.symptoms.orEmpty()) }
     var note by remember(day, initial) { mutableStateOf(initial?.note.orEmpty()) }
+    var showMore by rememberSaveable(day) { mutableStateOf(false) }
+    var weight by remember(day, initial) { mutableStateOf(initial?.weightKg?.toString().orEmpty()) }
+    var temperature by remember(day, initial) { mutableStateOf(initial?.temperatureC?.toString().orEmpty()) }
+    var sleep by remember(day, initial) { mutableStateOf(initial?.sleepHours?.toString().orEmpty()) }
+    var intimacy by remember(day, initial) { mutableStateOf(initial?.intimacy) }
+    val weightValue = parseDecimal(weight)
+    val temperatureValue = parseDecimal(temperature)
+    val sleepValue = parseDecimal(sleep)
+    val weightValid = weight.isBlank() || weightValue != null && weightValue in DayLog.MIN_WEIGHT_KG..DayLog.MAX_WEIGHT_KG
+    val temperatureValid = temperature.isBlank() || temperatureValue != null &&
+        temperatureValue in DayLog.MIN_TEMPERATURE_C..DayLog.MAX_TEMPERATURE_C
+    val sleepValid = sleep.isBlank() || sleepValue != null && sleepValue in 0.0..24.0
+    val canSave = weightValid && temperatureValid && sleepValid
     val locale = currentLocale()
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
-            modifier = Modifier.fillMaxWidth().heightIn(max = 720.dp).verticalScroll(rememberScrollState()).imePadding().padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.94f).imePadding(),
         ) {
-            Text(stringResource(R.string.edit_day), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
-            Text(day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            SwitchRow(R.string.bleeding, bleeding) { bleeding = it; if (!it) flow = Flow.NONE else if (flow == Flow.NONE) flow = Flow.UNKNOWN }
-            if (bleeding) {
+            Column(
+                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Text(stringResource(R.string.edit_day), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+                Text(
+                    day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 ChoiceRow(
                     label = R.string.flow,
                     choices = listOf(
+                        Flow.NONE to R.string.flow_none,
                         Flow.UNKNOWN to R.string.flow_unknown,
                         Flow.LIGHT to R.string.flow_light,
                         Flow.MEDIUM to R.string.flow_medium,
@@ -657,59 +867,111 @@ private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit,
                     ),
                     selected = flow,
                 ) { flow = it }
+                ChoiceRow(
+                    label = R.string.mood,
+                    choices = listOf(
+                        Mood.GREAT to R.string.mood_great,
+                        Mood.GOOD to R.string.mood_good,
+                        Mood.OKAY to R.string.mood_okay,
+                        Mood.LOW to R.string.mood_low,
+                        Mood.BAD to R.string.mood_bad,
+                    ),
+                    selected = mood,
+                ) { mood = if (mood == it) null else it }
+                Text(stringResource(R.string.symptoms))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    symptomLabels.forEach { (symptom, label) ->
+                        FilterChip(
+                            selected = symptom in symptoms,
+                            onClick = { symptoms = if (symptom in symptoms) symptoms - symptom else symptoms + symptom },
+                            label = { Text(stringResource(label)) },
+                        )
+                    }
+                }
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { if (it.length <= DayLog.MAX_NOTE_LENGTH) note = it },
+                    label = { Text(stringResource(R.string.note)) },
+                    placeholder = { Text(stringResource(R.string.note_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                )
+                TextButton(onClick = { showMore = !showMore }) {
+                    Text(stringResource(if (showMore) R.string.fewer_details else R.string.more_details))
+                }
+                if (showMore) {
+                    MeasurementField(weight, { weight = it }, R.string.weight_kg, weightValid)
+                    MeasurementField(temperature, { temperature = it }, R.string.temperature_c, temperatureValid)
+                    MeasurementField(sleep, { sleep = it }, R.string.sleep_hours, sleepValid)
+                    Text(stringResource(R.string.intimacy))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(
+                            Intimacy.SEX to R.string.intimacy_sex,
+                            Intimacy.PROTECTED to R.string.intimacy_protected,
+                        ).forEach { (value, label) ->
+                            FilterChip(
+                                selected = intimacy == value,
+                                onClick = { intimacy = value.takeUnless { intimacy == value } },
+                                label = { Text(stringResource(label)) },
+                            )
+                        }
+                    }
+                    initial?.importedDetails?.takeIf(String::isNotBlank)?.let { imported ->
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(stringResource(R.string.imported_details), fontWeight = FontWeight.SemiBold)
+                            Text(imported, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
             }
-            ChoiceRow(
-                label = R.string.mood,
-                choices = listOf(
-                    Mood.GREAT to R.string.mood_great,
-                    Mood.GOOD to R.string.mood_good,
-                    Mood.OKAY to R.string.mood_okay,
-                    Mood.LOW to R.string.mood_low,
-                    Mood.BAD to R.string.mood_bad,
-                ),
-                selected = mood,
-            ) { mood = if (mood == it) null else it }
-            Text(stringResource(R.string.symptoms))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+            HorizontalDivider()
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                symptomLabels.forEach { (symptom, label) ->
-                    FilterChip(
-                        selected = symptom in symptoms,
-                        onClick = { symptoms = if (symptom in symptoms) symptoms - symptom else symptoms + symptom },
-                        label = { Text(stringResource(label)) },
-                    )
-                }
-            }
-            OutlinedTextField(
-                value = note,
-                onValueChange = { if (it.length <= DayLog.MAX_NOTE_LENGTH) note = it },
-                label = { Text(stringResource(R.string.note)) },
-                placeholder = { Text(stringResource(R.string.note_hint)) },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                if (initial != null) {
-                    TextButton(onClick = { onSave(DayLog(day)) }) { Text(stringResource(R.string.delete_record)) }
-                    Spacer(Modifier.weight(1f))
-                }
+                if (initial != null) TextButton(onClick = { onSave(DayLog(day)) }) { Text(stringResource(R.string.delete_record)) }
+                Spacer(Modifier.weight(1f))
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
                 Button(onClick = {
                     onSave(DayLog(
                         day = day,
-                        bleeding = bleeding,
-                        flow = if (bleeding) flow else Flow.NONE,
+                        bleeding = flow != Flow.NONE,
+                        flow = flow,
                         mood = mood,
                         symptoms = symptoms,
                         note = note.trim(),
+                        weightKg = weightValue,
+                        temperatureC = temperatureValue,
+                        sleepHours = sleepValue,
+                        intimacy = intimacy,
+                        importedDetails = initial?.importedDetails.orEmpty(),
                     ))
-                }) { Text(stringResource(R.string.save)) }
+                }, enabled = canSave) { Text(stringResource(R.string.save)) }
             }
         }
     }
 }
+
+@Composable
+private fun MeasurementField(value: String, onValueChange: (String) -> Unit, @StringRes label: Int, valid: Boolean) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = { input -> if (input.length <= 8) onValueChange(input.filter { it.isDigit() || it == '.' || it == ',' }) },
+        label = { Text(stringResource(label)) },
+        supportingText = if (valid) null else {{ Text(stringResource(R.string.invalid_measurement)) }},
+        isError = !valid,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+private fun parseDecimal(value: String): Double? = value.trim().replace(',', '.').takeIf(String::isNotEmpty)?.toDoubleOrNull()
 
 private val symptomLabels = listOf(
     Symptom.CRAMPS to R.string.symptom_cramps,

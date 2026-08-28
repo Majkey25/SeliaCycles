@@ -5,7 +5,19 @@
     <string name="nav_calendar">Calendar</string>
     <string name="nav_history">History</string>
     <string name="nav_settings">Settings</string>
-    <string name="today_heading">Your cycle</string>
+    <string name="today_heading">Today</string>
+    <string name="add_entry">Add entry</string>
+    <string name="cycle_day">Cycle day</string>
+    <string name="cycle_day_value">Day %1$d</string>
+    <string name="estimated_window">%1$s – %2$s</string>
+    <plurals name="based_on_periods"><item quantity="one">Based on %d recorded period</item><item quantity="other">Based on %d recorded periods</item></plurals>
+    <string name="week_heading">Your week</string>
+    <string name="today_summary">Today’s entry</string>
+    <string name="nothing_logged">Nothing logged yet. Tap + to add today.</string>
+    <string name="flow_none">No bleeding</string>
+    <string name="flow_summary">Flow: %1$s</string>
+    <string name="mood_summary">Mood: %1$s</string>
+    <plurals name="symptom_count"><item quantity="one">%d symptom</item><item quantity="other">%d symptoms</item></plurals>
     <string name="next_period">Next period</string>
     <string name="predicted_today">Expected today</string>
     <plurals name="days_until_period"><item quantity="one">In %d day</item><item quantity="other">In %d days</item></plurals>
@@ -27,6 +39,18 @@
     <string name="no_history">No complete period history yet.</string>
     <string name="period_started">Period started</string>
     <string name="settings_heading">Settings</string>
+    <string name="settings_intro">Only the essentials are shown here. Open a category when you need it.</string>
+    <string name="settings_back">Settings</string>
+    <string name="settings_cycle">Cycle and tracking</string>
+    <string name="settings_cycle_summary">Predictions, cycle lengths, week and daily measurements</string>
+    <string name="settings_appearance">Appearance and language</string>
+    <string name="settings_appearance_summary">System theme and app language</string>
+    <string name="settings_reminders_summary">Optional private period reminder</string>
+    <string name="settings_data">Backup and import</string>
+    <string name="settings_data_summary">Selia backup, My Calendar and Health Connect</string>
+    <string name="settings_privacy_summary">Privacy, health information and medical limits</string>
+    <string name="daily_measurements">Daily measurements</string>
+    <string name="daily_measurements_body">Weight, basal temperature, sleep and intimacy are optional under More details in each daily entry.</string>
     <string name="section_tracking">Tracking</string>
     <string name="predictions">Period predictions</string>
     <string name="default_cycle_length">Default cycle length</string>
@@ -85,7 +109,7 @@
     <string name="edit_day">Daily log</string>
     <string name="bleeding">Period bleeding</string>
     <string name="flow">Flow</string>
-    <string name="flow_unknown">Not set</string>
+    <string name="flow_unknown">Period</string>
     <string name="flow_light">Light</string>
     <string name="flow_medium">Medium</string>
     <string name="flow_heavy">Heavy</string>
@@ -106,6 +130,16 @@
     <string name="symptom_backache">Backache</string>
     <string name="note">Note</string>
     <string name="note_hint">Optional private note</string>
+    <string name="more_details">More details</string>
+    <string name="fewer_details">Fewer details</string>
+    <string name="weight_kg">Weight (kg)</string>
+    <string name="temperature_c">Basal temperature (°C)</string>
+    <string name="sleep_hours">Sleep (hours)</string>
+    <string name="intimacy">Intimacy</string>
+    <string name="intimacy_sex">Sex</string>
+    <string name="intimacy_protected">Protected sex</string>
+    <string name="imported_details">Preserved My Calendar details</string>
+    <string name="invalid_measurement">Enter a value in the supported range.</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
     <string name="delete_record">Delete record</string>
