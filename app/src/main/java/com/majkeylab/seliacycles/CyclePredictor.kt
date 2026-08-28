@@ -2,6 +2,8 @@ package com.majkeylab.seliacycles
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 data class CyclePrediction(
@@ -9,6 +11,9 @@ data class CyclePrediction(
     val averageCycleLength: Int,
     val averagePeriodLength: Int,
     val periodStarts: List<LocalDate>,
+    val uncertaintyDays: Int,
+    val earliestPeriodStart: LocalDate?,
+    val latestPeriodStart: LocalDate?,
 )
 
 object CyclePredictor {
@@ -30,21 +35,35 @@ object CyclePredictor {
             groups
         }
         val starts = periods.map { it.first() }
-        val cycleLength = starts.zipWithNext { first, second ->
+        val cycleLengths = starts.zipWithNext { first, second ->
             ChronoUnit.DAYS.between(first, second).toInt()
-        }.filter { it in 15..90 }.takeLast(6).averageOr(defaultCycleLength)
+        }.filter { it in 15..90 }.takeLast(6)
+        val cycleLength = cycleLengths.weightedAverageOr(defaultCycleLength)
         val periodLength = periods.map { period ->
             ChronoUnit.DAYS.between(period.first(), period.last()).toInt() + 1
-        }.filter { it in 1..14 }.takeLast(6).averageOr(defaultPeriodLength)
+        }.filter { it in 1..14 }.takeLast(6).weightedAverageOr(defaultPeriodLength)
+        val uncertainty = when (cycleLengths.size) {
+            0, 1 -> 2
+            else -> max(1, cycleLengths.weightedAverageOf { abs(it - cycleLength).toDouble() }.roundToInt())
+        }
+        val next = starts.lastOrNull()?.plusDays(cycleLength.toLong())
 
         return CyclePrediction(
-            nextPeriodStart = starts.lastOrNull()?.plusDays(cycleLength.toLong()),
+            nextPeriodStart = next,
             averageCycleLength = cycleLength,
             averagePeriodLength = periodLength,
             periodStarts = starts,
+            uncertaintyDays = uncertainty,
+            earliestPeriodStart = next?.minusDays(uncertainty.toLong()),
+            latestPeriodStart = next?.plusDays(uncertainty.toLong()),
         )
     }
 
-    private fun List<Int>.averageOr(fallback: Int): Int =
-        if (isEmpty()) fallback else average().roundToInt()
+    private fun List<Int>.weightedAverageOr(fallback: Int): Int =
+        if (isEmpty()) fallback else weightedAverageOf(Int::toDouble).roundToInt()
+
+    private inline fun List<Int>.weightedAverageOf(value: (Int) -> Double): Double {
+        val weightSum = indices.sumOf { it + 1 }
+        return mapIndexed { index, item -> value(item) * (index + 1) }.sum() / weightSum
+    }
 }
