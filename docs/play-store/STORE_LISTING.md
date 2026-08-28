@@ -6,19 +6,21 @@ Name: `Selia Cycles`
 
 Short description:
 
-`Private period tracking, clear estimates, encrypted backup, no account or ads.`
+`Simple cycle calendar, adaptive estimates, My Calendar import and private sync.`
 
 Full description:
 
 Selia Cycles keeps period tracking focused and private.
 
-Record bleeding, flow, symptoms, mood, and a personal note. See your history in a clean calendar and get a next-period estimate based on recent cycles. Estimates are informational and are not medical advice or contraception.
+Record bleeding, flow, symptoms, mood, notes and optional measurements through one clear daily action. See your history in a modern calendar and get an adaptive next-period window based on recent cycles. Estimates are informational and are not medical advice or contraception.
 
-Your data stays in app-private storage. Selia Cycles has no account, ads, analytics, or app internet permission. Android can include the database in your encrypted system backup. You can also create a password-encrypted backup file and save it through Android's file picker.
+Selia Cycles is offline-first, with no ads or analytics. Android can include the database in your encrypted system backup. You can create a password-encrypted backup or preview and merge a My Calendar .pc backup.
+
+Google sign-in is optional. If enabled, private sync sends only your account identifier, period dates and flow to Firebase. Notes, symptoms, mood and measurements stay local. A one-time code can grant a partner revocable read-only calendar access.
 
 Optional Health Connect import reads menstrual period and flow records only after you grant permission. Selia Cycles never writes to or deletes Health Connect data.
 
-Available in English and Czech. Requires Android 10 or newer.
+Available in English, Czech, Slovak, German, Polish and Spanish. Requires Android 10 or newer.
 
 ## Czech
 
@@ -26,20 +28,22 @@ Name: `Selia Cycles`
 
 Short description:
 
-`Soukromé sledování menstruace, jasné odhady a šifrovaná záloha bez účtu.`
+`Jednoduchý kalendář cyklu, adaptivní odhady, My Calendar a synchronizace.`
 
 Full description:
 
 Selia Cycles nabízí přehledné a soukromé sledování menstruace.
 
-Zapisuj krvácení, intenzitu, příznaky, náladu a soukromou poznámku. Historii uvidíš v čistém kalendáři. Odhad další menstruace vychází z posledních cyklů a neslouží jako lékařská rada ani antikoncepce.
+Jednou jasnou akcí zapisuj krvácení, intenzitu, příznaky, náladu, poznámku a volitelná měření. Historii uvidíš v moderním kalendáři. Adaptivní okno další menstruace vychází z posledních cyklů a neslouží jako lékařská rada ani antikoncepce.
 
-Data zůstávají v soukromém úložišti aplikace. Selia Cycles nemá účet, reklamy, analytiku ani oprávnění aplikace k internetu. Android může databázi zahrnout do šifrované systémové zálohy. Ruční zálohu chrání tvoje heslo a uložíš ji přes systémový výběr souborů.
+Selia Cycles funguje primárně offline, bez reklam a analytiky. Android může databázi zahrnout do šifrované systémové zálohy. Můžeš vytvořit ruční šifrovanou zálohu nebo zkontrolovat a sloučit zálohu My Calendar .pc.
+
+Přihlášení přes Google je volitelné. Soukromá synchronizace odešle do Firebase jen identifikátor účtu, data menstruace a intenzitu. Poznámky, příznaky, nálada a měření zůstanou místní. Jednorázový kód může partnerovi udělit odvolatelný přístup ke kalendáři jen pro čtení.
 
 Volitelný import z Health Connect načte záznamy menstruace a intenzity pouze po udělení oprávnění. Selia Cycles do Health Connect nezapisuje a jeho data nemaže.
 
-Aplikace je v češtině a angličtině. Vyžaduje Android 10 nebo novější.
+Aplikace je v češtině, angličtině, slovenštině, němčině, polštině a španělštině. Vyžaduje Android 10 nebo novější.
 
 ## Closed test release notes
 
-`First closed beta: daily log, calendar estimates, history, reminders, Czech and English, encrypted backup, and optional Health Connect import.`
+`Redesigned closed beta: calendar-first logging, adaptive estimate window, My Calendar import, six languages, optional Google sync and read-only partner access.`

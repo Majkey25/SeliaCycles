@@ -83,6 +83,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -114,11 +115,17 @@ private enum class SettingsPage(@param:StringRes val title: Int, @param:StringRe
     APPEARANCE(R.string.settings_appearance, R.string.settings_appearance_summary),
     REMINDERS(R.string.section_reminders, R.string.settings_reminders_summary),
     DATA(R.string.settings_data, R.string.settings_data_summary),
+    ACCOUNT(R.string.settings_account, R.string.settings_account_summary),
     PRIVACY(R.string.section_about, R.string.settings_privacy_summary),
 }
 
 @Composable
-fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
+fun SeliaCyclesApp(
+    state: AppState,
+    viewModel: MainViewModel,
+    onGoogleSignIn: () -> Unit,
+    onGoogleSignOut: () -> Unit,
+) {
     var screen by rememberSaveable { mutableStateOf(Screen.TODAY) }
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
     var infoDialog by remember { mutableStateOf<InfoDialog?>(null) }
@@ -166,7 +173,9 @@ fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            if (!state.loading && screen != Screen.SETTINGS) {
+            if (!state.loading && screen != Screen.SETTINGS &&
+                !(screen == Screen.CALENDAR && state.cloud.selectedPartnerUid != null)
+            ) {
                 LargeFloatingActionButton(onClick = { selectedDay = LocalDate.now() }) {
                     Icon(
                         Icons.Default.Add,
@@ -195,7 +204,11 @@ fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
             } else {
                 when (screen) {
                     Screen.TODAY -> TodayScreen(state, onEdit = { selectedDay = it })
-                    Screen.CALENDAR -> CalendarScreen(state, onEdit = { selectedDay = it })
+                    Screen.CALENDAR -> CalendarScreen(
+                        state,
+                        onEdit = { selectedDay = it },
+                        onSelectPartner = viewModel::selectPartnerCalendar,
+                    )
                     Screen.HISTORY -> HistoryScreen(state)
                     Screen.SETTINGS -> SettingsScreen(
                         state = state,
@@ -222,10 +235,20 @@ fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
                         },
                         onInfo = { infoDialog = it },
                         onDeleteAll = { showDeleteConfirm = true },
+                        onGoogleSignIn = onGoogleSignIn,
+                        onGoogleSignOut = onGoogleSignOut,
+                        onCloudSyncChange = viewModel::setCloudSyncEnabled,
+                        onCloudSync = viewModel::syncNow,
+                        onCreateInvitation = viewModel::createPartnerInvitation,
+                        onAcceptInvitation = viewModel::acceptPartnerInvitation,
+                        onRevokePartner = viewModel::revokePartner,
+                        onDeleteCloudCopy = viewModel::deleteCloudCopy,
                     )
                 }
             }
-            if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter))
+            if (state.busy || state.cloud.busy) {
+                LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter))
+            }
         }
     }
 
@@ -450,7 +473,11 @@ private fun moodLabel(mood: Mood): Int = when (mood) {
 }
 
 @Composable
-private fun CalendarScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
+private fun CalendarScreen(
+    state: AppState,
+    onEdit: (LocalDate) -> Unit,
+    onSelectPartner: (String?) -> Unit,
+) {
     var month by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     val shownMonth = YearMonth.parse(month)
     val locale = currentLocale()
@@ -459,7 +486,15 @@ private fun CalendarScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
     val leading = (shownMonth.atDay(1).dayOfWeek.value - firstDay.value + 7) % 7
     val cells = leading + shownMonth.lengthOfMonth()
     val rows = (cells + 6) / 7
-    val predicted = state.prediction.nextPeriodStart
+    val selectedPartner = state.cloud.partnerCalendars.firstOrNull { it.ownerUid == state.cloud.selectedPartnerUid }
+    val displayedLogs = selectedPartner?.logs ?: state.backup.logs
+    val displayedByDay = displayedLogs.associateBy(DayLog::day)
+    val displayedPrediction = if (selectedPartner == null) state.prediction else CyclePredictor.predict(
+        bleedingDays = displayedLogs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
+        defaultCycleLength = state.backup.settings.cycleLength,
+        defaultPeriodLength = state.backup.settings.periodLength,
+    )
+    val predicted = displayedPrediction.nextPeriodStart
         ?.takeIf { state.backup.settings.predictionsEnabled }
         ?.let { start -> (0 until state.prediction.averagePeriodLength).map { start.plusDays(it.toLong()) }.toSet() }
         .orEmpty()
@@ -467,6 +502,33 @@ private fun CalendarScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
     val nextMonthLabel = stringResource(R.string.next_month)
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 20.dp)) {
         Text(stringResource(R.string.calendar_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
+        if (state.cloud.partnerCalendars.isNotEmpty()) {
+            FlowRow(
+                modifier = Modifier.padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                FilterChip(
+                    selected = selectedPartner == null,
+                    onClick = { onSelectPartner(null) },
+                    label = { Text(stringResource(R.string.my_calendar)) },
+                )
+                state.cloud.partnerCalendars.forEach { partner ->
+                    FilterChip(
+                        selected = selectedPartner?.ownerUid == partner.ownerUid,
+                        onClick = { onSelectPartner(partner.ownerUid) },
+                        label = { Text(partner.ownerName) },
+                    )
+                }
+            }
+            if (selectedPartner != null) {
+                Text(
+                    stringResource(R.string.partner_read_only),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
         Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(
                 onClick = { month = shownMonth.minusMonths(1).toString() },
@@ -508,9 +570,10 @@ private fun CalendarScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
                         val day = shownMonth.atDay(dayNumber)
                         CalendarDay(
                             day = day,
-                            recorded = state.logsByDay[day]?.bleeding == true,
+                            recorded = displayedByDay[day]?.bleeding == true,
                             predicted = day in predicted,
                             onClick = { onEdit(day) },
+                            enabled = selectedPartner == null,
                             modifier = Modifier.weight(1f).aspectRatio(1f),
                         )
                     }
@@ -530,6 +593,7 @@ private fun CalendarDay(
     recorded: Boolean,
     predicted: Boolean,
     onClick: () -> Unit,
+    enabled: Boolean,
     modifier: Modifier,
 ) {
     val background = when {
@@ -546,7 +610,7 @@ private fun CalendarDay(
     Box(
         modifier = modifier.padding(3.dp).clip(CircleShape).background(background)
             .then(if (day == LocalDate.now()) Modifier.border(1.dp, MaterialTheme.colorScheme.primary, CircleShape) else Modifier)
-            .clickable(onClick = onClick).semantics { contentDescription = date },
+            .clickable(enabled = enabled, onClick = onClick).semantics { contentDescription = date },
         contentAlignment = Alignment.Center,
     ) { Text(day.dayOfMonth.toString(), color = foreground) }
 }
@@ -611,9 +675,18 @@ private fun SettingsScreen(
     onReminderChange: (Boolean) -> Unit,
     onInfo: (InfoDialog) -> Unit,
     onDeleteAll: () -> Unit,
+    onGoogleSignIn: () -> Unit,
+    onGoogleSignOut: () -> Unit,
+    onCloudSyncChange: (Boolean) -> Unit,
+    onCloudSync: () -> Unit,
+    onCreateInvitation: () -> Unit,
+    onAcceptInvitation: (String) -> Unit,
+    onRevokePartner: (String) -> Unit,
+    onDeleteCloudCopy: () -> Unit,
 ) {
     val settings = state.backup.settings
     var pageName by rememberSaveable { mutableStateOf<String?>(null) }
+    var partnerCode by rememberSaveable { mutableStateOf("") }
     val page = pageName?.let(SettingsPage::valueOf)
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -684,6 +757,21 @@ private fun SettingsScreen(
                         Text(stringResource(R.string.delete_all_data), color = MaterialTheme.colorScheme.error)
                     }
                 }
+                SettingsPage.ACCOUNT -> CloudSettings(
+                    cloud = state.cloud,
+                    partnerCode = partnerCode,
+                    onPartnerCodeChange = { partnerCode = it.filter { character ->
+                        character.isLetterOrDigit() || character == '_' || character == '-'
+                    }.take(22) },
+                    onGoogleSignIn = onGoogleSignIn,
+                    onGoogleSignOut = onGoogleSignOut,
+                    onCloudSyncChange = onCloudSyncChange,
+                    onCloudSync = onCloudSync,
+                    onCreateInvitation = onCreateInvitation,
+                    onAcceptInvitation = { onAcceptInvitation(partnerCode) },
+                    onRevokePartner = onRevokePartner,
+                    onDeleteCloudCopy = onDeleteCloudCopy,
+                )
                 SettingsPage.PRIVACY -> {
                     SettingsLink(R.string.privacy) { onInfo(InfoDialog.PRIVACY) }
                     SettingsLink(R.string.about_cycle) { onInfo(InfoDialog.CYCLE) }
@@ -691,6 +779,107 @@ private fun SettingsScreen(
             }
         }
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun CloudSettings(
+    cloud: CloudState,
+    partnerCode: String,
+    onPartnerCodeChange: (String) -> Unit,
+    onGoogleSignIn: () -> Unit,
+    onGoogleSignOut: () -> Unit,
+    onCloudSyncChange: (Boolean) -> Unit,
+    onCloudSync: () -> Unit,
+    onCreateInvitation: () -> Unit,
+    onAcceptInvitation: () -> Unit,
+    onRevokePartner: (String) -> Unit,
+    onDeleteCloudCopy: () -> Unit,
+) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    when {
+        !cloud.available -> InfoBlock(R.string.cloud_unavailable, R.string.cloud_unavailable_body)
+        cloud.account == null -> {
+            InfoBlock(R.string.google_account, R.string.google_account_body)
+            Button(onClick = onGoogleSignIn, enabled = !cloud.busy, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.sign_in_google))
+            }
+        }
+        else -> {
+            Text(cloud.account.displayName ?: stringResource(R.string.google_account), style = MaterialTheme.typography.titleMedium)
+            cloud.account.email?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            InfoBlock(R.string.cloud_sync, R.string.cloud_sync_disclosure)
+            SwitchRow(R.string.cloud_sync_enabled, cloud.syncEnabled, onCloudSyncChange)
+            if (cloud.syncEnabled) {
+                OutlinedButton(onClick = onCloudSync, enabled = !cloud.busy, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.sync_now))
+                }
+            }
+            SectionTitle(R.string.partner_sharing)
+            Text(stringResource(R.string.partner_sharing_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Button(
+                onClick = onCreateInvitation,
+                enabled = cloud.syncEnabled && !cloud.busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(stringResource(R.string.create_partner_code)) }
+            cloud.inviteToken?.let { token ->
+                SelectionContainer {
+                    Text(token, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                }
+                Text(stringResource(R.string.partner_code_expiry), style = MaterialTheme.typography.bodySmall)
+            }
+            OutlinedTextField(
+                value = partnerCode,
+                onValueChange = onPartnerCodeChange,
+                label = { Text(stringResource(R.string.partner_code)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedButton(
+                onClick = onAcceptInvitation,
+                enabled = partnerCode.length == 22 && !cloud.busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(stringResource(R.string.open_partner_calendar)) }
+            cloud.partnerCalendars.forEach { partner ->
+                Text(
+                    stringResource(R.string.partner_calendar_available, partner.ownerName),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (cloud.readerUids.isNotEmpty()) {
+                SectionTitle(R.string.partner_access)
+                cloud.readerUids.forEach { readerUid ->
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text("…${readerUid.takeLast(6)}", modifier = Modifier.weight(1f))
+                        TextButton(onClick = { onRevokePartner(readerUid) }) {
+                            Text(stringResource(R.string.revoke_access), color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+            OutlinedButton(onClick = onGoogleSignOut, enabled = !cloud.busy, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.sign_out))
+            }
+            TextButton(onClick = { showDeleteConfirm = true }, enabled = !cloud.busy) {
+                Text(stringResource(R.string.delete_cloud_copy), color = MaterialTheme.colorScheme.error)
+            }
+        }
+    }
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text(stringResource(R.string.delete_cloud_copy)) },
+            text = { Text(stringResource(R.string.delete_cloud_copy_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                    onDeleteCloudCopy()
+                }) { Text(stringResource(R.string.confirm_delete), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
+            },
+        )
     }
 }
 

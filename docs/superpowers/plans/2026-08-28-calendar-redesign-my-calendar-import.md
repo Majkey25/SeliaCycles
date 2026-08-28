@@ -242,4 +242,3 @@ Run the repository's full clean test/lint/debug/release bundle command with exte
 - [ ] **Step 4: Hostile diff review**
 
 Check scope, data-loss paths, parser bounds, migration, translation coverage, accessibility, secrets, generated artifacts, and `git diff --check` before commit.
-

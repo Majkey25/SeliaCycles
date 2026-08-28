@@ -6,12 +6,15 @@ val releaseSigningProperties =
         ?.let(::file)
         ?.takeIf { it.isFile }
         ?.let { propertiesFile -> Properties().apply { propertiesFile.inputStream().use(::load) } }
+val googleWebClientId = providers.gradleProperty("seliaCyclesGoogleWebClientId").orElse("").get()
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+if (file("google-services.json").isFile) apply(plugin = "com.google.gms.google-services")
 
 android {
     namespace = "com.majkeylab.seliacycles"
@@ -21,8 +24,9 @@ android {
         applicationId = "com.majkeylab.seliacycles"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0-beta.1"
+        versionCode = 2
+        versionName = "0.2.0-beta.1"
+        resValue("string", "google_web_client_id", googleWebClientId)
     }
 
     signingConfigs {
@@ -78,6 +82,13 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     implementation("androidx.work:work-runtime-ktx:2.11.2")
     implementation("androidx.health.connect:connect-client:1.1.0")
+    implementation("androidx.credentials:credentials:1.6.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
+
+    implementation(platform("com.google.firebase:firebase-bom:34.18.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
 
     implementation(platform("androidx.compose:compose-bom:2026.06.01"))
     implementation("androidx.compose.ui:ui")

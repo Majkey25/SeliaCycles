@@ -8,23 +8,25 @@
   <img src="docs/play-store/assets/icon-512.png" width="180" alt="Selia Cycles calendar and drop icon">
 </p>
 
-Selia Cycles is a private period tracker for Android. It records bleeding, flow, symptoms, mood, and notes without an account, ads, analytics, or app internet access.
+Selia Cycles is a private, offline-first period tracker for Android. It records bleeding, flow, symptoms, mood, notes, weight, temperature, sleep, and intimacy without ads or analytics. A Google account is optional for cloud sync and read-only partner calendars.
 
 ## Features
 
-- Today, calendar, history, and settings screens in Material 3.
-- Period estimates based on up to six recent complete cycles.
-- Czech and English app languages.
+- Calendar-first Material 3 UI with a gradient cycle summary and one primary add action.
+- Adaptive estimates from up to six recent complete cycles with an uncertainty window.
+- System, English, Czech, Slovak, German, Polish, and Spanish languages.
 - System, light, and dark themes.
 - Optional local period reminders.
 - Password-encrypted `.seliabackup` export and atomic restore.
 - Android Auto Backup for the selected Google or device backup account.
 - Optional read-only import of menstrual period and flow records from Health Connect.
+- Direct preview-and-merge import of My Calendar `.pc` backups.
+- Optional Google sign-in, Firebase sync of period dates/flow, and revocable read-only partner access.
 - One-action deletion of all local app data.
 
 ## Data migration limits
 
-Android does not let one app read another app's private Google or Samsung account backup. Selia Cycles imports standard Health Connect menstrual records when a source app publishes them. Current Samsung Health documentation does not list cycle records among its Health Connect data types, and My Calendar does not publish a compatible backup format.
+Android does not let one app read another app's private Google or Samsung account backup. Selia Cycles imports standard Health Connect menstrual records when a source app publishes them and directly reads the verified Java/ZIP/SQLite structure used by My Calendar `.pc` exports. Samsung Health import depends on the records it exposes through Health Connect.
 
 ## Screenshots
 

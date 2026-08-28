@@ -24,10 +24,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+        val accountManager = GoogleAccountManager(this)
+        viewModel.initializeCloud(accountManager.isConfigured, accountManager.currentAccount())
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()
             SeliaCyclesTheme(state.backup.settings.theme) {
-                SeliaCyclesApp(state = state, viewModel = viewModel)
+                SeliaCyclesApp(
+                    state = state,
+                    viewModel = viewModel,
+                    onGoogleSignIn = { viewModel.signIn(accountManager::signIn) },
+                    onGoogleSignOut = { viewModel.signOut(accountManager::signOut) },
+                )
             }
         }
     }

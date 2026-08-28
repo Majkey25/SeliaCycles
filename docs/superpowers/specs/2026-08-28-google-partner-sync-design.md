@@ -19,18 +19,18 @@ Date: August 28, 2026
 
 ## Data and privacy
 
-- Calendar documents contain an owner UID and bounded reader UID list.
+- Calendar documents contain the owner UID and display name. Separate membership documents grant reader access.
 - Day documents use ISO dates and validated cycle fields.
 - Notes, weight, temperature, intimacy, symptoms, and tests are excluded from partner sharing by default.
-- The owner may enable additional categories individually after a clear disclosure.
+- Partner payloads contain only period dates and flow.
 - Sign-out removes local cloud session state but does not delete local calendar data.
 
 ## Firestore security
 
 - Owners alone can write calendar metadata and day documents.
-- Readers can only read a calendar whose metadata contains their authenticated UID.
-- Invitations deny list queries and allow a single authenticated acceptance transaction.
-- Rules validate allowed keys, data types, date bounds, reader limits, and immutable ownership.
+- Readers can only read a calendar when their authenticated UID has a membership document.
+- Invitations deny unrelated list queries, allow owner cleanup, and allow a single authenticated acceptance transaction.
+- Rules validate allowed keys, data types, date format, payload consistency, token entropy, and immutable ownership.
 - Emulator tests cover owner writes, reader reads, reader write denial, unrelated-user denial, expired invitations, and revocation.
 
 ## Delivery boundary

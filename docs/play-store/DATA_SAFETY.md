@@ -1,15 +1,17 @@
 # Google Play declarations
 
-These answers describe version `0.1.0-beta.1`. Recheck them after each dependency or feature change.
+These answers describe the redesigned closed-beta build. Recheck them after each dependency or feature change.
 
 ## Data safety
 
-- Does the app collect or share required user data types? **No**.
-- Reason: cycle data and Health Connect data stay on device. Google Play excludes on-device processing and end-to-end encrypted transfers from collection. The developer has no backup key or server access.
+- Data collected when optional Google sync is enabled: **User IDs**, **email address**, **name**, and **health information** consisting of menstrual dates and flow.
+- Purpose: **App functionality**, **account management**, **security**, and **user-requested partner sharing**.
+- Data excluded from cloud sync: notes, mood, symptoms, weight, temperature, sleep, intimacy, and imported source details.
+- Data is encrypted in transit. Firebase project administrators can technically access stored data; it is not used for ads, analytics, profiling, or sale.
 - Ads: **No**.
-- Account creation: **No**.
+- Account creation: **Optional Google/Firebase account**.
 - App access restrictions: **No**.
-- User data deletion: **Settings > Delete all data**, Android clear storage, or uninstall.
+- User data deletion: local deletion in Settings; separate **Delete cloud copy** for Firebase data, invitations, and partner access.
 
 ## Health apps declaration
 
@@ -27,7 +29,7 @@ These answers describe version `0.1.0-beta.1`. Recheck them after each dependenc
 
 Prominent disclosure shown before the import button:
 
-> Reads menstrual period and flow history from Health Connect to add it to your private calendar. Data is never sent to the developer.
+> Reads menstrual period and flow history from Health Connect into your calendar. It stays local unless you separately enable Google cloud sync, which includes period dates and flow.
 
 ## Store setup
 
