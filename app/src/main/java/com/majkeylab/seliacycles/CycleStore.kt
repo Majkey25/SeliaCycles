@@ -84,23 +84,6 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
 
     fun clearAll() = replace(CycleBackup())
 
-    fun mergeImported(imported: List<DayLog>) = writableDatabase.runInTransaction {
-        val merged = readLogs(this).associateByTo(mutableMapOf(), DayLog::day)
-        imported.forEach { incoming ->
-            val current = merged[incoming.day]
-            merged[incoming.day] = current?.let { mergeDayLogs(it, incoming) } ?: incoming
-        }
-        require(merged.size <= CycleBackup.MAX_LOGS)
-        imported.map(DayLog::day).distinct().forEach { day ->
-            check(insertWithOnConflict(
-                "day_logs",
-                null,
-                logValues(merged.getValue(day)),
-                SQLiteDatabase.CONFLICT_REPLACE,
-            ) != -1L)
-        }
-    }
-
     private fun readLogs(database: SQLiteDatabase): List<DayLog> = database.query(
         "day_logs",
         LOG_COLUMNS,

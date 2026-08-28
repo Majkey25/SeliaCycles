@@ -10,23 +10,31 @@
     <string name="cycle_day">Día del ciclo</string>
     <string name="cycle_day_value">Día %1$d</string>
     <string name="estimated_window">%1$s – %2$s</string>
-    <plurals name="based_on_periods"><item quantity="one">Basado en %d periodo registrado</item><item quantity="other">Basado en %d periodos registrados</item></plurals>
+    <plurals name="based_on_periods"><item quantity="one">Basado en %d periodo registrado</item><item quantity="many">Basado en %d periodos registrados</item><item quantity="other">Basado en %d periodos registrados</item></plurals>
     <string name="week_heading">Tu semana</string>
     <string name="today_summary">Registro de hoy</string>
     <string name="nothing_logged">Aún no hay nada registrado hoy. Toca + para añadirlo.</string>
     <string name="flow_none">Sin sangrado</string>
     <string name="flow_summary">Flujo: %1$s</string>
     <string name="mood_summary">Estado de ánimo: %1$s</string>
-    <plurals name="symptom_count"><item quantity="one">%d síntoma</item><item quantity="other">%d síntomas</item></plurals>
+    <plurals name="symptom_count"><item quantity="one">%d síntoma</item><item quantity="many">%d síntomas</item><item quantity="other">%d síntomas</item></plurals>
     <string name="next_period">Próximo periodo</string>
     <string name="predicted_today">Previsto para hoy</string>
-    <plurals name="days_until_period"><item quantity="one">En %d día</item><item quantity="other">En %d días</item></plurals>
-    <plurals name="period_late"><item quantity="one">1 día después de lo previsto</item><item quantity="other">%d días después de lo previsto</item></plurals>
+    <plurals name="days_until_period"><item quantity="one">En %d día</item><item quantity="many">En %d días</item><item quantity="other">En %d días</item></plurals>
+    <plurals name="period_late"><item quantity="one">1 día después de lo previsto</item><item quantity="many">%d días después de lo previsto</item><item quantity="other">%d días después de lo previsto</item></plurals>
     <string name="no_period_data">Registra tu primer periodo para iniciar las estimaciones.</string>
+    <string name="predictions_disabled">Las estimaciones están desactivadas en Ajustes.</string>
     <string name="log_today">Registrar hoy</string>
     <string name="edit_today">Editar el registro de hoy</string>
     <string name="today_logged">Hoy está registrado</string>
     <string name="estimate_notice">Estimación basada en tu historial. No es asesoramiento médico ni anticoncepción.</string>
+    <string name="forecast_heading">Este mes y el siguiente</string>
+    <string name="this_month">Este mes</string>
+    <string name="following_month">Próximo mes</string>
+    <string name="forecast_recorded">Inicio registrado: %1$s</string>
+    <string name="forecast_estimated">Inicio estimado: %1$s – %2$s</string>
+    <string name="forecast_not_expected">No se espera el periodo</string>
+    <string name="forecast_unavailable">Aún no hay estimación</string>
     <string name="calendar_heading">Calendario</string>
     <string name="previous_month">Mes anterior</string>
     <string name="next_month">Mes siguiente</string>
@@ -36,7 +44,7 @@
     <string name="average_cycle">Ciclo medio</string>
     <string name="average_period">Periodo medio</string>
     <string name="recorded_cycles">Inicios registrados</string>
-    <plurals name="days_value"><item quantity="one">%d día</item><item quantity="other">%d días</item></plurals>
+    <plurals name="days_value"><item quantity="one">%d día</item><item quantity="many">%d días</item><item quantity="other">%d días</item></plurals>
     <string name="no_history">Aún no hay un historial completo de periodos.</string>
     <string name="period_started">Inicio del periodo</string>
     <string name="settings_heading">Ajustes</string>
@@ -47,21 +55,19 @@
     <string name="settings_appearance">Aspecto e idioma</string>
     <string name="settings_appearance_summary">Tema del sistema e idioma de la aplicación</string>
     <string name="settings_reminders_summary">Recordatorio privado opcional del periodo</string>
-    <string name="settings_data">Copia e importación</string>
-    <string name="settings_data_summary">Copia de Selia, My Calendar y Health Connect</string>
-    <string name="settings_account">Cuenta de Google y pareja</string>
-    <string name="settings_account_summary">Sincronización opcional y calendarios de pareja de solo lectura</string>
+    <string name="settings_data">Datos y transferencia</string>
+    <string name="settings_data_summary">Datos locales privados y transferencia entre dispositivos</string>
+    <string name="device_transfer">Transferencia entre dispositivos</string>
+    <string name="device_transfer_body">Selia Cycles no tiene cuenta ni nube propia. Android puede transferir directamente la base de datos privada y los ajustes al configurar un dispositivo nuevo.</string>
     <string name="settings_privacy_summary">Privacidad, información de salud y límites médicos</string>
     <string name="daily_measurements">Mediciones diarias</string>
     <string name="daily_measurements_body">El peso, la temperatura basal, el sueño y la intimidad son opcionales en Más detalles.</string>
-    <string name="section_tracking">Seguimiento</string>
     <string name="predictions">Estimaciones del periodo</string>
     <string name="default_cycle_length">Duración predeterminada del ciclo</string>
     <string name="default_period_length">Duración predeterminada del periodo</string>
     <string name="first_day_of_week">Primer día de la semana</string>
     <string name="monday">Lunes</string>
     <string name="sunday">Domingo</string>
-    <string name="section_appearance">Aspecto</string>
     <string name="theme">Tema</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
@@ -77,66 +83,12 @@
     <string name="section_reminders">Recordatorios</string>
     <string name="period_reminder">Recordatorio del periodo</string>
     <string name="remind_before">Días antes de la estimación</string>
-    <string name="section_data">Datos y copia</string>
-    <string name="cloud_backup">Copia de Google y del dispositivo</string>
-    <string name="cloud_backup_body">Android incluye de forma segura los datos de la aplicación en la cuenta de copia del sistema elegida. Puedes guardar una copia manual cifrada en Google Drive, Mis archivos de Samsung, OneDrive u otro proveedor desde el selector de archivos.</string>
-    <string name="create_backup">Crear copia cifrada</string>
-    <string name="restore_backup">Restaurar copia cifrada</string>
-    <string name="my_calendar_import">Copia de My Calendar</string>
-    <string name="my_calendar_import_body">Importa el historial del periodo y los datos diarios compatibles desde una copia .pc de My Calendar. No se cambia nada antes de confirmar la vista previa.</string>
-    <string name="my_calendar_import_action">Importar My Calendar (.pc)</string>
-    <string name="my_calendar_preview_title">Revisar importación de My Calendar</string>
-    <string name="my_calendar_preview_body">%1$d días registrados desde %2$s hasta %3$s.</string>
-    <string name="my_calendar_preview_preserved">%1$d datos de origen no tienen una etiqueta verificada en Selia. Se conservarán sin adivinar.</string>
-    <string name="my_calendar_merge_notice">La combinación conserva las notas, el ánimo, las mediciones y el flujo explícito existentes.</string>
-    <string name="merge_import">Combinar</string>
-    <string name="my_calendar_import_complete">Importación de My Calendar completada.</string>
-    <string name="my_calendar_import_unsupported">Este archivo no es una copia .pc compatible de My Calendar.</string>
-    <string name="my_calendar_import_damaged">La copia de My Calendar está dañada o no se puede leer. Los datos existentes no han cambiado.</string>
-    <string name="my_calendar_import_empty">No se encontraron registros de calendario compatibles en esta copia.</string>
-    <string name="restore_warning">Una copia válida sustituirá todos los registros y ajustes actuales.</string>
-    <string name="health_connect">Importar desde Health Connect</string>
-    <string name="health_connect_body">Lee el historial del periodo y del flujo desde Health Connect en tu calendario. Permanece local salvo que actives por separado la sincronización de Google, que incluye las fechas y el flujo.</string>
-    <string name="import_data">Importar datos</string>
-    <string name="other_apps">Samsung Health y My Calendar</string>
-    <string name="other_apps_body">Las copias .pc de My Calendar se pueden importar directamente. Samsung Health funciona mediante Health Connect cuando comparte registros del periodo.</string>
     <string name="delete_all_data">Eliminar todos los datos</string>
-    <string name="delete_all_data_body">Elimina permanentemente todos los registros locales y restablece los ajustes. Los archivos de copia manual no se ven afectados.</string>
+    <string name="delete_all_data_body">Elimina permanentemente todos los registros locales y restablece los ajustes.</string>
     <string name="confirm_delete">Eliminar permanentemente</string>
     <string name="section_about">Privacidad y salud</string>
     <string name="privacy">Privacidad</string>
-    <string name="privacy_body">Los datos del ciclo permanecen por defecto en el almacenamiento privado de la aplicación. Selia Cycles no tiene publicidad ni analítica. La sincronización opcional de Google envía a Firebase el identificador de la cuenta y solo las fechas del periodo y el flujo; las notas, el ánimo, los síntomas, el peso, la temperatura, el sueño y la intimidad siguen siendo locales. Las copias manuales usan AES-GCM y tu contraseña. Health Connect es de solo lectura.</string>
-    <string name="my_calendar">Mi calendario</string>
-    <string name="partner_read_only">Calendario de pareja — solo lectura</string>
-    <string name="cloud_unavailable">La sincronización de Google no está configurada</string>
-    <string name="cloud_unavailable_body">Esta versión no tiene un proyecto Firebase ni un cliente Google OAuth verificados. El calendario local, las copias y las importaciones siguen funcionando.</string>
-    <string name="google_account">Cuenta de Google</string>
-    <string name="google_account_body">El inicio de sesión es opcional y solo se necesita para sincronizar y compartir con la pareja.</string>
-    <string name="sign_in_google">Iniciar sesión con Google</string>
-    <string name="cloud_sync">Sincronización en la nube</string>
-    <string name="cloud_sync_disclosure">Al activarla, Google Firebase recibe el identificador de tu cuenta más las fechas del periodo y el flujo. Los datos diarios privados se excluyen. Desactivarla detiene las actualizaciones, pero no borra la copia en la nube.</string>
-    <string name="cloud_sync_enabled">Sincronizar mi calendario</string>
-    <string name="sync_now">Sincronizar ahora</string>
-    <string name="partner_sharing">Compartir con la pareja</string>
-    <string name="partner_sharing_body">Crea un código de un solo uso. Una pareja con sesión iniciada puede ver las fechas del periodo y el flujo, pero no editarlos. Puedes revocar el acceso.</string>
-    <string name="create_partner_code">Crear código de pareja</string>
-    <string name="partner_code_expiry">Este código caduca en 24 horas.</string>
-    <string name="partner_code">Código de pareja</string>
-    <string name="open_partner_calendar">Abrir calendario de pareja</string>
-    <string name="partner_calendar_available">%1$s está disponible en Calendario.</string>
-    <string name="partner_access">Personas con acceso</string>
-    <string name="revoke_access">Revocar</string>
-    <string name="sign_out">Cerrar sesión</string>
-    <string name="delete_cloud_copy">Eliminar copia en la nube</string>
-    <string name="delete_cloud_copy_body">Elimina permanentemente de Firebase el calendario sincronizado, las invitaciones y los accesos de pareja. No elimina los datos locales ni las copias manuales.</string>
-    <string name="cloud_copy_deleted">Copia en la nube eliminada.</string>
-    <string name="cloud_sign_in_failed">El inicio de sesión de Google falló o se canceló.</string>
-    <string name="cloud_operation_failed">La operación en la nube falló. Los datos locales no han cambiado.</string>
-    <string name="cloud_sync_complete">Sincronización en la nube completada.</string>
-    <string name="partner_invite_created">Código de pareja creado.</string>
-    <string name="partner_invite_accepted">Calendario de pareja añadido.</string>
-    <string name="partner_invite_failed">El código es inválido, ha caducado o ya se ha usado.</string>
-    <string name="partner_revoked">Acceso de pareja revocado.</string>
+    <string name="privacy_body">Los datos del ciclo permanecen en el almacenamiento privado de la aplicación. Selia Cycles no tiene cuenta, publicidad, analítica ni nube propia. Android puede transferir la base de datos directamente al configurar un dispositivo nuevo. La aplicación no tiene permiso de red.</string>
     <string name="about_cycle">Cómo funciona el ciclo menstrual</string>
     <string name="cycle_info_body">El ciclo comienza el primer día de sangrado y termina el día anterior al siguiente periodo. Las hormonas preparan el útero para el embarazo. Si no hay embarazo, el revestimiento uterino se desprende como sangrado menstrual. Los ciclos adultos suelen variar; 24–38 días es un intervalo clínico frecuente y el sangrado suele durar unos 2–7 días. El momento de la ovulación varía, por lo que las estimaciones del calendario no confirman la ovulación y no deben usarse como anticoncepción. Consulta a un profesional sanitario ante sangrado muy abundante, dolor intenso, sangrado entre periodos o un cambio marcado de tu patrón habitual.</string>
     <string name="medical_sources">Fuentes médicas</string>
@@ -145,7 +97,6 @@
     <string name="source_nhs">NHS</string>
     <string name="close">Cerrar</string>
     <string name="edit_day">Registro diario</string>
-    <string name="bleeding">Sangrado menstrual</string>
     <string name="flow">Flujo</string>
     <string name="flow_unknown">Periodo</string>
     <string name="flow_light">Ligero</string>
@@ -176,28 +127,16 @@
     <string name="intimacy">Intimidad</string>
     <string name="intimacy_sex">Sexo</string>
     <string name="intimacy_protected">Sexo con protección</string>
-    <string name="imported_details">Datos conservados de My Calendar</string>
+    <string name="imported_details">Datos importados conservados</string>
     <string name="invalid_measurement">Introduce un valor dentro del intervalo compatible.</string>
     <string name="cancel">Cancelar</string>
     <string name="save">Guardar</string>
     <string name="delete_record">Eliminar registro</string>
     <string name="decrease_value">Disminuir %1$s</string>
     <string name="increase_value">Aumentar %1$s</string>
-    <string name="backup_password_title">Proteger copia</string>
-    <string name="restore_password_title">Desbloquear copia</string>
-    <string name="password">Contraseña</string>
-    <string name="password_help">Al menos 8 caracteres. No se puede recuperar.</string>
-    <string name="continue_action">Continuar</string>
-    <string name="backup_saved">Copia cifrada guardada.</string>
-    <string name="backup_restored">Copia restaurada.</string>
-    <string name="backup_restore_failed">Contraseña incorrecta, archivo dañado o copia no compatible.</string>
-    <string name="health_import_complete">Importación de Health Connect completada.</string>
-    <string name="health_import_failed">Error al importar desde Health Connect. Revisa los permisos y los datos de origen.</string>
-    <string name="health_connect_unavailable">Health Connect no está disponible en este dispositivo.</string>
-    <string name="health_connect_update">Instala o actualiza Health Connect primero.</string>
-    <string name="permission_denied">Permiso denegado. No se importaron datos.</string>
+    <string name="permission_denied">Permiso denegado. No cambió nada.</string>
     <string name="operation_failed">La operación falló. Los datos existentes no se sustituyeron.</string>
     <string name="reminder_channel">Recordatorios del periodo</string>
     <string name="reminder_title">Estimación del periodo</string>
-    <plurals name="reminder_text"><item quantity="one">Tu próximo periodo se estima en 1 día.</item><item quantity="other">Tu próximo periodo se estima en %d días.</item></plurals>
+    <plurals name="reminder_text"><item quantity="one">Tu próximo periodo se estima en 1 día.</item><item quantity="many">Tu próximo periodo se estima en %d días.</item><item quantity="other">Tu próximo periodo se estima en %d días.</item></plurals>
 </resources>

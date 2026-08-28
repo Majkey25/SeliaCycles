@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0-beta.1 - 2026-08-28
+
+### Added
+
+- Robust local prediction that handles missed tracking cycles and isolated outliers.
+- Recorded or estimated windows for the current and next month.
+- Direct Android device-to-device transfer without normal cloud backup.
+
+### Removed
+
+- Google/Firebase account sync and partner calendars.
+- Manual backup/restore, My Calendar import, and Health Connect import.
+
 ## 0.1.0-beta.1 - 2026-08-28
 
 ### Added

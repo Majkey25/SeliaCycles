@@ -61,29 +61,6 @@ data class DayLog(
     }
 }
 
-fun mergeDayLogs(current: DayLog, incoming: DayLog): DayLog {
-    require(current.day == incoming.day)
-    val bleeding = current.bleeding || incoming.bleeding
-    val flow = when {
-        !bleeding -> Flow.NONE
-        current.bleeding && current.flow != Flow.UNKNOWN -> current.flow
-        incoming.bleeding -> incoming.flow.takeUnless { it == Flow.NONE } ?: Flow.UNKNOWN
-        else -> Flow.UNKNOWN
-    }
-    return current.copy(
-        bleeding = bleeding,
-        flow = flow,
-        mood = current.mood ?: incoming.mood,
-        symptoms = current.symptoms + incoming.symptoms,
-        note = current.note.takeIf(String::isNotBlank) ?: incoming.note,
-        weightKg = current.weightKg ?: incoming.weightKg,
-        temperatureC = current.temperatureC ?: incoming.temperatureC,
-        sleepHours = current.sleepHours ?: incoming.sleepHours,
-        intimacy = current.intimacy ?: incoming.intimacy,
-        importedDetails = current.importedDetails.takeIf(String::isNotBlank) ?: incoming.importedDetails,
-    )
-}
-
 data class AppSettings(
     val cycleLength: Int = 28,
     val periodLength: Int = 5,

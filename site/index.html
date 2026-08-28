@@ -10,7 +10,7 @@
     main { max-width: 760px; margin: auto; padding: 48px 24px 80px; }
     h1 { font-size: clamp(2rem, 6vw, 3.5rem); letter-spacing: -.04em; margin-bottom: .4rem; }
     h2 { margin-top: 2.2rem; color: #713b55; }
-    p, li { line-height: 1.65; }
+    p { line-height: 1.65; }
     .meta { color: #6f5d63; }
     a { color: #713b55; }
     @media (prefers-color-scheme: dark) {
@@ -26,26 +26,14 @@
   <p class="meta">Effective August 28, 2026</p>
   <p>Selia Cycles is published by MajkeyLab. Contact <a href="mailto:majkeylab@gmail.com">majkeylab@gmail.com</a> about this policy.</p>
 
-  <h2>Data stored by the app</h2>
-  <p>Selia Cycles stores menstrual dates, flow, symptoms, mood, notes, measurements, reminder settings, and display settings in private storage on your Android device. The app has no ads, analytics, or telemetry. Google sign-in and cloud sync are optional.</p>
+  <h2>Local data</h2>
+  <p>Selia Cycles stores cycle records, optional daily details, reminders, and display settings in private storage on the Android device. The app has no account, ads, analytics, telemetry, cloud sync, or network permission. MajkeyLab does not receive cycle data.</p>
 
-  <h2>Optional Google account and cloud sync</h2>
-  <p>If you sign in and enable sync, Firebase Authentication receives your Google account identifier, display name, and email address. Cloud Firestore stores your account identifier, display name, menstrual dates, and flow. Notes, mood, symptoms, weight, temperature, sleep, intimacy, and imported source details are excluded from the default cloud payload.</p>
-  <p>MajkeyLab administers the Firebase project and can technically access stored data. It is used only for sync, partner access, security, support, and deletion—not for ads, analytics, profiling, or sale.</p>
-  <p>A one-time invitation can grant a signed-in partner read-only access to menstrual dates and flow. The owner can revoke access at any time.</p>
+  <h2>Device transfer</h2>
+  <p>Android may copy the private database and settings directly during new-device setup. Selia Cycles supplies data only for a device-to-device transport. Normal cloud backup receives no app data. MajkeyLab cannot access the transfer.</p>
 
-  <h2>Health Connect</h2>
-  <p>Health Connect import is optional. Selia Cycles reads menstrual period and flow history into the calendar only after permission. It does not read in the background or write Health Connect records. Imported dates and flow are synced only if you separately enable Google cloud sync.</p>
-
-  <h2>Backups</h2>
-  <p>Android Auto Backup may copy the app database to the Google or device backup account selected in Android settings. Android controls this service. MajkeyLab cannot access the backup.</p>
-  <p>Manual backup is optional. Selia Cycles encrypts the file with AES-GCM and a key derived from your password. You choose the destination in Android's system file picker. MajkeyLab cannot read the file or recover its password.</p>
-
-  <h2>Sharing and sale</h2>
-  <p>Selia Cycles does not sell personal data. Google/Firebase processes the optional account and synced fields described above. A partner receives only the read-only fields explicitly shared by the owner.</p>
-
-  <h2>Retention and deletion</h2>
-  <p>Use <strong>Settings > Delete all data</strong> for local records. Use <strong>Google account and partner > Delete cloud copy</strong> for synced data, invitations, and partner access. Manual backup files remain where you saved them until you delete them.</p>
+  <h2>Sharing and deletion</h2>
+  <p>Selia Cycles does not sell or share personal data. Use <strong>Settings &gt; Delete all data</strong>, clear app storage, or uninstall to delete local records.</p>
 
   <h2>Medical disclaimer</h2>
   <p>Selia Cycles provides personal tracking and calendar estimates. It does not diagnose a condition, confirm ovulation, or provide contraception.</p>

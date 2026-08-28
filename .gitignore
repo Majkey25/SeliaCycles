@@ -5,10 +5,7 @@ local.properties
 *.iml
 .reference/tmp/
 keystore.properties
+firebase-tests/
 *.jks
 *.keystore
 *.p12
-node_modules/
-firebase-debug.log
-firestore-debug.log
-app/google-services.json

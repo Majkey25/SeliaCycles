@@ -2,26 +2,27 @@
 
 ## Objective
 
-Build `com.majkeylab.seliacycles`, a private Android period tracker for fast daily logging, clear period predictions, local history, reminders, and honest data migration.
+Build `com.majkeylab.seliacycles`, a private local-only Android period calendar with fast daily logging and honest personal estimates.
 
-## Stack and commands
+## Stack
 
-- Kotlin 2.3.21, Jetpack Compose Material 3, AndroidX, native SQLite, Health Connect 1.1.0.
+- Kotlin 2.3.21, Jetpack Compose Material 3, AndroidX, native SQLite.
 - Android 10+, compile/target SDK 36, JDK 17, Gradle 8.13.
-- Build: `gradlew.bat :app:assembleDebug --console=plain`
-- Test: `gradlew.bat :app:testDebugUnitTest --console=plain`
-- Lint: `gradlew.bat :app:lintDebug --console=plain`
+- Six locales: English, Czech, Slovak, German, Polish, Spanish.
 
 ## Boundaries
 
-- Always: app-private storage, bounded validated imports, encrypted manual backups, explicit Health Connect consent, no diagnostic or contraceptive claims.
-- Never: network access, embedded secrets, invented Samsung/My Calendar APIs, silent destructive restore.
-- Samsung Health/My Calendar data import works only when a source exposes standard Health Connect menstrual records. Proprietary account backups are inaccessible to other apps.
+- Keep cycle data in app-private storage.
+- No account, cloud sync, partner access, analytics, ads, external import, manual backup, or network permission.
+- Allow Android device-to-device transfer only.
+- Keep the SQLite schema compatible with existing installed data.
+- Estimates are not diagnosis, ovulation confirmation, or contraception.
 
 ## Success criteria
 
-- User can log bleeding, flow, symptoms, mood, and a short note for any day.
-- Calendar, history, and next-period estimate update from stored records.
-- Settings cover theme, language, prediction defaults, reminders, backup/restore, Health Connect, privacy, and menstrual-health information.
-- Google/device cloud restore uses Android Auto Backup. Manual backup uses a password-encrypted file through Android's document picker.
-- Unit test, lint, debug build, install, and four emulator flows pass or exact blockers are recorded.
+- Any day can record bleeding, flow, symptoms, mood, note, weight, basal temperature, sleep, and intimacy.
+- Real bleeding starts immediately re-anchor the prediction.
+- Robust local statistics handle skipped tracking cycles and isolated outliers.
+- Today shows recorded or estimated status for this month and next month.
+- Calendar marks recorded and future estimated days.
+- Unit, lint, APK, AAB, physical-phone, and cold-start checks pass.

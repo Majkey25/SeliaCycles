@@ -3,7 +3,6 @@ package com.majkeylab.seliacycles
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,31 +39,23 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.Backup
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.CloudOff
-import androidx.compose.material.icons.outlined.CloudSync
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.EventAvailable
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Healing
 import androidx.compose.material.icons.outlined.ImportExport
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Opacity
 import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Remove
-import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.SentimentSatisfied
 import androidx.compose.material.icons.outlined.Thermostat
@@ -113,17 +104,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
-import androidx.health.connect.client.HealthConnectClient
-import androidx.health.connect.client.PermissionController
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -151,7 +138,6 @@ private enum class SettingsPage(
     APPEARANCE(R.string.settings_appearance, R.string.settings_appearance_summary, Icons.Outlined.Palette),
     REMINDERS(R.string.section_reminders, R.string.settings_reminders_summary, Icons.Outlined.Notifications),
     DATA(R.string.settings_data, R.string.settings_data_summary, Icons.Outlined.ImportExport),
-    ACCOUNT(R.string.settings_account, R.string.settings_account_summary, Icons.Outlined.People),
     PRIVACY(R.string.section_about, R.string.settings_privacy_summary, Icons.Outlined.Security),
 }
 
@@ -159,38 +145,14 @@ private enum class SettingsPage(
 fun SeliaCyclesApp(
     state: AppState,
     viewModel: MainViewModel,
-    onGoogleSignIn: () -> Unit,
-    onGoogleSignOut: () -> Unit,
 ) {
     var screen by rememberSaveable { mutableStateOf(Screen.TODAY) }
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
     var infoDialog by remember { mutableStateOf<InfoDialog?>(null) }
-    var showExportPassword by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
-    var importUri by remember { mutableStateOf<Uri?>(null) }
-    var exportPassword by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
 
-    val createBackup = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/octet-stream"),
-    ) { uri ->
-        val password = exportPassword
-        exportPassword = null
-        if (uri != null && password != null) viewModel.exportBackup(uri, password)
-    }
-    val openBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) importUri = uri
-    }
-    val openMyCalendar = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) viewModel.inspectMyCalendar(uri)
-    }
-    val healthPermission = rememberLauncherForActivityResult(
-        PermissionController.createRequestPermissionResultContract(),
-    ) { granted ->
-        if (granted.containsAll(HealthConnectImporter.permissions)) viewModel.importHealthConnect()
-        else viewModel.permissionDenied()
-    }
     val notificationPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -209,7 +171,7 @@ fun SeliaCyclesApp(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            if (!state.loading && screen == Screen.CALENDAR && state.cloud.selectedPartnerUid == null) {
+            if (!state.loading && screen == Screen.CALENDAR) {
                 LargeFloatingActionButton(onClick = { selectedDay = LocalDate.now() }) {
                     Icon(
                         Icons.Default.Add,
@@ -238,25 +200,11 @@ fun SeliaCyclesApp(
             } else {
                 when (screen) {
                     Screen.TODAY -> TodayScreen(state, onEdit = { selectedDay = it })
-                    Screen.CALENDAR -> CalendarScreen(
-                        state,
-                        onEdit = { selectedDay = it },
-                        onSelectPartner = viewModel::selectPartnerCalendar,
-                    )
+                    Screen.CALENDAR -> CalendarScreen(state, onEdit = { selectedDay = it })
                     Screen.HISTORY -> HistoryScreen(state)
                     Screen.SETTINGS -> SettingsScreen(
                         state = state,
                         onSave = viewModel::saveSettings,
-                        onCreateBackup = { showExportPassword = true },
-                        onRestoreBackup = { openBackup.launch(arrayOf("application/octet-stream", "*/*")) },
-                        onMyCalendarImport = { openMyCalendar.launch(arrayOf("application/octet-stream", "*/*")) },
-                        onHealthImport = {
-                            if (viewModel.healthConnectStatus == HealthConnectClient.SDK_AVAILABLE) {
-                                healthPermission.launch(HealthConnectImporter.permissions)
-                            } else {
-                                viewModel.healthConnectUnavailableMessage()
-                            }
-                        },
                         onReminderChange = { enabled ->
                             if (enabled && Build.VERSION.SDK_INT >= 33 &&
                                 ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
@@ -269,18 +217,10 @@ fun SeliaCyclesApp(
                         },
                         onInfo = { infoDialog = it },
                         onDeleteAll = { showDeleteConfirm = true },
-                        onGoogleSignIn = onGoogleSignIn,
-                        onGoogleSignOut = onGoogleSignOut,
-                        onCloudSyncChange = viewModel::setCloudSyncEnabled,
-                        onCloudSync = viewModel::syncNow,
-                        onCreateInvitation = viewModel::createPartnerInvitation,
-                        onAcceptInvitation = viewModel::acceptPartnerInvitation,
-                        onRevokePartner = viewModel::revokePartner,
-                        onDeleteCloudCopy = viewModel::deleteCloudCopy,
                     )
                 }
             }
-            if (state.busy || state.cloud.busy) {
+            if (state.busy) {
                 LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter))
             }
         }
@@ -295,35 +235,6 @@ fun SeliaCyclesApp(
                 viewModel.saveLog(it)
                 selectedDay = null
             },
-        )
-    }
-    if (showExportPassword) {
-        PasswordDialog(
-            title = R.string.backup_password_title,
-            onDismiss = { showExportPassword = false },
-            onConfirm = { password ->
-                showExportPassword = false
-                exportPassword = password
-                createBackup.launch("SeliaCycles-${LocalDate.now()}.seliabackup")
-            },
-        )
-    }
-    importUri?.let { uri ->
-        PasswordDialog(
-            title = R.string.restore_password_title,
-            extraMessage = R.string.restore_warning,
-            onDismiss = { importUri = null },
-            onConfirm = { password ->
-                importUri = null
-                viewModel.restoreBackup(uri, password)
-            },
-        )
-    }
-    state.myCalendarPreview?.let { preview ->
-        MyCalendarPreviewDialog(
-            preview = preview,
-            onDismiss = viewModel::cancelMyCalendarImport,
-            onConfirm = viewModel::confirmMyCalendarImport,
         )
     }
     infoDialog?.let { dialog ->
@@ -351,16 +262,18 @@ fun SeliaCyclesApp(
 private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
     val today = LocalDate.now()
     val prediction = state.prediction
-    val next = prediction.nextPeriodStart.takeIf { state.backup.settings.predictionsEnabled }
+    val predictionsEnabled = state.backup.settings.predictionsEnabled
+    val next = prediction.nextPeriodStart.takeIf { predictionsEnabled }
     val distance = next?.let { ChronoUnit.DAYS.between(today, it).toInt() }
     val locale = currentLocale()
     val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale) }
     val shortDateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val latestStart = prediction.periodStarts.lastOrNull()
     val cycleDay = latestStart?.let { ChronoUnit.DAYS.between(it, today).toInt() + 1 }?.takeIf { it > 0 }
-    val predictedDays = next?.let { start ->
-        (0 until prediction.averagePeriodLength).mapTo(mutableSetOf()) { start.plusDays(it.toLong()) }
-    }.orEmpty()
+    val predictedDays = prediction.futurePeriodStarts.takeIf { state.backup.settings.predictionsEnabled }
+        ?.flatMap { start -> (0 until prediction.averagePeriodLength).map { start.plusDays(it.toLong()) } }
+        ?.toSet()
+        .orEmpty()
     val todayLog = state.logsByDay[today]
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -384,6 +297,7 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
                 Text(stringResource(R.string.next_period), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelLarge)
                 Text(
                     when {
+                        !predictionsEnabled -> stringResource(R.string.predictions_disabled)
                         next == null -> stringResource(R.string.no_period_data)
                         prediction.earliestPeriodStart == prediction.latestPeriodStart -> next.format(dateFormat)
                         else -> stringResource(
@@ -414,6 +328,9 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
                     )
                 }
             }
+        }
+        if (predictionsEnabled) {
+            MonthlyForecastSection(prediction.monthlyForecasts)
         }
         SectionLabel(Icons.Outlined.CalendarMonth, R.string.week_heading)
         Row(Modifier.fillMaxWidth()) {
@@ -461,6 +378,54 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall,
         )
+    }
+}
+
+@Composable
+private fun MonthlyForecastSection(forecasts: List<MonthlyForecast>) {
+    val locale = currentLocale()
+    val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SectionLabel(Icons.Outlined.EventAvailable, R.string.forecast_heading)
+        forecasts.forEachIndexed { index, forecast ->
+            val icon = when (forecast.status) {
+                ForecastStatus.RECORDED -> Icons.Outlined.CheckCircle
+                ForecastStatus.ESTIMATED -> Icons.Outlined.EventAvailable
+                ForecastStatus.NOT_EXPECTED -> Icons.Outlined.CalendarMonth
+                ForecastStatus.UNAVAILABLE -> Icons.Outlined.CalendarMonth
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text(
+                        stringResource(if (index == 0) R.string.this_month else R.string.following_month),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        when (forecast.status) {
+                            ForecastStatus.RECORDED -> stringResource(
+                                R.string.forecast_recorded,
+                                forecast.start?.format(dateFormat).orEmpty(),
+                            )
+                            ForecastStatus.ESTIMATED -> stringResource(
+                                R.string.forecast_estimated,
+                                forecast.earliestStart?.format(dateFormat).orEmpty(),
+                                forecast.latestStart?.format(dateFormat).orEmpty(),
+                            )
+                            ForecastStatus.NOT_EXPECTED -> stringResource(R.string.forecast_not_expected)
+                            ForecastStatus.UNAVAILABLE -> stringResource(R.string.forecast_unavailable)
+                        },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -518,7 +483,6 @@ private fun moodLabel(mood: Mood): Int = when (mood) {
 private fun CalendarScreen(
     state: AppState,
     onEdit: (LocalDate) -> Unit,
-    onSelectPartner: (String?) -> Unit,
 ) {
     var month by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     val shownMonth = YearMonth.parse(month)
@@ -528,49 +492,16 @@ private fun CalendarScreen(
     val leading = (shownMonth.atDay(1).dayOfWeek.value - firstDay.value + 7) % 7
     val cells = leading + shownMonth.lengthOfMonth()
     val rows = (cells + 6) / 7
-    val selectedPartner = state.cloud.partnerCalendars.firstOrNull { it.ownerUid == state.cloud.selectedPartnerUid }
-    val displayedLogs = selectedPartner?.logs ?: state.backup.logs
-    val displayedByDay = displayedLogs.associateBy(DayLog::day)
-    val displayedPrediction = if (selectedPartner == null) state.prediction else CyclePredictor.predict(
-        bleedingDays = displayedLogs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
-        defaultCycleLength = state.backup.settings.cycleLength,
-        defaultPeriodLength = state.backup.settings.periodLength,
-    )
-    val predicted = displayedPrediction.nextPeriodStart
-        ?.takeIf { state.backup.settings.predictionsEnabled }
-        ?.let { start -> (0 until state.prediction.averagePeriodLength).map { start.plusDays(it.toLong()) }.toSet() }
+    val predicted = state.prediction.futurePeriodStarts.takeIf { state.backup.settings.predictionsEnabled }
+        ?.flatMap { start ->
+            (0 until state.prediction.averagePeriodLength).map { start.plusDays(it.toLong()) }
+        }
+        ?.toSet()
         .orEmpty()
     val previousMonthLabel = stringResource(R.string.previous_month)
     val nextMonthLabel = stringResource(R.string.next_month)
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 20.dp)) {
         Text(stringResource(R.string.calendar_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
-        if (state.cloud.partnerCalendars.isNotEmpty()) {
-            FlowRow(
-                modifier = Modifier.padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                FilterChip(
-                    selected = selectedPartner == null,
-                    onClick = { onSelectPartner(null) },
-                    label = { Text(stringResource(R.string.my_calendar)) },
-                )
-                state.cloud.partnerCalendars.forEach { partner ->
-                    FilterChip(
-                        selected = selectedPartner?.ownerUid == partner.ownerUid,
-                        onClick = { onSelectPartner(partner.ownerUid) },
-                        label = { Text(partner.ownerName) },
-                    )
-                }
-            }
-            if (selectedPartner != null) {
-                Text(
-                    stringResource(R.string.partner_read_only),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-        }
         Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(
                 onClick = { month = shownMonth.minusMonths(1).toString() },
@@ -612,10 +543,10 @@ private fun CalendarScreen(
                         val day = shownMonth.atDay(dayNumber)
                         CalendarDay(
                             day = day,
-                            recorded = displayedByDay[day]?.bleeding == true,
+                            recorded = state.logsByDay[day]?.bleeding == true,
                             predicted = day in predicted,
                             onClick = { onEdit(day) },
-                            enabled = selectedPartner == null,
+                            enabled = true,
                             modifier = Modifier.weight(1f).aspectRatio(1f),
                         )
                     }
@@ -712,25 +643,12 @@ private fun Metric(icon: ImageVector, @StringRes label: Int, value: String, modi
 private fun SettingsScreen(
     state: AppState,
     onSave: (AppSettings) -> Unit,
-    onCreateBackup: () -> Unit,
-    onRestoreBackup: () -> Unit,
-    onMyCalendarImport: () -> Unit,
-    onHealthImport: () -> Unit,
     onReminderChange: (Boolean) -> Unit,
     onInfo: (InfoDialog) -> Unit,
     onDeleteAll: () -> Unit,
-    onGoogleSignIn: () -> Unit,
-    onGoogleSignOut: () -> Unit,
-    onCloudSyncChange: (Boolean) -> Unit,
-    onCloudSync: () -> Unit,
-    onCreateInvitation: () -> Unit,
-    onAcceptInvitation: (String) -> Unit,
-    onRevokePartner: (String) -> Unit,
-    onDeleteCloudCopy: () -> Unit,
 ) {
     val settings = state.backup.settings
     var pageName by rememberSaveable { mutableStateOf<String?>(null) }
-    var partnerCode by rememberSaveable { mutableStateOf("") }
     val page = pageName?.let(SettingsPage::valueOf)
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -791,23 +709,7 @@ private fun SettingsScreen(
                     }
                 }
                 SettingsPage.DATA -> {
-                    InfoBlock(R.string.cloud_backup, R.string.cloud_backup_body, Icons.Outlined.Backup)
-                    Button(onClick = onCreateBackup, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-                        ButtonLabel(Icons.Outlined.Backup, R.string.create_backup)
-                    }
-                    OutlinedButton(onClick = onRestoreBackup, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-                        ButtonLabel(Icons.Outlined.Restore, R.string.restore_backup)
-                    }
-                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                    InfoBlock(R.string.my_calendar_import, R.string.my_calendar_import_body, Icons.Outlined.CalendarMonth)
-                    OutlinedButton(onClick = onMyCalendarImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-                        ButtonLabel(Icons.Outlined.FileDownload, R.string.my_calendar_import_action)
-                    }
-                    InfoBlock(R.string.health_connect, R.string.health_connect_body, Icons.Outlined.HealthAndSafety)
-                    OutlinedButton(onClick = onHealthImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-                        ButtonLabel(Icons.Outlined.FileDownload, R.string.import_data)
-                    }
-                    InfoBlock(R.string.other_apps, R.string.other_apps_body, Icons.Outlined.ImportExport)
+                    InfoBlock(R.string.device_transfer, R.string.device_transfer_body, Icons.Outlined.Security)
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
                     OutlinedButton(onClick = onDeleteAll, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
                         Icon(Icons.Outlined.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error)
@@ -815,21 +717,6 @@ private fun SettingsScreen(
                         Text(stringResource(R.string.delete_all_data), color = MaterialTheme.colorScheme.error)
                     }
                 }
-                SettingsPage.ACCOUNT -> CloudSettings(
-                    cloud = state.cloud,
-                    partnerCode = partnerCode,
-                    onPartnerCodeChange = { partnerCode = it.filter { character ->
-                        character.isLetterOrDigit() || character == '_' || character == '-'
-                    }.take(22) },
-                    onGoogleSignIn = onGoogleSignIn,
-                    onGoogleSignOut = onGoogleSignOut,
-                    onCloudSyncChange = onCloudSyncChange,
-                    onCloudSync = onCloudSync,
-                    onCreateInvitation = onCreateInvitation,
-                    onAcceptInvitation = { onAcceptInvitation(partnerCode) },
-                    onRevokePartner = onRevokePartner,
-                    onDeleteCloudCopy = onDeleteCloudCopy,
-                )
                 SettingsPage.PRIVACY -> {
                     SettingsLink(Icons.Outlined.Security, R.string.privacy) { onInfo(InfoDialog.PRIVACY) }
                     SettingsLink(Icons.Outlined.HealthAndSafety, R.string.about_cycle) { onInfo(InfoDialog.CYCLE) }
@@ -837,110 +724,6 @@ private fun SettingsScreen(
             }
         }
         Spacer(Modifier.height(16.dp))
-    }
-}
-
-@Composable
-private fun CloudSettings(
-    cloud: CloudState,
-    partnerCode: String,
-    onPartnerCodeChange: (String) -> Unit,
-    onGoogleSignIn: () -> Unit,
-    onGoogleSignOut: () -> Unit,
-    onCloudSyncChange: (Boolean) -> Unit,
-    onCloudSync: () -> Unit,
-    onCreateInvitation: () -> Unit,
-    onAcceptInvitation: () -> Unit,
-    onRevokePartner: (String) -> Unit,
-    onDeleteCloudCopy: () -> Unit,
-) {
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-    when {
-        !cloud.available -> InfoBlock(R.string.cloud_unavailable, R.string.cloud_unavailable_body, Icons.Outlined.CloudOff)
-        cloud.account == null -> {
-            InfoBlock(R.string.google_account, R.string.google_account_body, Icons.Outlined.AccountCircle)
-            Button(onClick = onGoogleSignIn, enabled = !cloud.busy, modifier = Modifier.fillMaxWidth()) {
-                ButtonLabel(Icons.Outlined.AccountCircle, R.string.sign_in_google)
-            }
-        }
-        else -> {
-            Text(cloud.account.displayName ?: stringResource(R.string.google_account), style = MaterialTheme.typography.titleMedium)
-            cloud.account.email?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            InfoBlock(R.string.cloud_sync, R.string.cloud_sync_disclosure, Icons.Outlined.CloudSync)
-            SwitchRow(R.string.cloud_sync_enabled, cloud.syncEnabled, Icons.Outlined.CloudSync, onCloudSyncChange)
-            if (cloud.syncEnabled) {
-                OutlinedButton(onClick = onCloudSync, enabled = !cloud.busy, modifier = Modifier.fillMaxWidth()) {
-                    ButtonLabel(Icons.Outlined.CloudSync, R.string.sync_now)
-                }
-            }
-            SectionLabel(Icons.Outlined.People, R.string.partner_sharing)
-            Text(stringResource(R.string.partner_sharing_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Button(
-                onClick = onCreateInvitation,
-                enabled = cloud.syncEnabled && !cloud.busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) { ButtonLabel(Icons.Outlined.People, R.string.create_partner_code) }
-            cloud.inviteToken?.let { token ->
-                SelectionContainer {
-                    Text(token, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                }
-                Text(stringResource(R.string.partner_code_expiry), style = MaterialTheme.typography.bodySmall)
-            }
-            OutlinedTextField(
-                value = partnerCode,
-                onValueChange = onPartnerCodeChange,
-                label = { Text(stringResource(R.string.partner_code)) },
-                leadingIcon = { Icon(Icons.Outlined.People, contentDescription = null) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            OutlinedButton(
-                onClick = onAcceptInvitation,
-                enabled = partnerCode.length == 22 && !cloud.busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) { ButtonLabel(Icons.Outlined.CalendarMonth, R.string.open_partner_calendar) }
-            cloud.partnerCalendars.forEach { partner ->
-                Text(
-                    stringResource(R.string.partner_calendar_available, partner.ownerName),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (cloud.readerUids.isNotEmpty()) {
-                SectionLabel(Icons.Outlined.People, R.string.partner_access)
-                cloud.readerUids.forEach { readerUid ->
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text("…${readerUid.takeLast(6)}", modifier = Modifier.weight(1f))
-                        TextButton(onClick = { onRevokePartner(readerUid) }) {
-                            Text(stringResource(R.string.revoke_access), color = MaterialTheme.colorScheme.error)
-                        }
-                    }
-                }
-            }
-            OutlinedButton(onClick = onGoogleSignOut, enabled = !cloud.busy, modifier = Modifier.fillMaxWidth()) {
-                ButtonLabel(Icons.Outlined.AccountCircle, R.string.sign_out)
-            }
-            TextButton(onClick = { showDeleteConfirm = true }, enabled = !cloud.busy) {
-                Icon(Icons.Outlined.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.delete_cloud_copy), color = MaterialTheme.colorScheme.error)
-            }
-        }
-    }
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.delete_cloud_copy)) },
-            text = { Text(stringResource(R.string.delete_cloud_copy_body)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDeleteConfirm = false
-                    onDeleteCloudCopy()
-                }) { Text(stringResource(R.string.confirm_delete), color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
-            },
-        )
     }
 }
 
@@ -959,40 +742,6 @@ private fun SettingsCategoryRow(icon: ImageVector, @StringRes title: Int, @Strin
         }
         Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
     }
-}
-
-@Composable
-private fun MyCalendarPreviewDialog(
-    preview: MyCalendarPreview,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    val locale = currentLocale()
-    val formatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.my_calendar_preview_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(
-                    R.string.my_calendar_preview_body,
-                    preview.logs.size,
-                    preview.firstDay.format(formatter),
-                    preview.lastDay.format(formatter),
-                ))
-                if (preview.unsupportedDetails > 0) {
-                    Text(
-                        stringResource(R.string.my_calendar_preview_preserved, preview.unsupportedDetails),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-                Text(stringResource(R.string.my_calendar_merge_notice), style = MaterialTheme.typography.bodySmall)
-            }
-        },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.merge_import)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
-    )
 }
 
 @Composable
@@ -1105,13 +854,6 @@ private fun SettingsLink(icon: ImageVector, @StringRes label: Int, onClick: () -
         Spacer(Modifier.weight(1f))
         Icon(Icons.Outlined.ChevronRight, contentDescription = null)
     }
-}
-
-@Composable
-private fun ButtonLabel(icon: ImageVector, @StringRes label: Int) {
-    Icon(icon, contentDescription = null)
-    Spacer(Modifier.width(8.dp))
-    Text(stringResource(label))
 }
 
 @Composable
@@ -1288,38 +1030,6 @@ private val symptomLabels = listOf(
     Symptom.CRAVINGS to R.string.symptom_cravings,
     Symptom.BACKACHE to R.string.symptom_backache,
 )
-
-@Composable
-private fun PasswordDialog(
-    @StringRes title: Int,
-    @StringRes extraMessage: Int? = null,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
-) {
-    var password by remember { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it.take(128) },
-                    label = { Text(stringResource(R.string.password)) },
-                    leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null) },
-                    visualTransformation = PasswordVisualTransformation(),
-                    singleLine = true,
-                )
-                Text(stringResource(R.string.password_help), style = MaterialTheme.typography.bodySmall)
-                extraMessage?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(password) }, enabled = password.length >= 8) { Text(stringResource(R.string.continue_action)) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
-    )
-}
 
 @Composable
 private fun InfoDialogContent(dialog: InfoDialog, onDismiss: () -> Unit) {

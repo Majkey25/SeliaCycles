@@ -1,112 +1,57 @@
-# Selia Cycles closed beta acceptance
+# Selia Cycles 0.3.0-beta.1 acceptance
 
-Date: August 28, 2026
+Date: 2026-08-28
 
-## Environment
+## Build evidence
 
-- Device: dedicated `SeliaCycles_QA` AVD on `emulator-5554`.
-- OS: Android 16, API 36, Google Play system image.
-- Physical device: Huawei YAL-L21 on `BQLDU19927002646`.
-- Physical OS: Android 10, API 29, 1080 x 2340.
-- Package: `com.majkeylab.seliacycles`.
+- Command: `gradlew.bat clean :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:bundleRelease --console=plain`
+- Result: `BUILD SUCCESSFUL`; 112 tasks, 110 executed and 2 up-to-date.
+- Predictor tests: 12 run, 0 failures, 0 errors, 0 skipped.
+- Android Lint: 0 errors, 7 update/toolchain warnings.
+- Locale resource sets: 139 named strings/plurals in each of English, Czech, Slovak, German, Polish, and Spanish.
+- `git diff --check`: no whitespace errors.
+- Firebase, Credential Manager, Google ID, and Health Connect are absent from `debugRuntimeClasspath`.
+- Merged release manifest has no `INTERNET`, `ACCESS_NETWORK_STATE`, or health-data permission.
 
-## Live scenarios
+## Artifacts
 
-### Daily log and persistence
+- Debug APK SHA-256: `FC0F2C9E8936B30FB4E50FEEDA9A49E8F5A51B03AE3CBD72B32B061EBAF3AA31`
+- Signed release AAB SHA-256: `42981904C255E6F273558443F94103B482EC0747EA6039BB47CAB9837E0B123B`
+- APK signature scheme v2 verified.
+- AAB: `jar verified`.
+- Microsoft Defender custom scans completed with no matching threat detection.
 
-1. Opened **Log today**.
-2. Enabled period bleeding.
-3. Selected medium flow, okay mood, cramps, and a note.
-4. Saved the log.
-5. Confirmed that Today showed September 25, 2026 and **In 28 days**.
-6. Force-stopped and relaunched the app.
-7. Confirmed that the record and estimate remained.
+## Physical Huawei QA
 
-Result: passed.
+Target: `BQLDU19927002646`, Huawei YAL-L21, Android 10. Every ADB command was pinned to this serial. No emulator was used.
 
-### Encrypted backup failure and recovery
+### Upgrade and data preservation
 
-1. Created `SeliaCycles-2026-08-28.seliabackup` through Android DocumentsUI with a test password.
-2. Confirmed that the file was 336 bytes and did not crash the app.
-3. Restored with a wrong password.
-4. Confirmed the explicit rejection message and unchanged current data.
-5. Restored with the correct password.
-6. Confirmed **Backup restored** and the original Today record.
+- Installed with `adb -s BQLDU19927002646 install --user 0 -r ...`.
+- Version changed from `0.2.0-beta.1` / code 2 to `0.3.0-beta.1` / code 3.
+- `firstInstallTime` remained `2026-08-28 14:15:59`.
+- Existing database remained present at 28,672 bytes.
+- History remained 28 recorded starts; latest real start remained August 28, 2026.
 
-Result: passed.
+### Prediction behavior
 
-### Health Connect denial
+- Previous build on the same data: 44-day average and September 26–October 26 window.
+- New build: 29-day average and September 25–27 window.
+- This month shows `Recorded start: Aug 28, 2026`.
+- Next month shows `Estimated start: Sep 25, 2026 – Sep 27, 2026`.
+- Added an adjacent real bleeding start on August 27: cycle day changed to 2 and forecast re-anchored to September 24–26.
+- Deleted the temporary August 27 record: start, cycle day, and September 25–27 forecast returned exactly. History remained 28 starts.
 
-1. Opened **Import data** after reading the prominent disclosure.
-2. Left first-run Health Connect onboarding with **Go back**.
-3. Confirmed **Permission denied. No data was imported.**
-4. Confirmed no crash and no local data loss.
+### Negative and regression paths
 
-Result: passed.
+- Predictions OFF hides forecast rows and now says `Predictions are turned off in Settings.`
+- Predictions were restored ON and the September 25–27 estimate returned.
+- Calendar day edit, Period selection, Save, Delete record, History, Settings navigation, System theme, and System language were exercised live.
+- Settings contains five clear categories. Data and transfer contains only device transfer information and Delete all data.
+- Cold launch completed in 1,602 ms, process remained running, and the crash buffer contained no Selia Cycles crash.
+- Installed requested permissions contain notifications and WorkManager scheduling permissions only; no internet, network-state, or health-data permission.
 
-### Nearby workflows
+## Screenshots
 
-- Navigated Today, Calendar, History, and Settings.
-- Verified the recorded calendar marker and history entry.
-- Switched Czech and English at runtime.
-- Switched dark and light themes.
-- Granted notification permission, enabled reminders, and confirmed a WorkManager system job for the package.
-- Disabled the reminder after the check.
-- Checked the emulator crash buffer after the flows. It was empty.
-
-Result: passed.
-
-## Physical phone verification
-
-- Installed the debug APK only on `BQLDU19927002646` and launched `MainActivity`.
-- Logged period bleeding, medium flow, okay mood, cramps, headache, and a note.
-- Confirmed the September 25 prediction, cold-relaunch persistence, calendar marker, and history entry.
-- Switched to Czech and dark theme; verified the phone screenshots visually.
-- Enabled reminders and confirmed the package's periodic WorkManager job in `dumpsys jobscheduler`.
-- Confirmed the explicit Health Connect unavailable message on Android 10 without a crash.
-- Exported a 350-byte encrypted backup through DocumentsUI.
-- Confirmed wrong-password rejection without data loss, then restored successfully with the correct password.
-- Checked the AndroidRuntime error buffer after the flows. It was empty.
-
-Result: passed.
-
-### Redesign and My Calendar migration
-
-- Verified the gradient Today hero, seven-day direct editing, primary add/edit action, persistent Save bar, and icon-led settings categories at 1080 x 2340.
-- Verified direct flow selection plus mood, symptoms, note, weight, basal temperature, sleep, and protected-intimacy persistence.
-- Switched English, Spanish, Czech, system theme, and dark theme at runtime; all six locale resource sets contain the same 200 entries.
-- Previewed the supplied `My Calendar-2026-08-28-24.pc` without mutation: 184 supported days from January 22, 2022 through April 19, 2026 and 74 preserved source details.
-- Confirmed merge, 28 imported period starts, cold-relaunch persistence, and preservation of the existing August 2026 local record.
-- Selected an unrelated ZIP and confirmed explicit rejection with all 28 starts unchanged.
-- Exported and restored the version 2 encrypted Selia backup with the imported history intact.
-- Removed the temporary measurement record and pushed duplicate `.pc`; moved the generated test backup to Huawei Recently deleted.
-
-Result: passed.
-
-### Partner-sync security
-
-- Verified nine Firestore Emulator scenarios: owner writes, payload validation, immutable identity, anonymous/unrelated denial, reader-only access, transactional one-time invitation, expired invitation denial, owner cleanup, and revocation.
-- Verified default partner payload keys are only `day`, `bleeding`, and `flow`.
-- Verified the no-config phone build reports Google sync unavailable while all offline features remain usable.
-- Live Google sign-in and two-account sync remain gated on verified Firebase/OAuth configuration.
-
-Result: local security gates passed; live account flow pending configuration.
-
-## Store assets
-
-- [Today](../play-store/assets/screenshots/en/01-home.png)
-- [Calendar](../play-store/assets/screenshots/en/02-calendar.png)
-- [History](../play-store/assets/screenshots/en/03-history.png)
-- [Settings](../play-store/assets/screenshots/en/04-settings.png)
-- [Physical phone home](screenshots/phone-android10-home.png)
-- [Physical phone calendar](screenshots/phone-android10-calendar.png)
-- [Physical phone settings](screenshots/phone-android10-settings.png)
-- [Physical phone Czech dark settings](screenshots/phone-android10-settings-cs-dark.png)
-- [Physical phone backup and import settings](screenshots/phone-android10-settings-low.png)
-- [Redesigned Today](screenshots/phone-redesign-home.png)
-- [Icon-led daily log](screenshots/phone-icons-log.png)
-- [Icon-led settings](screenshots/phone-icons-settings.png)
-- [Czech dark appearance and languages](screenshots/phone-redesign-settings-cs-dark.png)
-- [My Calendar import preview](screenshots/phone-redesign-import-preview.png)
-- [512 px icon](../play-store/assets/icon-512.png)
-- [Feature graphic](../play-store/assets/feature-graphic-1024x500.png)
+- [Current and next month prediction](screenshots/phone-local-prediction-home.png)
+- [Local data and device transfer settings](screenshots/phone-local-data-settings.png)
