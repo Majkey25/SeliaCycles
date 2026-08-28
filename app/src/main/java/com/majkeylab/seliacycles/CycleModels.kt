@@ -20,6 +20,8 @@ enum class Symptom {
 
 enum class AppTheme { SYSTEM, LIGHT, DARK }
 
+enum class Intimacy { SEX, PROTECTED }
+
 data class DayLog(
     val day: LocalDate,
     val bleeding: Boolean = false,
@@ -27,21 +29,59 @@ data class DayLog(
     val mood: Mood? = null,
     val symptoms: Set<Symptom> = emptySet(),
     val note: String = "",
+    val weightKg: Double? = null,
+    val temperatureC: Double? = null,
+    val sleepHours: Double? = null,
+    val intimacy: Intimacy? = null,
+    val importedDetails: String = "",
 ) {
     init {
         require(day in MIN_DATE..MAX_DATE)
         require(note.length <= MAX_NOTE_LENGTH)
+        require(importedDetails.length <= MAX_IMPORTED_DETAILS_LENGTH)
+        require(weightKg == null || weightKg.isFinite() && weightKg in MIN_WEIGHT_KG..MAX_WEIGHT_KG)
+        require(temperatureC == null || temperatureC.isFinite() && temperatureC in MIN_TEMPERATURE_C..MAX_TEMPERATURE_C)
+        require(sleepHours == null || sleepHours.isFinite() && sleepHours in 0.0..24.0)
         require((bleeding && flow != Flow.NONE) || (!bleeding && flow == Flow.NONE))
     }
 
     val isEmpty: Boolean
-        get() = !bleeding && mood == null && symptoms.isEmpty() && note.isBlank()
+        get() = !bleeding && mood == null && symptoms.isEmpty() && note.isBlank() && weightKg == null &&
+            temperatureC == null && sleepHours == null && intimacy == null && importedDetails.isBlank()
 
     companion object {
         const val MAX_NOTE_LENGTH = 1_000
+        const val MAX_IMPORTED_DETAILS_LENGTH = 2_000
+        const val MIN_WEIGHT_KG = 15.0
+        const val MAX_WEIGHT_KG = 400.0
+        const val MIN_TEMPERATURE_C = 30.0
+        const val MAX_TEMPERATURE_C = 45.0
         val MIN_DATE: LocalDate = LocalDate.of(1900, 1, 1)
         val MAX_DATE: LocalDate = LocalDate.of(2100, 12, 31)
     }
+}
+
+fun mergeDayLogs(current: DayLog, incoming: DayLog): DayLog {
+    require(current.day == incoming.day)
+    val bleeding = current.bleeding || incoming.bleeding
+    val flow = when {
+        !bleeding -> Flow.NONE
+        current.bleeding && current.flow != Flow.UNKNOWN -> current.flow
+        incoming.bleeding -> incoming.flow.takeUnless { it == Flow.NONE } ?: Flow.UNKNOWN
+        else -> Flow.UNKNOWN
+    }
+    return current.copy(
+        bleeding = bleeding,
+        flow = flow,
+        mood = current.mood ?: incoming.mood,
+        symptoms = current.symptoms + incoming.symptoms,
+        note = current.note.takeIf(String::isNotBlank) ?: incoming.note,
+        weightKg = current.weightKg ?: incoming.weightKg,
+        temperatureC = current.temperatureC ?: incoming.temperatureC,
+        sleepHours = current.sleepHours ?: incoming.sleepHours,
+        intimacy = current.intimacy ?: incoming.intimacy,
+        importedDetails = current.importedDetails.takeIf(String::isNotBlank) ?: incoming.importedDetails,
+    )
 }
 
 data class AppSettings(

@@ -18,6 +18,11 @@ class BackupCodecTest {
                     mood = Mood.OKAY,
                     symptoms = setOf(Symptom.CRAMPS, Symptom.FATIGUE),
                     note = "Private note",
+                    weightKg = 68.4,
+                    temperatureC = 36.6,
+                    sleepHours = 7.5,
+                    intimacy = Intimacy.PROTECTED,
+                    importedDetails = "My Calendar mood code: 65",
                 ),
                 DayLog(
                     day = LocalDate.of(2026, 8, 29),
@@ -40,5 +45,21 @@ class BackupCodecTest {
         assertFailsWith<BackupFormatException> {
             BackupCodec.decrypt(encrypted, "wrong password".toCharArray())
         }
+    }
+
+    @Test
+    fun readsVersionOneJson() {
+        val backup = BackupCodec.fromJson(
+            """{"version":1,"settings":{"cycleLength":28,"periodLength":5,"firstDayOfWeek":"MONDAY","predictionsEnabled":true,"reminderEnabled":false,"reminderDays":2,"theme":"SYSTEM"},"logs":[{"day":"2026-08-28","bleeding":true,"flow":"MEDIUM","mood":"GOOD","symptoms":["CRAMPS"],"note":"kept"}]}""",
+        )
+
+        assertEquals(DayLog(
+            day = LocalDate.of(2026, 8, 28),
+            bleeding = true,
+            flow = Flow.MEDIUM,
+            mood = Mood.GOOD,
+            symptoms = setOf(Symptom.CRAMPS),
+            note = "kept",
+        ), backup.logs.single())
     }
 }

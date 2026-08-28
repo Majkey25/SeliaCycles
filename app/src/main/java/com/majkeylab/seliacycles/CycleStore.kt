@@ -18,7 +18,12 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
                 flow TEXT NOT NULL,
                 mood TEXT,
                 symptoms TEXT NOT NULL,
-                note TEXT NOT NULL
+                note TEXT NOT NULL,
+                weight_kg REAL,
+                temperature_c REAL,
+                sleep_hours REAL,
+                intimacy TEXT,
+                imported_details TEXT NOT NULL
             )
             """.trimIndent(),
         )
@@ -39,7 +44,15 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         database.insertOrThrow("settings", null, settingsValues(AppSettings()))
     }
 
-    override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) {
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN weight_kg REAL")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN temperature_c REAL")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN sleep_hours REAL")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN intimacy TEXT")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN imported_details TEXT NOT NULL DEFAULT ''")
+        }
+    }
 
     fun load(): CycleBackup = CycleBackup(
         logs = readLogs(readableDatabase),
@@ -75,18 +88,7 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         val merged = readLogs(this).associateByTo(mutableMapOf(), DayLog::day)
         imported.forEach { incoming ->
             val current = merged[incoming.day]
-            merged[incoming.day] = if (current == null) {
-                incoming
-            } else {
-                current.copy(
-                    bleeding = current.bleeding || incoming.bleeding,
-                    flow = when {
-                        incoming.flow != Flow.UNKNOWN -> incoming.flow
-                        current.flow != Flow.NONE -> current.flow
-                        else -> Flow.UNKNOWN
-                    },
-                )
-            }
+            merged[incoming.day] = current?.let { mergeDayLogs(it, incoming) } ?: incoming
         }
         require(merged.size <= CycleBackup.MAX_LOGS)
         imported.map(DayLog::day).distinct().forEach { day ->
@@ -140,6 +142,11 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             ?.mapTo(mutableSetOf(), Symptom::valueOf)
             .orEmpty(),
         note = getString(5),
+        weightKg = getNullableDouble(6),
+        temperatureC = getNullableDouble(7),
+        sleepHours = getNullableDouble(8),
+        intimacy = getString(9)?.let(Intimacy::valueOf),
+        importedDetails = getString(10),
     )
 
     private fun logValues(log: DayLog): ContentValues = ContentValues().apply {
@@ -149,7 +156,14 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         put("mood", log.mood?.name)
         put("symptoms", log.symptoms.map(Symptom::name).sorted().joinToString(","))
         put("note", log.note)
+        put("weight_kg", log.weightKg)
+        put("temperature_c", log.temperatureC)
+        put("sleep_hours", log.sleepHours)
+        put("intimacy", log.intimacy?.name)
+        put("imported_details", log.importedDetails)
     }
+
+    private fun Cursor.getNullableDouble(index: Int): Double? = if (isNull(index)) null else getDouble(index)
 
     private fun settingsValues(settings: AppSettings): ContentValues = ContentValues().apply {
         put("id", 1)
@@ -173,8 +187,20 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
 
     companion object {
         private const val DATABASE_NAME = "selia-cycles.db"
-        private const val DATABASE_VERSION = 1
-        private val LOG_COLUMNS = arrayOf("day", "bleeding", "flow", "mood", "symptoms", "note")
+        private const val DATABASE_VERSION = 2
+        private val LOG_COLUMNS = arrayOf(
+            "day",
+            "bleeding",
+            "flow",
+            "mood",
+            "symptoms",
+            "note",
+            "weight_kg",
+            "temperature_c",
+            "sleep_hours",
+            "intimacy",
+            "imported_details",
+        )
         private val SETTINGS_COLUMNS = arrayOf(
             "cycle_length",
             "period_length",

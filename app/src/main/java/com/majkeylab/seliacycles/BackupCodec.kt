@@ -80,7 +80,7 @@ object BackupCodec {
     }
 
     private fun toJson(backup: CycleBackup): String = JSONObject()
-        .put("version", 1)
+        .put("version", 2)
         .put("settings", JSONObject()
             .put("cycleLength", backup.settings.cycleLength)
             .put("periodLength", backup.settings.periodLength)
@@ -97,14 +97,20 @@ object BackupCodec {
                     .put("flow", log.flow.name)
                     .put("mood", log.mood?.name ?: JSONObject.NULL)
                     .put("symptoms", JSONArray(log.symptoms.map(Symptom::name).sorted()))
-                    .put("note", log.note))
+                    .put("note", log.note)
+                    .put("weightKg", log.weightKg ?: JSONObject.NULL)
+                    .put("temperatureC", log.temperatureC ?: JSONObject.NULL)
+                    .put("sleepHours", log.sleepHours ?: JSONObject.NULL)
+                    .put("intimacy", log.intimacy?.name ?: JSONObject.NULL)
+                    .put("importedDetails", log.importedDetails))
             }
         })
         .toString()
 
-    private fun fromJson(text: String): CycleBackup {
+    internal fun fromJson(text: String): CycleBackup {
         val root = JSONObject(text)
-        if (root.getInt("version") != 1) throw BackupFormatException("Unsupported backup version")
+        val version = root.getInt("version")
+        if (version !in 1..2) throw BackupFormatException("Unsupported backup version")
         val settingsJson = root.getJSONObject("settings")
         val logsJson = root.getJSONArray("logs")
         if (logsJson.length() > CycleBackup.MAX_LOGS) throw BackupFormatException("Backup contains too many records")
@@ -119,13 +125,18 @@ object BackupCodec {
                     day = LocalDate.parse(item.getString("day")),
                     bleeding = item.getBoolean("bleeding"),
                     flow = Flow.valueOf(item.getString("flow")),
-                    mood = item.optString("mood").takeIf(String::isNotEmpty)?.let(Mood::valueOf),
+                    mood = item.optNullableString("mood")?.let(Mood::valueOf),
                     symptoms = buildSet {
                         repeat(symptomsJson.length()) { symptomIndex ->
                             add(Symptom.valueOf(symptomsJson.getString(symptomIndex)))
                         }
                     },
                     note = item.getString("note"),
+                    weightKg = item.optNullableDouble("weightKg"),
+                    temperatureC = item.optNullableDouble("temperatureC"),
+                    sleepHours = item.optNullableDouble("sleepHours"),
+                    intimacy = item.optNullableString("intimacy")?.let(Intimacy::valueOf),
+                    importedDetails = item.optString("importedDetails"),
                 ))
             }
         }
@@ -142,4 +153,10 @@ object BackupCodec {
             ),
         )
     }
+
+    private fun JSONObject.optNullableDouble(name: String): Double? =
+        if (!has(name) || isNull(name)) null else getDouble(name)
+
+    private fun JSONObject.optNullableString(name: String): String? =
+        if (!has(name) || isNull(name)) null else getString(name).takeIf(String::isNotEmpty)
 }
