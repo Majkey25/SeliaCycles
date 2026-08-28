@@ -49,9 +49,11 @@ class MyCalendarBackupTest {
 
     @Test
     fun rejectsInvalidDatabaseHeader() {
-        assertFailsWith<MyCalendarFormatException> {
+        val error = assertFailsWith<MyCalendarFormatException> {
             MyCalendarContainerReader.read(ByteArrayInputStream(fixture("cloud.db" to "not sqlite".encodeToByteArray())))
         }
+
+        assertEquals(MyCalendarFailure.UNSUPPORTED, error.failure)
     }
 
     private fun fixture(vararg entries: Pair<String, ByteArray>): ByteArray {

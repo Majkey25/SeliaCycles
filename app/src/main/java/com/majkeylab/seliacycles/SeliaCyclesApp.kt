@@ -124,6 +124,9 @@ fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
     val openBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) importUri = uri
     }
+    val openMyCalendar = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) viewModel.inspectMyCalendar(uri)
+    }
     val healthPermission = rememberLauncherForActivityResult(
         PermissionController.createRequestPermissionResultContract(),
     ) { granted ->
@@ -173,6 +176,7 @@ fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
                         onSave = viewModel::saveSettings,
                         onCreateBackup = { showExportPassword = true },
                         onRestoreBackup = { openBackup.launch(arrayOf("application/octet-stream", "*/*")) },
+                        onMyCalendarImport = { openMyCalendar.launch(arrayOf("application/octet-stream", "*/*")) },
                         onHealthImport = {
                             if (viewModel.healthConnectStatus == HealthConnectClient.SDK_AVAILABLE) {
                                 healthPermission.launch(HealthConnectImporter.permissions)
@@ -230,6 +234,13 @@ fun SeliaCyclesApp(state: AppState, viewModel: MainViewModel) {
                 importUri = null
                 viewModel.restoreBackup(uri, password)
             },
+        )
+    }
+    state.myCalendarPreview?.let { preview ->
+        MyCalendarPreviewDialog(
+            preview = preview,
+            onDismiss = viewModel::cancelMyCalendarImport,
+            onConfirm = viewModel::confirmMyCalendarImport,
         )
     }
     infoDialog?.let { dialog ->
@@ -448,6 +459,7 @@ private fun SettingsScreen(
     onSave: (AppSettings) -> Unit,
     onCreateBackup: () -> Unit,
     onRestoreBackup: () -> Unit,
+    onMyCalendarImport: () -> Unit,
     onHealthImport: () -> Unit,
     onReminderChange: (Boolean) -> Unit,
     onInfo: (InfoDialog) -> Unit,
@@ -487,6 +499,10 @@ private fun SettingsScreen(
         InfoBlock(R.string.cloud_backup, R.string.cloud_backup_body)
         Button(onClick = onCreateBackup, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(stringResource(R.string.create_backup)) }
         OutlinedButton(onClick = onRestoreBackup, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(stringResource(R.string.restore_backup)) }
+        InfoBlock(R.string.my_calendar_import, R.string.my_calendar_import_body)
+        OutlinedButton(onClick = onMyCalendarImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
+            Text(stringResource(R.string.my_calendar_import_action))
+        }
         InfoBlock(R.string.health_connect, R.string.health_connect_body)
         OutlinedButton(onClick = onHealthImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(stringResource(R.string.import_data)) }
         InfoBlock(R.string.other_apps, R.string.other_apps_body)
@@ -499,6 +515,40 @@ private fun SettingsScreen(
         SettingsLink(R.string.about_cycle) { onInfo(InfoDialog.CYCLE) }
         Spacer(Modifier.height(16.dp))
     }
+}
+
+@Composable
+private fun MyCalendarPreviewDialog(
+    preview: MyCalendarPreview,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    val locale = currentLocale()
+    val formatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.my_calendar_preview_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(
+                    R.string.my_calendar_preview_body,
+                    preview.logs.size,
+                    preview.firstDay.format(formatter),
+                    preview.lastDay.format(formatter),
+                ))
+                if (preview.unsupportedDetails > 0) {
+                    Text(
+                        stringResource(R.string.my_calendar_preview_preserved, preview.unsupportedDetails),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Text(stringResource(R.string.my_calendar_merge_notice), style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.merge_import)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
 }
 
 @Composable

@@ -19,6 +19,7 @@ data class AppState(
     val backup: CycleBackup = CycleBackup(),
     val loading: Boolean = true,
     val busy: Boolean = false,
+    val myCalendarPreview: MyCalendarPreview? = null,
     @param:StringRes val message: Int? = null,
 ) {
     val logsByDay: Map<java.time.LocalDate, DayLog> = backup.logs.associateBy(DayLog::day)
@@ -33,6 +34,7 @@ data class AppState(
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val store = CycleStore(application)
     private val healthConnect = HealthConnectImporter(application)
+    private val myCalendarImporter = MyCalendarImporter(application)
     private val storeMutex = Mutex()
     private val _state = MutableStateFlow(AppState())
     val state = _state.asStateFlow()
@@ -108,6 +110,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun inspectMyCalendar(uri: Uri) = viewModelScope.launch {
+        _state.value = _state.value.copy(busy = true, message = null, myCalendarPreview = null)
+        val result = runCatching {
+            withContext(Dispatchers.IO) {
+                getApplication<Application>().contentResolver.openInputStream(uri)?.use(myCalendarImporter::inspect)
+                    ?: error("Cannot open My Calendar backup")
+            }
+        }
+        result.fold(
+            onSuccess = { preview -> _state.value = _state.value.copy(busy = false, myCalendarPreview = preview) },
+            onFailure = { error ->
+                setResult(when ((error as? MyCalendarFormatException)?.failure) {
+                    MyCalendarFailure.UNSUPPORTED -> R.string.my_calendar_import_unsupported
+                    MyCalendarFailure.EMPTY -> R.string.my_calendar_import_empty
+                    MyCalendarFailure.DAMAGED, null -> R.string.my_calendar_import_damaged
+                })
+            },
+        )
+    }
+
+    fun confirmMyCalendarImport() {
+        val preview = _state.value.myCalendarPreview ?: return
+        runStoreAction(R.string.my_calendar_import_complete) {
+            store.mergeImported(preview.logs)
+        }
+    }
+
+    fun cancelMyCalendarImport() {
+        _state.value = _state.value.copy(myCalendarPreview = null)
+    }
+
     fun clearAll() = runStoreAction {
         store.clearAll()
         ReminderWorker.sync(getApplication(), AppSettings())
@@ -131,10 +164,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(message = null)
     }
 
-    private fun runStoreAction(action: suspend () -> Unit) = viewModelScope.launch {
+    private fun runStoreAction(@StringRes successMessage: Int? = null, action: suspend () -> Unit) = viewModelScope.launch {
         setBusy(true)
         val result = runCatching { withContext(Dispatchers.IO) { storeMutex.withLock { action() } } }
-        reload(if (result.isFailure) R.string.operation_failed else null)
+        reload(if (result.isFailure) R.string.operation_failed else successMessage)
     }
 
     private fun reload(@StringRes message: Int? = null) = viewModelScope.launch {

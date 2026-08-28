@@ -14,7 +14,13 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.zip.ZipInputStream
 
-class MyCalendarFormatException(message: String, cause: Throwable? = null) : Exception(message, cause)
+enum class MyCalendarFailure { UNSUPPORTED, DAMAGED, EMPTY }
+
+class MyCalendarFormatException(
+    message: String,
+    cause: Throwable? = null,
+    val failure: MyCalendarFailure = MyCalendarFailure.DAMAGED,
+) : Exception(message, cause)
 
 data class MyCalendarContainer(val database: ByteArray, val generation: String?)
 
@@ -29,7 +35,10 @@ object MyCalendarContainerReader {
     fun read(input: InputStream): MyCalendarContainer = try {
         ObjectInputStream(LimitedInputStream(input, MAX_FILE_BYTES)).use { objectInput ->
             if (objectInput.readInt() != -1 || objectInput.readInt() != 1 || objectInput.readInt() != 0) {
-                throw MyCalendarFormatException("Unsupported My Calendar metadata")
+                throw MyCalendarFormatException(
+                    "Unsupported My Calendar metadata",
+                    failure = MyCalendarFailure.UNSUPPORTED,
+                )
             }
             readZip(objectInput)
         }
@@ -65,11 +74,17 @@ object MyCalendarContainerReader {
                 zip.closeEntry()
             }
         }
-        val verifiedDatabase = database ?: throw MyCalendarFormatException("My Calendar database is missing")
+        val verifiedDatabase = database ?: throw MyCalendarFormatException(
+            "My Calendar database is missing",
+            failure = MyCalendarFailure.UNSUPPORTED,
+        )
         if (verifiedDatabase.size < sqliteHeader.size ||
             !verifiedDatabase.copyOfRange(0, sqliteHeader.size).contentEquals(sqliteHeader)
         ) {
-            throw MyCalendarFormatException("Invalid My Calendar database")
+            throw MyCalendarFormatException(
+                "Invalid My Calendar database",
+                failure = MyCalendarFailure.UNSUPPORTED,
+            )
         }
         return MyCalendarContainer(verifiedDatabase, generation)
     }
@@ -191,7 +206,10 @@ object MyCalendarTransformer {
             )
             if (!log.isEmpty) add(logs, log)
         }
-        if (logs.isEmpty()) throw MyCalendarFormatException("No supported My Calendar records")
+        if (logs.isEmpty()) throw MyCalendarFormatException(
+            "No supported My Calendar records",
+            failure = MyCalendarFailure.EMPTY,
+        )
         val sorted = logs.values.sortedBy(DayLog::day)
         return MyCalendarPreview(sorted, sorted.first().day, sorted.last().day, unsupported, generation)
     }
@@ -301,7 +319,10 @@ class MyCalendarImporter(context: Context) {
         val actual = database.rawQuery("PRAGMA table_info($table)", null).use { cursor ->
             buildSet { while (cursor.moveToNext()) add(cursor.getString(1)) }
         }
-        if (!actual.containsAll(required)) throw MyCalendarFormatException("Unsupported My Calendar database")
+        if (!actual.containsAll(required)) throw MyCalendarFormatException(
+            "Unsupported My Calendar database",
+            failure = MyCalendarFailure.UNSUPPORTED,
+        )
     }
 
     private fun Cursor.getNullableDouble(index: Int): Double? = if (isNull(index)) null else getDouble(index)

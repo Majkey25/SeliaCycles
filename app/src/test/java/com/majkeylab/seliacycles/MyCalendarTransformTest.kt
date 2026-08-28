@@ -137,9 +137,10 @@ class MyCalendarTransformTest {
         assertFailsWith<MyCalendarFormatException> {
             MyCalendarTransformer.transform(null, listOf(MyCalendarPeriodRow(20260828, 15)), emptyList())
         }
-        assertFailsWith<MyCalendarFormatException> {
+        val emptyError = assertFailsWith<MyCalendarFormatException> {
             MyCalendarTransformer.transform(null, emptyList(), listOf(MyCalendarNoteRow(20260828)))
         }
+        assertEquals(MyCalendarFailure.EMPTY, emptyError.failure)
     }
 
     @Test
