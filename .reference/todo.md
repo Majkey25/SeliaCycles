@@ -6,6 +6,6 @@
 - [x] Signed AAB
 - [x] Complete physical Huawei live flows
 - [x] Update QA screenshots and evidence
-- [ ] Commit and push
-- [ ] Verify GitHub CI
-- [ ] Upload to Google Play Closed testing
+- [x] Commit and push
+- [x] Verify GitHub CI
+- [ ] Confirm and submit Google Play declarations, listing, signed AAB, and Closed testing release
