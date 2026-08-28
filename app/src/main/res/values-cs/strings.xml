@@ -67,6 +67,10 @@
     <string name="language_system">Podle systému</string>
     <string name="language_english">English</string>
     <string name="language_czech">Čeština</string>
+    <string name="language_slovak">Slovenčina</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_spanish">Español</string>
     <string name="section_reminders">Připomínky</string>
     <string name="period_reminder">Připomínka menstruace</string>
     <string name="remind_before">Dní před odhadem</string>

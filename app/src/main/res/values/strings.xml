@@ -67,6 +67,10 @@
     <string name="language_system">System</string>
     <string name="language_english">English</string>
     <string name="language_czech">Čeština</string>
+    <string name="language_slovak">Slovenčina</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_spanish">Español</string>
     <string name="section_reminders">Reminders</string>
     <string name="period_reminder">Period reminder</string>
     <string name="remind_before">Days before estimate</string>

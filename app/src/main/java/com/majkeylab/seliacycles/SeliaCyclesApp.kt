@@ -799,7 +799,15 @@ private fun LanguageRow() {
     val current = AppCompatDelegate.getApplicationLocales().get(0)?.language.orEmpty()
     ChoiceRow(
         label = R.string.language,
-        choices = listOf("" to R.string.language_system, "en" to R.string.language_english, "cs" to R.string.language_czech),
+        choices = listOf(
+            "" to R.string.language_system,
+            "en" to R.string.language_english,
+            "cs" to R.string.language_czech,
+            "sk" to R.string.language_slovak,
+            "de" to R.string.language_german,
+            "pl" to R.string.language_polish,
+            "es" to R.string.language_spanish,
+        ),
         selected = current,
     ) { language -> AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language)) }
 }
