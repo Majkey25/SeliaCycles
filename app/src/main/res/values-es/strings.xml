@@ -24,6 +24,7 @@
     <plurals name="period_late"><item quantity="one">1 día después de lo previsto</item><item quantity="other">%d días después de lo previsto</item></plurals>
     <string name="no_period_data">Registra tu primer periodo para iniciar las estimaciones.</string>
     <string name="log_today">Registrar hoy</string>
+    <string name="edit_today">Editar el registro de hoy</string>
     <string name="today_logged">Hoy está registrado</string>
     <string name="estimate_notice">Estimación basada en tu historial. No es asesoramiento médico ni anticoncepción.</string>
     <string name="calendar_heading">Calendario</string>

@@ -24,6 +24,7 @@
     <plurals name="period_late"><item quantity="one">1 Tag später als geschätzt</item><item quantity="other">%d Tage später als geschätzt</item></plurals>
     <string name="no_period_data">Erfasse deine erste Periode, um Schätzungen zu starten.</string>
     <string name="log_today">Heute erfassen</string>
+    <string name="edit_today">Heutigen Eintrag bearbeiten</string>
     <string name="today_logged">Heute ist erfasst</string>
     <string name="estimate_notice">Schätzung aus deinem Verlauf. Keine medizinische Beratung oder Verhütung.</string>
     <string name="calendar_heading">Kalender</string>

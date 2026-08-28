@@ -24,6 +24,7 @@
     <plurals name="period_late"><item quantity="one">O 1 den později než odhad</item><item quantity="few">O %d dny později než odhad</item><item quantity="many">O %d dne později než odhad</item><item quantity="other">O %d dní později než odhad</item></plurals>
     <string name="no_period_data">Zapiš první menstruaci a aplikace začne počítat odhady.</string>
     <string name="log_today">Zapsat dnešek</string>
+    <string name="edit_today">Upravit dnešní záznam</string>
     <string name="today_logged">Dnešek je zapsaný</string>
     <string name="estimate_notice">Odhad vychází z tvé historie. Nejde o lékařskou radu ani antikoncepci.</string>
     <string name="calendar_heading">Kalendář</string>

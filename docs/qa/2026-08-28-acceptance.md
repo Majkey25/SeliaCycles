@@ -70,6 +70,28 @@ Result: passed.
 
 Result: passed.
 
+### Redesign and My Calendar migration
+
+- Verified the gradient Today hero, seven-day direct editing, primary add/edit action, persistent Save bar, and icon-led settings categories at 1080 x 2340.
+- Verified direct flow selection plus mood, symptoms, note, weight, basal temperature, sleep, and protected-intimacy persistence.
+- Switched English, Spanish, Czech, system theme, and dark theme at runtime; all six locale resource sets contain the same 200 entries.
+- Previewed the supplied `My Calendar-2026-08-28-24.pc` without mutation: 184 supported days from January 22, 2022 through April 19, 2026 and 74 preserved source details.
+- Confirmed merge, 28 imported period starts, cold-relaunch persistence, and preservation of the existing August 2026 local record.
+- Selected an unrelated ZIP and confirmed explicit rejection with all 28 starts unchanged.
+- Exported and restored the version 2 encrypted Selia backup with the imported history intact.
+- Removed the temporary measurement record and pushed duplicate `.pc`; moved the generated test backup to Huawei Recently deleted.
+
+Result: passed.
+
+### Partner-sync security
+
+- Verified nine Firestore Emulator scenarios: owner writes, payload validation, immutable identity, anonymous/unrelated denial, reader-only access, transactional one-time invitation, expired invitation denial, owner cleanup, and revocation.
+- Verified default partner payload keys are only `day`, `bleeding`, and `flow`.
+- Verified the no-config phone build reports Google sync unavailable while all offline features remain usable.
+- Live Google sign-in and two-account sync remain gated on verified Firebase/OAuth configuration.
+
+Result: local security gates passed; live account flow pending configuration.
+
 ## Store assets
 
 - [Today](../play-store/assets/screenshots/en/01-home.png)
@@ -81,5 +103,10 @@ Result: passed.
 - [Physical phone settings](screenshots/phone-android10-settings.png)
 - [Physical phone Czech dark settings](screenshots/phone-android10-settings-cs-dark.png)
 - [Physical phone backup and import settings](screenshots/phone-android10-settings-low.png)
+- [Redesigned Today](screenshots/phone-redesign-home.png)
+- [Icon-led daily log](screenshots/phone-icons-log.png)
+- [Icon-led settings](screenshots/phone-icons-settings.png)
+- [Czech dark appearance and languages](screenshots/phone-redesign-settings-cs-dark.png)
+- [My Calendar import preview](screenshots/phone-redesign-import-preview.png)
 - [512 px icon](../play-store/assets/icon-512.png)
 - [Feature graphic](../play-store/assets/feature-graphic-1024x500.png)

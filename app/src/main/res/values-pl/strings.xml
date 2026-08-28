@@ -24,6 +24,7 @@
     <plurals name="period_late"><item quantity="one">1 dzień później niż oszacowano</item><item quantity="few">%d dni później niż oszacowano</item><item quantity="many">%d dni później niż oszacowano</item><item quantity="other">%d dnia później niż oszacowano</item></plurals>
     <string name="no_period_data">Zapisz pierwszą miesiączkę, aby rozpocząć prognozy.</string>
     <string name="log_today">Zapisz dzisiaj</string>
+    <string name="edit_today">Edytuj dzisiejszy wpis</string>
     <string name="today_logged">Dzisiejszy dzień jest zapisany</string>
     <string name="estimate_notice">Oszacowanie na podstawie historii. To nie jest porada medyczna ani antykoncepcja.</string>
     <string name="calendar_heading">Kalendarz</string>

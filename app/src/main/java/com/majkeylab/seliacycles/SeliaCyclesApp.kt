@@ -34,10 +34,42 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Notes
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Backup
+import androidx.compose.material.icons.outlined.Bedtime
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.CloudSync
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.EventAvailable
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.HealthAndSafety
+import androidx.compose.material.icons.outlined.Healing
+import androidx.compose.material.icons.outlined.ImportExport
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Opacity
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Remove
+import androidx.compose.material.icons.outlined.Restore
+import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.SentimentSatisfied
+import androidx.compose.material.icons.outlined.Thermostat
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -110,13 +142,17 @@ private enum class Screen(@param:StringRes val label: Int, val icon: ImageVector
 
 private enum class InfoDialog { PRIVACY, CYCLE }
 
-private enum class SettingsPage(@param:StringRes val title: Int, @param:StringRes val summary: Int) {
-    CYCLE(R.string.settings_cycle, R.string.settings_cycle_summary),
-    APPEARANCE(R.string.settings_appearance, R.string.settings_appearance_summary),
-    REMINDERS(R.string.section_reminders, R.string.settings_reminders_summary),
-    DATA(R.string.settings_data, R.string.settings_data_summary),
-    ACCOUNT(R.string.settings_account, R.string.settings_account_summary),
-    PRIVACY(R.string.section_about, R.string.settings_privacy_summary),
+private enum class SettingsPage(
+    @param:StringRes val title: Int,
+    @param:StringRes val summary: Int,
+    val icon: ImageVector,
+) {
+    CYCLE(R.string.settings_cycle, R.string.settings_cycle_summary, Icons.Outlined.Tune),
+    APPEARANCE(R.string.settings_appearance, R.string.settings_appearance_summary, Icons.Outlined.Palette),
+    REMINDERS(R.string.section_reminders, R.string.settings_reminders_summary, Icons.Outlined.Notifications),
+    DATA(R.string.settings_data, R.string.settings_data_summary, Icons.Outlined.ImportExport),
+    ACCOUNT(R.string.settings_account, R.string.settings_account_summary, Icons.Outlined.People),
+    PRIVACY(R.string.section_about, R.string.settings_privacy_summary, Icons.Outlined.Security),
 }
 
 @Composable
@@ -173,9 +209,7 @@ fun SeliaCyclesApp(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            if (!state.loading && screen != Screen.SETTINGS &&
-                !(screen == Screen.CALENDAR && state.cloud.selectedPartnerUid != null)
-            ) {
+            if (!state.loading && screen == Screen.CALENDAR && state.cloud.selectedPartnerUid == null) {
                 LargeFloatingActionButton(onClick = { selectedDay = LocalDate.now() }) {
                     Icon(
                         Icons.Default.Add,
@@ -381,7 +415,7 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
                 }
             }
         }
-        Text(stringResource(R.string.week_heading), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        SectionLabel(Icons.Outlined.CalendarMonth, R.string.week_heading)
         Row(Modifier.fillMaxWidth()) {
             (-3L..3L).forEach { offset ->
                 val day = today.plusDays(offset)
@@ -394,7 +428,12 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
                 )
             }
         }
-        Text(stringResource(R.string.today_summary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Button(onClick = { onEdit(today) }, modifier = Modifier.fillMaxWidth().height(60.dp)) {
+            Icon(Icons.Default.Add, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(if (todayLog == null) R.string.log_today else R.string.edit_today))
+        }
+        SectionLabel(Icons.Outlined.EventAvailable, R.string.today_summary)
         if (todayLog == null) {
             Text(stringResource(R.string.nothing_logged), color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
@@ -403,7 +442,11 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
                     .background(MaterialTheme.colorScheme.surfaceVariant).clickable { onEdit(today) }.padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Text(stringResource(R.string.today_logged), fontWeight = FontWeight.SemiBold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.today_logged), fontWeight = FontWeight.SemiBold)
+                }
                 if (todayLog.bleeding) {
                     Text(stringResource(R.string.flow_summary, stringResource(flowLabel(todayLog.flow))))
                 }
@@ -418,7 +461,6 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall,
         )
-        Spacer(Modifier.height(88.dp))
     }
 }
 
@@ -534,7 +576,7 @@ private fun CalendarScreen(
                 onClick = { month = shownMonth.minusMonths(1).toString() },
                 enabled = shownMonth > YearMonth.from(DayLog.MIN_DATE),
             ) {
-                Text("‹", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.semantics { contentDescription = previousMonthLabel })
+                Icon(Icons.Outlined.ChevronLeft, contentDescription = previousMonthLabel)
             }
             Text(
                 shownMonth.format(DateTimeFormatter.ofPattern("LLLL yyyy", locale)).replaceFirstChar { it.titlecase(locale) },
@@ -546,7 +588,7 @@ private fun CalendarScreen(
                 onClick = { month = shownMonth.plusMonths(1).toString() },
                 enabled = shownMonth < YearMonth.from(DayLog.MAX_DATE),
             ) {
-                Text("›", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.semantics { contentDescription = nextMonthLabel })
+                Icon(Icons.Outlined.ChevronRight, contentDescription = nextMonthLabel)
             }
         }
         Row(Modifier.fillMaxWidth()) {
@@ -634,9 +676,9 @@ private fun HistoryScreen(state: AppState) {
     ) {
         Text(stringResource(R.string.history_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Metric(R.string.average_cycle, pluralStringResource(R.plurals.days_value, prediction.averageCycleLength, prediction.averageCycleLength), Modifier.weight(1f))
-            Metric(R.string.average_period, pluralStringResource(R.plurals.days_value, prediction.averagePeriodLength, prediction.averagePeriodLength), Modifier.weight(1f))
-            Metric(R.string.recorded_cycles, prediction.periodStarts.size.toString(), Modifier.weight(1f))
+            Metric(Icons.Outlined.Refresh, R.string.average_cycle, pluralStringResource(R.plurals.days_value, prediction.averageCycleLength, prediction.averageCycleLength), Modifier.weight(1f))
+            Metric(Icons.Outlined.Opacity, R.string.average_period, pluralStringResource(R.plurals.days_value, prediction.averagePeriodLength, prediction.averagePeriodLength), Modifier.weight(1f))
+            Metric(Icons.Outlined.EventAvailable, R.string.recorded_cycles, prediction.periodStarts.size.toString(), Modifier.weight(1f))
         }
         HorizontalDivider()
         if (prediction.periodStarts.isEmpty()) {
@@ -657,8 +699,10 @@ private fun HistoryScreen(state: AppState) {
 }
 
 @Composable
-private fun Metric(@StringRes label: Int, value: String, modifier: Modifier = Modifier) {
+private fun Metric(icon: ImageVector, @StringRes label: Int, value: String, modifier: Modifier = Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(4.dp))
         Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
         Text(stringResource(label), style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
     }
@@ -697,22 +741,33 @@ private fun SettingsScreen(
             Text(stringResource(R.string.settings_intro), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             SettingsPage.entries.forEach { item ->
-                SettingsCategoryRow(item.title, item.summary) { pageName = item.name }
+                SettingsCategoryRow(item.icon, item.title, item.summary) { pageName = item.name }
             }
         } else {
-            TextButton(onClick = { pageName = null }) { Text("‹  ${stringResource(R.string.settings_back)}") }
+            TextButton(onClick = { pageName = null }) {
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.settings_back))
+            }
             Text(stringResource(page.title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
             when (page) {
                 SettingsPage.CYCLE -> {
-                    SwitchRow(R.string.predictions, settings.predictionsEnabled) { onSave(settings.copy(predictionsEnabled = it)) }
-                    Stepper(R.string.default_cycle_length, settings.cycleLength, 15..90) { onSave(settings.copy(cycleLength = it)) }
-                    Stepper(R.string.default_period_length, settings.periodLength, 1..14) { onSave(settings.copy(periodLength = it)) }
+                    SwitchRow(R.string.predictions, settings.predictionsEnabled, Icons.Outlined.Refresh) {
+                        onSave(settings.copy(predictionsEnabled = it))
+                    }
+                    Stepper(R.string.default_cycle_length, settings.cycleLength, 15..90, Icons.Outlined.Refresh) {
+                        onSave(settings.copy(cycleLength = it))
+                    }
+                    Stepper(R.string.default_period_length, settings.periodLength, 1..14, Icons.Outlined.Opacity) {
+                        onSave(settings.copy(periodLength = it))
+                    }
                     ChoiceRow(
                         label = R.string.first_day_of_week,
                         choices = listOf(DayOfWeek.MONDAY to R.string.monday, DayOfWeek.SUNDAY to R.string.sunday),
                         selected = settings.firstDayOfWeek,
+                        icon = Icons.Outlined.CalendarMonth,
                     ) { onSave(settings.copy(firstDayOfWeek = it)) }
-                    InfoBlock(R.string.daily_measurements, R.string.daily_measurements_body)
+                    InfoBlock(R.string.daily_measurements, R.string.daily_measurements_body, Icons.Outlined.MonitorWeight)
                 }
                 SettingsPage.APPEARANCE -> {
                     ChoiceRow(
@@ -723,37 +778,40 @@ private fun SettingsScreen(
                             AppTheme.DARK to R.string.theme_dark,
                         ),
                         selected = settings.theme,
+                        icon = Icons.Outlined.Palette,
                     ) { onSave(settings.copy(theme = it)) }
                     LanguageRow()
                 }
                 SettingsPage.REMINDERS -> {
-                    SwitchRow(R.string.period_reminder, settings.reminderEnabled, onReminderChange)
+                    SwitchRow(R.string.period_reminder, settings.reminderEnabled, Icons.Outlined.Notifications, onReminderChange)
                     if (settings.reminderEnabled) {
-                        Stepper(R.string.remind_before, settings.reminderDays, 0..14) {
+                        Stepper(R.string.remind_before, settings.reminderDays, 0..14, Icons.Outlined.Notifications) {
                             onSave(settings.copy(reminderDays = it))
                         }
                     }
                 }
                 SettingsPage.DATA -> {
-                    InfoBlock(R.string.cloud_backup, R.string.cloud_backup_body)
+                    InfoBlock(R.string.cloud_backup, R.string.cloud_backup_body, Icons.Outlined.Backup)
                     Button(onClick = onCreateBackup, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-                        Text(stringResource(R.string.create_backup))
+                        ButtonLabel(Icons.Outlined.Backup, R.string.create_backup)
                     }
                     OutlinedButton(onClick = onRestoreBackup, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-                        Text(stringResource(R.string.restore_backup))
+                        ButtonLabel(Icons.Outlined.Restore, R.string.restore_backup)
                     }
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                    InfoBlock(R.string.my_calendar_import, R.string.my_calendar_import_body)
+                    InfoBlock(R.string.my_calendar_import, R.string.my_calendar_import_body, Icons.Outlined.CalendarMonth)
                     OutlinedButton(onClick = onMyCalendarImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-                        Text(stringResource(R.string.my_calendar_import_action))
+                        ButtonLabel(Icons.Outlined.FileDownload, R.string.my_calendar_import_action)
                     }
-                    InfoBlock(R.string.health_connect, R.string.health_connect_body)
+                    InfoBlock(R.string.health_connect, R.string.health_connect_body, Icons.Outlined.HealthAndSafety)
                     OutlinedButton(onClick = onHealthImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-                        Text(stringResource(R.string.import_data))
+                        ButtonLabel(Icons.Outlined.FileDownload, R.string.import_data)
                     }
-                    InfoBlock(R.string.other_apps, R.string.other_apps_body)
+                    InfoBlock(R.string.other_apps, R.string.other_apps_body, Icons.Outlined.ImportExport)
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
                     OutlinedButton(onClick = onDeleteAll, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
+                        Icon(Icons.Outlined.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.delete_all_data), color = MaterialTheme.colorScheme.error)
                     }
                 }
@@ -773,8 +831,8 @@ private fun SettingsScreen(
                     onDeleteCloudCopy = onDeleteCloudCopy,
                 )
                 SettingsPage.PRIVACY -> {
-                    SettingsLink(R.string.privacy) { onInfo(InfoDialog.PRIVACY) }
-                    SettingsLink(R.string.about_cycle) { onInfo(InfoDialog.CYCLE) }
+                    SettingsLink(Icons.Outlined.Security, R.string.privacy) { onInfo(InfoDialog.PRIVACY) }
+                    SettingsLink(Icons.Outlined.HealthAndSafety, R.string.about_cycle) { onInfo(InfoDialog.CYCLE) }
                 }
             }
         }
@@ -798,30 +856,30 @@ private fun CloudSettings(
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
     when {
-        !cloud.available -> InfoBlock(R.string.cloud_unavailable, R.string.cloud_unavailable_body)
+        !cloud.available -> InfoBlock(R.string.cloud_unavailable, R.string.cloud_unavailable_body, Icons.Outlined.CloudOff)
         cloud.account == null -> {
-            InfoBlock(R.string.google_account, R.string.google_account_body)
+            InfoBlock(R.string.google_account, R.string.google_account_body, Icons.Outlined.AccountCircle)
             Button(onClick = onGoogleSignIn, enabled = !cloud.busy, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.sign_in_google))
+                ButtonLabel(Icons.Outlined.AccountCircle, R.string.sign_in_google)
             }
         }
         else -> {
             Text(cloud.account.displayName ?: stringResource(R.string.google_account), style = MaterialTheme.typography.titleMedium)
             cloud.account.email?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            InfoBlock(R.string.cloud_sync, R.string.cloud_sync_disclosure)
-            SwitchRow(R.string.cloud_sync_enabled, cloud.syncEnabled, onCloudSyncChange)
+            InfoBlock(R.string.cloud_sync, R.string.cloud_sync_disclosure, Icons.Outlined.CloudSync)
+            SwitchRow(R.string.cloud_sync_enabled, cloud.syncEnabled, Icons.Outlined.CloudSync, onCloudSyncChange)
             if (cloud.syncEnabled) {
                 OutlinedButton(onClick = onCloudSync, enabled = !cloud.busy, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.sync_now))
+                    ButtonLabel(Icons.Outlined.CloudSync, R.string.sync_now)
                 }
             }
-            SectionTitle(R.string.partner_sharing)
+            SectionLabel(Icons.Outlined.People, R.string.partner_sharing)
             Text(stringResource(R.string.partner_sharing_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Button(
                 onClick = onCreateInvitation,
                 enabled = cloud.syncEnabled && !cloud.busy,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(stringResource(R.string.create_partner_code)) }
+            ) { ButtonLabel(Icons.Outlined.People, R.string.create_partner_code) }
             cloud.inviteToken?.let { token ->
                 SelectionContainer {
                     Text(token, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -832,6 +890,7 @@ private fun CloudSettings(
                 value = partnerCode,
                 onValueChange = onPartnerCodeChange,
                 label = { Text(stringResource(R.string.partner_code)) },
+                leadingIcon = { Icon(Icons.Outlined.People, contentDescription = null) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -839,7 +898,7 @@ private fun CloudSettings(
                 onClick = onAcceptInvitation,
                 enabled = partnerCode.length == 22 && !cloud.busy,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(stringResource(R.string.open_partner_calendar)) }
+            ) { ButtonLabel(Icons.Outlined.CalendarMonth, R.string.open_partner_calendar) }
             cloud.partnerCalendars.forEach { partner ->
                 Text(
                     stringResource(R.string.partner_calendar_available, partner.ownerName),
@@ -847,7 +906,7 @@ private fun CloudSettings(
                 )
             }
             if (cloud.readerUids.isNotEmpty()) {
-                SectionTitle(R.string.partner_access)
+                SectionLabel(Icons.Outlined.People, R.string.partner_access)
                 cloud.readerUids.forEach { readerUid ->
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("…${readerUid.takeLast(6)}", modifier = Modifier.weight(1f))
@@ -858,9 +917,11 @@ private fun CloudSettings(
                 }
             }
             OutlinedButton(onClick = onGoogleSignOut, enabled = !cloud.busy, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.sign_out))
+                ButtonLabel(Icons.Outlined.AccountCircle, R.string.sign_out)
             }
             TextButton(onClick = { showDeleteConfirm = true }, enabled = !cloud.busy) {
+                Icon(Icons.Outlined.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.delete_cloud_copy), color = MaterialTheme.colorScheme.error)
             }
         }
@@ -884,17 +945,19 @@ private fun CloudSettings(
 }
 
 @Composable
-private fun SettingsCategoryRow(@StringRes title: Int, @StringRes summary: Int, onClick: () -> Unit) {
+private fun SettingsCategoryRow(icon: ImageVector, @StringRes title: Int, @StringRes summary: Int, onClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+        Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(stringResource(title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(stringResource(summary), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
-        Text("›", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+        Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -933,45 +996,62 @@ private fun MyCalendarPreviewDialog(
 }
 
 @Composable
-private fun SectionTitle(@StringRes text: Int) {
-    Text(
-        stringResource(text),
-        modifier = Modifier.padding(top = 16.dp),
-        color = MaterialTheme.colorScheme.primary,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.Bold,
-    )
+private fun SectionLabel(icon: ImageVector, @StringRes text: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Text(stringResource(text), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+    }
 }
 
 @Composable
-private fun SwitchRow(@StringRes label: Int, checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun SwitchRow(@StringRes label: Int, checked: Boolean, icon: ImageVector? = null, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        icon?.let {
+            Icon(it, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(12.dp))
+        }
         Text(stringResource(label), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Switch(checked = checked, onCheckedChange = onChange)
     }
 }
 
 @Composable
-private fun Stepper(@StringRes label: Int, value: Int, range: IntRange, onChange: (Int) -> Unit) {
+private fun Stepper(
+    @StringRes label: Int,
+    value: Int,
+    range: IntRange,
+    icon: ImageVector? = null,
+    onChange: (Int) -> Unit,
+) {
     val labelText = stringResource(label)
     val decrease = stringResource(R.string.decrease_value, labelText)
     val increase = stringResource(R.string.increase_value, labelText)
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        icon?.let {
+            Icon(it, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(12.dp))
+        }
         Text(labelText, modifier = Modifier.weight(1f))
         IconButton(onClick = { onChange(value - 1) }, enabled = value > range.first) {
-            Text("−", modifier = Modifier.semantics { contentDescription = decrease })
+            Icon(Icons.Outlined.Remove, contentDescription = decrease)
         }
         Text(value.toString(), modifier = Modifier.width(36.dp), textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
         IconButton(onClick = { onChange(value + 1) }, enabled = value < range.last) {
-            Text("+", modifier = Modifier.semantics { contentDescription = increase })
+            Icon(Icons.Default.Add, contentDescription = increase)
         }
     }
 }
 
 @Composable
-private fun <T> ChoiceRow(@StringRes label: Int, choices: List<Pair<T, Int>>, selected: T?, onSelect: (T) -> Unit) {
+private fun <T> ChoiceRow(
+    @StringRes label: Int,
+    choices: List<Pair<T, Int>>,
+    selected: T?,
+    icon: ImageVector? = null,
+    onSelect: (T) -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(label))
+        if (icon == null) Text(stringResource(label)) else SectionLabel(icon, label)
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -998,24 +1078,40 @@ private fun LanguageRow() {
             "es" to R.string.language_spanish,
         ),
         selected = current,
+        icon = Icons.Outlined.Language,
     ) { language -> AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language)) }
 }
 
 @Composable
-private fun InfoBlock(@StringRes title: Int, @StringRes body: Int) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
-        Text(stringResource(body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun InfoBlock(@StringRes title: Int, @StringRes body: Int, icon: ImageVector? = null) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+        icon?.let { Icon(it, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 
 @Composable
-private fun SettingsLink(@StringRes label: Int, onClick: () -> Unit) {
-    Text(
-        stringResource(label),
+private fun SettingsLink(icon: ImageVector, @StringRes label: Int, onClick: () -> Unit) {
+    Row(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(vertical = 14.dp),
-        style = MaterialTheme.typography.bodyLarge,
-    )
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(12.dp))
+        Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.weight(1f))
+        Icon(Icons.Outlined.ChevronRight, contentDescription = null)
+    }
+}
+
+@Composable
+private fun ButtonLabel(icon: ImageVector, @StringRes label: Int) {
+    Icon(icon, contentDescription = null)
+    Spacer(Modifier.width(8.dp))
+    Text(stringResource(label))
 }
 
 @Composable
@@ -1063,6 +1159,7 @@ private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit,
                         Flow.HEAVY to R.string.flow_heavy,
                     ),
                     selected = flow,
+                    icon = Icons.Outlined.Opacity,
                 ) { flow = it }
                 ChoiceRow(
                     label = R.string.mood,
@@ -1074,8 +1171,9 @@ private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit,
                         Mood.BAD to R.string.mood_bad,
                     ),
                     selected = mood,
+                    icon = Icons.Outlined.SentimentSatisfied,
                 ) { mood = if (mood == it) null else it }
-                Text(stringResource(R.string.symptoms))
+                SectionLabel(Icons.Outlined.Healing, R.string.symptoms)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -1093,17 +1191,20 @@ private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit,
                     onValueChange = { if (it.length <= DayLog.MAX_NOTE_LENGTH) note = it },
                     label = { Text(stringResource(R.string.note)) },
                     placeholder = { Text(stringResource(R.string.note_hint)) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Notes, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
                 )
                 TextButton(onClick = { showMore = !showMore }) {
+                    Icon(Icons.Outlined.Tune, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
                     Text(stringResource(if (showMore) R.string.fewer_details else R.string.more_details))
                 }
                 if (showMore) {
-                    MeasurementField(weight, { weight = it }, R.string.weight_kg, weightValid)
-                    MeasurementField(temperature, { temperature = it }, R.string.temperature_c, temperatureValid)
-                    MeasurementField(sleep, { sleep = it }, R.string.sleep_hours, sleepValid)
-                    Text(stringResource(R.string.intimacy))
+                    MeasurementField(weight, { weight = it }, R.string.weight_kg, weightValid, Icons.Outlined.MonitorWeight)
+                    MeasurementField(temperature, { temperature = it }, R.string.temperature_c, temperatureValid, Icons.Outlined.Thermostat)
+                    MeasurementField(sleep, { sleep = it }, R.string.sleep_hours, sleepValid, Icons.Outlined.Bedtime)
+                    SectionLabel(Icons.Outlined.FavoriteBorder, R.string.intimacy)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(
                             Intimacy.SEX to R.string.intimacy_sex,
@@ -1118,7 +1219,7 @@ private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit,
                     }
                     initial?.importedDetails?.takeIf(String::isNotBlank)?.let { imported ->
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(stringResource(R.string.imported_details), fontWeight = FontWeight.SemiBold)
+                            SectionLabel(Icons.Outlined.ImportExport, R.string.imported_details)
                             Text(imported, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -1155,11 +1256,18 @@ private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit,
 }
 
 @Composable
-private fun MeasurementField(value: String, onValueChange: (String) -> Unit, @StringRes label: Int, valid: Boolean) {
+private fun MeasurementField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    @StringRes label: Int,
+    valid: Boolean,
+    icon: ImageVector,
+) {
     OutlinedTextField(
         value = value,
         onValueChange = { input -> if (input.length <= 8) onValueChange(input.filter { it.isDigit() || it == '.' || it == ',' }) },
         label = { Text(stringResource(label)) },
+        leadingIcon = { Icon(icon, contentDescription = null) },
         supportingText = if (valid) null else {{ Text(stringResource(R.string.invalid_measurement)) }},
         isError = !valid,
         singleLine = true,
@@ -1198,6 +1306,7 @@ private fun PasswordDialog(
                     value = password,
                     onValueChange = { password = it.take(128) },
                     label = { Text(stringResource(R.string.password)) },
+                    leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                 )

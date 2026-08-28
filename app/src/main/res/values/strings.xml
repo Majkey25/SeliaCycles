@@ -24,6 +24,7 @@
     <plurals name="period_late"><item quantity="one">1 day later than estimate</item><item quantity="other">%d days later than estimate</item></plurals>
     <string name="no_period_data">Log your first period to start predictions.</string>
     <string name="log_today">Log today</string>
+    <string name="edit_today">Edit today’s entry</string>
     <string name="today_logged">Today is logged</string>
     <string name="estimate_notice">Estimate from your history. Not medical advice or contraception.</string>
     <string name="calendar_heading">Calendar</string>
