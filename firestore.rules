@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function calendarPath(ownerUid) {
+      return /databases/$(database)/documents/calendars/$(ownerUid);
+    }
+
+    function membershipPath(ownerUid, readerUid) {
+      return /databases/$(database)/documents/memberships/$(ownerUid + "_" + readerUid);
+    }
+
+    function isOwner(ownerUid) {
+      return signedIn() && request.auth.uid == ownerUid;
+    }
+
+    function isReader(ownerUid) {
+      return signedIn() &&
+        exists(calendarPath(ownerUid)) &&
+        exists(membershipPath(ownerUid, request.auth.uid));
+    }
+
+    function validCalendar(ownerUid, data) {
+      return data.keys().hasOnly(["ownerUid", "ownerName", "createdAt", "updatedAt"]) &&
+        data.keys().hasAll(["ownerUid", "ownerName", "createdAt", "updatedAt"]) &&
+        data.ownerUid == ownerUid &&
+        data.ownerName is string &&
+        data.ownerName.size() <= 80 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function validDay(dayId, data) {
+      return data.keys().hasOnly(["day", "bleeding", "flow", "updatedAt"]) &&
+        data.keys().hasAll(["day", "bleeding", "flow", "updatedAt"]) &&
+        data.day == dayId &&
+        data.day.matches("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") &&
+        data.bleeding is bool &&
+        data.flow in ["NONE", "UNKNOWN", "LIGHT", "MEDIUM", "HEAVY"] &&
+        ((data.bleeding && data.flow != "NONE") || (!data.bleeding && data.flow == "NONE")) &&
+        data.updatedAt is timestamp;
+    }
+
+    function validToken(token) {
+      return token.matches("^[A-Za-z0-9_-]{22}$");
+    }
+
+    match /calendars/{ownerUid} {
+      allow get: if isOwner(ownerUid) || isReader(ownerUid);
+      allow list: if false;
+      allow create: if isOwner(ownerUid) && validCalendar(ownerUid, request.resource.data);
+      allow update: if isOwner(ownerUid) &&
+        resource.data.ownerUid == request.resource.data.ownerUid &&
+        resource.data.createdAt == request.resource.data.createdAt &&
+        validCalendar(ownerUid, request.resource.data);
+      allow delete: if isOwner(ownerUid);
+
+      match /days/{dayId} {
+        allow read: if isOwner(ownerUid) || isReader(ownerUid);
+        allow create, update: if isOwner(ownerUid) &&
+          exists(calendarPath(ownerUid)) &&
+          validDay(dayId, request.resource.data);
+        allow delete: if isOwner(ownerUid);
+      }
+    }
+
+    match /invitations/{token} {
+      allow get: if signedIn() && validToken(token);
+      allow list: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if signedIn() &&
+        validToken(token) &&
+        request.resource.data.keys().hasOnly(["ownerUid", "calendarId", "createdAt", "expiresAt", "acceptedBy"]) &&
+        request.resource.data.keys().hasAll(["ownerUid", "calendarId", "createdAt", "expiresAt", "acceptedBy"]) &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        request.resource.data.calendarId == request.auth.uid &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.expiresAt is timestamp &&
+        request.resource.data.expiresAt > request.time &&
+        request.resource.data.expiresAt < request.time + duration.value(7, "d") &&
+        request.resource.data.acceptedBy == null &&
+        exists(calendarPath(request.auth.uid));
+      allow update: if signedIn() &&
+        validToken(token) &&
+        resource.data.acceptedBy == null &&
+        resource.data.expiresAt > request.time &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["acceptedBy"]) &&
+        request.resource.data.acceptedBy == request.auth.uid;
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /memberships/{membershipId} {
+      allow read: if signedIn() &&
+        (resource.data.ownerUid == request.auth.uid || resource.data.readerUid == request.auth.uid);
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly(["ownerUid", "readerUid", "inviteToken", "createdAt"]) &&
+        request.resource.data.keys().hasAll(["ownerUid", "readerUid", "inviteToken", "createdAt"]) &&
+        request.resource.data.readerUid == request.auth.uid &&
+        membershipId == request.resource.data.ownerUid + "_" + request.auth.uid &&
+        validToken(request.resource.data.inviteToken) &&
+        request.resource.data.createdAt is timestamp &&
+        getAfter(/databases/$(database)/documents/invitations/$(request.resource.data.inviteToken)).data.ownerUid ==
+          request.resource.data.ownerUid &&
+        getAfter(/databases/$(database)/documents/invitations/$(request.resource.data.inviteToken)).data.calendarId ==
+          request.resource.data.ownerUid &&
+        getAfter(/databases/$(database)/documents/invitations/$(request.resource.data.inviteToken)).data.acceptedBy ==
+          request.auth.uid;
+      allow update: if false;
+      allow delete: if signedIn() &&
+        (resource.data.ownerUid == request.auth.uid || resource.data.readerUid == request.auth.uid);
+    }
+  }
+}

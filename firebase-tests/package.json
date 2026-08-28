@@ -1,0 +1,13 @@
+{
+  "name": "selia-cycles-firebase-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-selia-cycles \"node --test firestore.rules.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.2",
+    "firebase": "12.18.0",
+    "firebase-tools": "15.28.2"
+  }
+}
