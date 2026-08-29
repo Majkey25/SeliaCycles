@@ -56,3 +56,15 @@ Target: `BQLDU19927002646`, Huawei YAL-L21, Android 10. Every ADB command was pi
 
 - [Current and next month prediction](screenshots/phone-local-prediction-home.png)
 - [Local data and device transfer settings](screenshots/phone-local-data-settings.png)
+
+## Google Play Closed testing
+
+- Submitted on August 29, 2026 to the active Alpha closed-testing track.
+- Release: `Selia Cycles 0.3.0-beta.1 — Local predictions`, version code 3.
+- Google Play accepted the signed release AAB and submitted 15 changes for review.
+- Live Play Console status: `Probíhá kontrola` (review in progress).
+- Audience: 177 countries/regions.
+- Tester groups: `testers-community@googlegroups.com` and `majkeytest@googlegroups.com`.
+- Feedback address: `majkeylab@gmail.com`.
+- Tester opt-in: `https://play.google.com/apps/testing/com.majkeylab.seliacycles` after Google approves and publishes the release.
+- Controlled publishing is off, so the closed test publishes automatically after approval.

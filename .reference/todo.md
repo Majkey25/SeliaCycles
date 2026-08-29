@@ -8,4 +8,5 @@
 - [x] Update QA screenshots and evidence
 - [x] Commit and push
 - [x] Verify GitHub CI
-- [ ] Confirm and submit Google Play declarations, listing, signed AAB, and Closed testing release
+- [x] Submit Google Play declarations, listing, signed AAB, and Closed testing release for review
+- [ ] Verify Google review approval and tester availability
