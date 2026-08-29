@@ -1,6 +1,6 @@
 # Google Play declarations
 
-These answers describe version 0.4.0-beta.1.
+These answers describe version 0.5.0-beta.1.
 
 ## Data safety
 
@@ -19,6 +19,7 @@ These answers describe version 0.4.0-beta.1.
 ## Health apps declaration
 
 - Health feature: **Period Tracking**, which Google defines to include ovulation tracking/prediction and fertility awareness.
+- Reproductive signs and test results remain in app-private local storage and are not transmitted.
 - Medical device: **No**.
 - Diagnosis or treatment: **No**.
 - Research: **No**.

@@ -300,7 +300,8 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
         Text(stringResource(R.string.today_heading), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
         Box(
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))
-                .background(Brush.linearGradient(listOf(CycleGradientStart, CycleGradientEnd))).padding(24.dp),
+                .background(Brush.linearGradient(paletteGradientColors(state.backup.settings.palette)))
+                .padding(24.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.cycle_day), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelLarge)
@@ -347,7 +348,7 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
             }
         }
         MonthlyForecastSection(state)
-        CycleInsightSection(state.todayInsight, state.backup.settings.partnerViewEnabled)
+        CycleInsightSection(state.todayInsight, todayLog, state.backup.settings.partnerViewEnabled)
         SectionLabel(Icons.Outlined.CalendarMonth, R.string.week_heading)
         Row(Modifier.fillMaxWidth()) {
             (-3L..3L).forEach { offset ->
@@ -385,6 +386,7 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
                 if (todayLog.bleeding) {
                     Text(stringResource(R.string.flow_summary, stringResource(flowLabel(todayLog.flow))))
                 }
+                if (todayLog.spotting) Text(stringResource(R.string.spotting_summary))
                 todayLog.mood?.let { Text(stringResource(R.string.mood_summary, stringResource(moodLabel(it)))) }
                 if (todayLog.symptoms.isNotEmpty()) {
                     Text(pluralStringResource(R.plurals.symptom_count, todayLog.symptoms.size, todayLog.symptoms.size))
@@ -467,7 +469,7 @@ private fun MonthlyForecastSection(state: AppState) {
 }
 
 @Composable
-private fun CycleInsightSection(insight: DailyCycleInsight, partnerView: Boolean) {
+private fun CycleInsightSection(insight: DailyCycleInsight, todayLog: DayLog?, partnerView: Boolean) {
     val locale = currentLocale()
     val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -478,6 +480,7 @@ private fun CycleInsightSection(insight: DailyCycleInsight, partnerView: Boolean
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             insight.phase?.let { Text(stringResource(R.string.cycle_phase_value, stringResource(phaseLabel(it)))) }
+            Text(stringResource(R.string.fertility_today, stringResource(fertilityStatusLabel(insight.fertilityStatus))))
             insight.fertility?.let { fertility ->
                 Text(stringResource(R.string.estimated_ovulation, fertility.ovulation.format(dateFormat)))
                 Text(stringResource(
@@ -485,6 +488,12 @@ private fun CycleInsightSection(insight: DailyCycleInsight, partnerView: Boolean
                     fertility.fertileStart.format(dateFormat),
                     fertility.fertileEnd.format(dateFormat),
                 ))
+            }
+            todayLog?.cervicalMucus?.let {
+                Text(stringResource(R.string.recorded_cervical_mucus, stringResource(cervicalMucusLabel(it))))
+            }
+            todayLog?.ovulationTest?.let {
+                Text(stringResource(R.string.recorded_ovulation_test, stringResource(testResultLabel(it))))
             }
             Text(
                 insight.moodTrend?.let { trend ->
@@ -512,6 +521,14 @@ private fun phaseLabel(phase: CyclePhase): Int = when (phase) {
     CyclePhase.FOLLICULAR -> R.string.phase_follicular
     CyclePhase.FERTILE -> R.string.phase_fertile
     CyclePhase.LUTEAL -> R.string.phase_luteal
+}
+
+@StringRes
+private fun fertilityStatusLabel(status: FertilityStatus): Int = when (status) {
+    FertilityStatus.UNAVAILABLE -> R.string.fertility_status_unavailable
+    FertilityStatus.OUTSIDE -> R.string.fertility_status_outside
+    FertilityStatus.FERTILE -> R.string.fertility_status_fertile
+    FertilityStatus.OVULATION -> R.string.fertility_status_ovulation
 }
 
 @Composable
@@ -891,16 +908,22 @@ private fun SettingsScreen(
                     InfoBlock(R.string.daily_measurements, R.string.daily_measurements_body, Icons.Outlined.MonitorWeight)
                 }
                 SettingsPage.APPEARANCE -> {
-                    ChoiceRow(
-                        label = R.string.theme,
-                        choices = listOf(
-                            AppTheme.SYSTEM to R.string.theme_system,
-                            AppTheme.LIGHT to R.string.theme_light,
-                            AppTheme.DARK to R.string.theme_dark,
-                        ),
-                        selected = settings.theme,
-                        icon = Icons.Outlined.Palette,
-                    ) { onSave(settings.copy(theme = it)) }
+                    SectionLabel(Icons.Outlined.Palette, R.string.theme)
+                    AppTheme.entries.forEach { theme ->
+                        AppearancePreviewRow(
+                            label = themeLabel(theme),
+                            colors = themePreviewColors(theme),
+                            selected = settings.theme == theme,
+                        ) { onSave(settings.copy(theme = theme)) }
+                    }
+                    SectionLabel(Icons.Outlined.Palette, R.string.color_palette)
+                    AppPalette.entries.forEach { palette ->
+                        AppearancePreviewRow(
+                            label = paletteLabel(palette),
+                            colors = palettePreviewColors(palette),
+                            selected = settings.palette == palette,
+                        ) { onSave(settings.copy(palette = palette)) }
+                    }
                     LanguageRow()
                 }
                 SettingsPage.REMINDERS -> {
@@ -1114,6 +1137,50 @@ private fun <T> ChoiceRow(
 }
 
 @Composable
+private fun AppearancePreviewRow(
+    @StringRes label: Int,
+    colors: List<Color>,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        modifier = Modifier.fillMaxWidth().clip(shape)
+            .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+            .border(1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, shape)
+            .clickable(onClick = onClick).padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            colors.forEach { color -> Box(Modifier.size(24.dp).clip(CircleShape).background(color)) }
+        }
+        Text(stringResource(label), modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+        if (selected) Icon(Icons.Outlined.CheckCircle, contentDescription = stringResource(R.string.calendar_selected))
+    }
+}
+
+private fun themePreviewColors(theme: AppTheme): List<Color> = when (theme) {
+    AppTheme.SYSTEM -> listOf(Color(0xFFF7F4FC), Color(0xFF1B1820), Color(0xFF7658E8))
+    AppTheme.LIGHT -> listOf(Color.White, Color(0xFFE7E0FF), Color(0xFF5840D6))
+    AppTheme.DARK -> listOf(Color(0xFF14121A), Color(0xFF4030A4), Color(0xFFC8BFFF))
+}
+
+@StringRes
+private fun themeLabel(theme: AppTheme): Int = when (theme) {
+    AppTheme.SYSTEM -> R.string.theme_system
+    AppTheme.LIGHT -> R.string.theme_light
+    AppTheme.DARK -> R.string.theme_dark
+}
+
+@StringRes
+private fun paletteLabel(palette: AppPalette): Int = when (palette) {
+    AppPalette.SELIA -> R.string.palette_selia
+    AppPalette.ROSE -> R.string.palette_rose
+    AppPalette.OCEAN -> R.string.palette_ocean
+}
+
+@Composable
 private fun LanguageRow() {
     val current = AppCompatDelegate.getApplicationLocales().get(0)?.language.orEmpty()
     ChoiceRow(
@@ -1161,6 +1228,7 @@ private fun SettingsLink(icon: ImageVector, @StringRes label: Int, onClick: () -
 @OptIn(ExperimentalMaterial3Api::class)
 private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit, onSave: (DayLog) -> Unit) {
     var flow by remember(day, initial) { mutableStateOf(initial?.flow?.takeIf { initial.bleeding } ?: Flow.NONE) }
+    var spotting by remember(day, initial) { mutableStateOf(initial?.spotting == true) }
     var mood by remember(day, initial) { mutableStateOf(initial?.mood) }
     var symptoms by remember(day, initial) { mutableStateOf(initial?.symptoms.orEmpty()) }
     var note by remember(day, initial) { mutableStateOf(initial?.note.orEmpty()) }
@@ -1169,6 +1237,14 @@ private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit,
     var temperature by remember(day, initial) { mutableStateOf(initial?.temperatureC?.toString().orEmpty()) }
     var sleep by remember(day, initial) { mutableStateOf(initial?.sleepHours?.toString().orEmpty()) }
     var intimacy by remember(day, initial) { mutableStateOf(initial?.intimacy) }
+    var cervicalMucus by remember(day, initial) { mutableStateOf(initial?.cervicalMucus) }
+    var ovulationTest by remember(day, initial) { mutableStateOf(initial?.ovulationTest) }
+    var pregnancyTest by remember(day, initial) { mutableStateOf(initial?.pregnancyTest) }
+    var painLevel by remember(day, initial) { mutableStateOf(initial?.painLevel) }
+    var energy by remember(day, initial) { mutableStateOf(initial?.energy) }
+    var stress by remember(day, initial) { mutableStateOf(initial?.stress) }
+    var activity by remember(day, initial) { mutableStateOf(initial?.activity) }
+    var medication by remember(day, initial) { mutableStateOf(initial?.medication) }
     val weightValue = parseDecimal(weight)
     val temperatureValue = parseDecimal(temperature)
     val sleepValue = parseDecimal(sleep)
@@ -1244,6 +1320,52 @@ private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit,
                     Text(stringResource(if (showMore) R.string.fewer_details else R.string.more_details))
                 }
                 if (showMore) {
+                    SectionLabel(Icons.Outlined.Opacity, R.string.fertility_signs)
+                    SwitchRow(R.string.spotting, spotting, Icons.Outlined.Opacity) { spotting = it }
+                    ChoiceRow(
+                        label = R.string.cervical_mucus,
+                        choices = cervicalMucusLabels,
+                        selected = cervicalMucus,
+                        icon = Icons.Outlined.Opacity,
+                    ) { cervicalMucus = it.takeUnless { cervicalMucus == it } }
+                    ChoiceRow(
+                        label = R.string.ovulation_test,
+                        choices = testResultLabels,
+                        selected = ovulationTest,
+                        icon = Icons.Outlined.EventAvailable,
+                    ) { ovulationTest = it.takeUnless { ovulationTest == it } }
+                    ChoiceRow(
+                        label = R.string.pregnancy_test,
+                        choices = testResultLabels,
+                        selected = pregnancyTest,
+                        icon = Icons.Outlined.HealthAndSafety,
+                    ) { pregnancyTest = it.takeUnless { pregnancyTest == it } }
+                    SectionLabel(Icons.Outlined.Healing, R.string.wellbeing_trackers)
+                    PainRow(painLevel) { painLevel = it }
+                    ChoiceRow(
+                        label = R.string.energy,
+                        choices = wellbeingLevelLabels,
+                        selected = energy,
+                        icon = Icons.Outlined.SentimentSatisfied,
+                    ) { energy = it.takeUnless { energy == it } }
+                    ChoiceRow(
+                        label = R.string.stress,
+                        choices = wellbeingLevelLabels,
+                        selected = stress,
+                        icon = Icons.Outlined.SentimentSatisfied,
+                    ) { stress = it.takeUnless { stress == it } }
+                    ChoiceRow(
+                        label = R.string.activity,
+                        choices = activityLevelLabels,
+                        selected = activity,
+                        icon = Icons.Outlined.MonitorWeight,
+                    ) { activity = it.takeUnless { activity == it } }
+                    ChoiceRow(
+                        label = R.string.medication,
+                        choices = medicationStatusLabels,
+                        selected = medication,
+                        icon = Icons.Outlined.HealthAndSafety,
+                    ) { medication = it.takeUnless { medication == it } }
                     MeasurementField(weight, { weight = it }, R.string.weight_kg, weightValid, Icons.Outlined.MonitorWeight)
                     MeasurementField(temperature, { temperature = it }, R.string.temperature_c, temperatureValid, Icons.Outlined.Thermostat)
                     MeasurementField(sleep, { sleep = it }, R.string.sleep_hours, sleepValid, Icons.Outlined.Bedtime)
@@ -1282,6 +1404,7 @@ private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit,
                     onSave(DayLog(
                         day = day,
                         bleeding = flow != Flow.NONE,
+                        spotting = spotting,
                         flow = flow,
                         mood = mood,
                         symptoms = symptoms,
@@ -1290,9 +1413,33 @@ private fun DayLogSheet(day: LocalDate, initial: DayLog?, onDismiss: () -> Unit,
                         temperatureC = temperatureValue,
                         sleepHours = sleepValue,
                         intimacy = intimacy,
+                        cervicalMucus = cervicalMucus,
+                        ovulationTest = ovulationTest,
+                        pregnancyTest = pregnancyTest,
+                        painLevel = painLevel,
+                        energy = energy,
+                        stress = stress,
+                        activity = activity,
+                        medication = medication,
                         importedDetails = initial?.importedDetails.orEmpty(),
                     ))
                 }, enabled = canSave) { Text(stringResource(R.string.save)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PainRow(value: Int?, onChange: (Int?) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SectionLabel(Icons.Outlined.Healing, R.string.pain_level)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            (0..10).forEach { level ->
+                FilterChip(
+                    selected = value == level,
+                    onClick = { onChange(level.takeUnless { value == level }) },
+                    label = { Text(level.toString()) },
+                )
             }
         }
     }
@@ -1331,6 +1478,44 @@ private val symptomLabels = listOf(
     Symptom.CRAVINGS to R.string.symptom_cravings,
     Symptom.BACKACHE to R.string.symptom_backache,
 )
+
+private val cervicalMucusLabels = listOf(
+    CervicalMucus.DRY to R.string.cervical_dry,
+    CervicalMucus.STICKY to R.string.cervical_sticky,
+    CervicalMucus.CREAMY to R.string.cervical_creamy,
+    CervicalMucus.WATERY to R.string.cervical_watery,
+    CervicalMucus.EGG_WHITE to R.string.cervical_egg_white,
+    CervicalMucus.UNUSUAL to R.string.cervical_unusual,
+)
+
+private val testResultLabels = listOf(
+    TestResult.NEGATIVE to R.string.test_negative,
+    TestResult.POSITIVE to R.string.test_positive,
+    TestResult.INVALID to R.string.test_invalid,
+)
+
+private val wellbeingLevelLabels = listOf(
+    WellbeingLevel.LOW to R.string.level_low,
+    WellbeingLevel.MEDIUM to R.string.level_medium,
+    WellbeingLevel.HIGH to R.string.level_high,
+)
+
+private val activityLevelLabels = listOf(
+    ActivityLevel.LIGHT to R.string.activity_light,
+    ActivityLevel.MODERATE to R.string.activity_moderate,
+    ActivityLevel.INTENSE to R.string.activity_intense,
+)
+
+private val medicationStatusLabels = listOf(
+    MedicationStatus.TAKEN to R.string.medication_taken,
+    MedicationStatus.MISSED to R.string.medication_missed,
+)
+
+@StringRes
+private fun cervicalMucusLabel(value: CervicalMucus): Int = cervicalMucusLabels.first { it.first == value }.second
+
+@StringRes
+private fun testResultLabel(value: TestResult): Int = testResultLabels.first { it.first == value }.second
 
 @Composable
 private fun InfoDialogContent(dialog: InfoDialog, onDismiss: () -> Unit) {

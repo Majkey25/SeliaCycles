@@ -6,13 +6,13 @@ Selia Cycles is published by MajkeyLab. Contact `majkeylab@gmail.com` about this
 
 ## Data stored by the app
 
-Selia Cycles stores menstrual dates, flow, symptoms, mood, notes, weight, basal temperature, sleep, intimacy, saved forecast baselines, reminder settings, and display settings in private storage on the Android device.
+Selia Cycles stores menstrual dates, spotting, flow, symptoms, mood, notes, cervical mucus, ovulation and pregnancy test results, pain, energy, stress, activity, medication status, weight, basal temperature, sleep, intimacy, saved forecast baselines, reminder settings, and display settings in private storage on the Android device.
 
 The app has no account, ads, analytics, telemetry, Selia cloud, or network permission. MajkeyLab does not receive cycle data.
 
 ## Optional calendar mirror
 
-If the user enables calendar mirroring, Selia Cycles requests Android calendar read/write permission, lists visible writable calendars, and copies short labels for recorded periods, period estimates, fertile windows, and estimated ovulation into the selected calendar. Notes, symptoms, measurements, intimacy, and raw mood logs are never copied.
+If the user enables calendar mirroring, Selia Cycles requests Android calendar read/write permission, lists visible writable calendars, and copies short labels for recorded periods, period estimates, fertile windows, and estimated ovulation into the selected calendar. Notes, symptoms, measurements, spotting, cervical mucus, test results, medication, intimacy, and raw mood logs are never copied.
 
 The selected calendar provider, such as Google Calendar, Outlook, Exchange, or a local calendar, controls whether those labels are uploaded to an account and who can access them. Events are private by default. Enabling Partner view uses the selected calendar's normal sharing visibility. Its privacy terms apply. Selia stores the selected device calendar row ID in Android no-backup storage because the ID is device-specific.
 

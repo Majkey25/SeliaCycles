@@ -24,7 +24,16 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
                 temperature_c REAL,
                 sleep_hours REAL,
                 intimacy TEXT,
-                imported_details TEXT NOT NULL
+                imported_details TEXT NOT NULL,
+                spotting INTEGER NOT NULL CHECK (spotting IN (0, 1)),
+                cervical_mucus TEXT,
+                ovulation_test TEXT,
+                pregnancy_test TEXT,
+                pain_level INTEGER CHECK (pain_level BETWEEN 0 AND 10),
+                energy TEXT,
+                stress TEXT,
+                activity TEXT,
+                medication TEXT
             )
             """.trimIndent(),
         )
@@ -39,7 +48,8 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
                 reminder INTEGER NOT NULL CHECK (reminder IN (0, 1)),
                 reminder_days INTEGER NOT NULL,
                 theme TEXT NOT NULL,
-                partner_view INTEGER NOT NULL CHECK (partner_view IN (0, 1))
+                partner_view INTEGER NOT NULL CHECK (partner_view IN (0, 1)),
+                palette TEXT NOT NULL
             )
             """.trimIndent(),
         )
@@ -58,6 +68,18 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         if (oldVersion < 3) {
             database.execSQL("ALTER TABLE settings ADD COLUMN partner_view INTEGER NOT NULL DEFAULT 0 CHECK (partner_view IN (0, 1))")
             createForecastSnapshotsTable(database)
+        }
+        if (oldVersion < 4) {
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN spotting INTEGER NOT NULL DEFAULT 0 CHECK (spotting IN (0, 1))")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN cervical_mucus TEXT")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN ovulation_test TEXT")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN pregnancy_test TEXT")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN pain_level INTEGER CHECK (pain_level BETWEEN 0 AND 10)")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN energy TEXT")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN stress TEXT")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN activity TEXT")
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN medication TEXT")
+            database.execSQL("ALTER TABLE settings ADD COLUMN palette TEXT NOT NULL DEFAULT 'SELIA'")
         }
     }
 
@@ -164,6 +186,7 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             reminderDays = cursor.getInt(5),
             theme = AppTheme.valueOf(cursor.getString(6)),
             partnerViewEnabled = cursor.getInt(7) == 1,
+            palette = AppPalette.valueOf(cursor.getString(8)),
         )
     }
 
@@ -182,6 +205,15 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         sleepHours = getNullableDouble(8),
         intimacy = getString(9)?.let(Intimacy::valueOf),
         importedDetails = getString(10),
+        spotting = getInt(11) == 1,
+        cervicalMucus = getString(12)?.let(CervicalMucus::valueOf),
+        ovulationTest = getString(13)?.let(TestResult::valueOf),
+        pregnancyTest = getString(14)?.let(TestResult::valueOf),
+        painLevel = getNullableInt(15),
+        energy = getString(16)?.let(WellbeingLevel::valueOf),
+        stress = getString(17)?.let(WellbeingLevel::valueOf),
+        activity = getString(18)?.let(ActivityLevel::valueOf),
+        medication = getString(19)?.let(MedicationStatus::valueOf),
     )
 
     private fun logValues(log: DayLog): ContentValues = ContentValues().apply {
@@ -196,9 +228,20 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         put("sleep_hours", log.sleepHours)
         put("intimacy", log.intimacy?.name)
         put("imported_details", log.importedDetails)
+        put("spotting", log.spotting)
+        put("cervical_mucus", log.cervicalMucus?.name)
+        put("ovulation_test", log.ovulationTest?.name)
+        put("pregnancy_test", log.pregnancyTest?.name)
+        put("pain_level", log.painLevel)
+        put("energy", log.energy?.name)
+        put("stress", log.stress?.name)
+        put("activity", log.activity?.name)
+        put("medication", log.medication?.name)
     }
 
     private fun Cursor.getNullableDouble(index: Int): Double? = if (isNull(index)) null else getDouble(index)
+
+    private fun Cursor.getNullableInt(index: Int): Int? = if (isNull(index)) null else getInt(index)
 
     private fun settingsValues(settings: AppSettings): ContentValues = ContentValues().apply {
         put("id", 1)
@@ -210,6 +253,7 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         put("reminder_days", settings.reminderDays)
         put("theme", settings.theme.name)
         put("partner_view", settings.partnerViewEnabled)
+        put("palette", settings.palette.name)
     }
 
     private fun createForecastSnapshotsTable(database: SQLiteDatabase) {
@@ -245,7 +289,7 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
 
     companion object {
         private const val DATABASE_NAME = "selia-cycles.db"
-        private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 4
         private val LOG_COLUMNS = arrayOf(
             "day",
             "bleeding",
@@ -258,6 +302,15 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             "sleep_hours",
             "intimacy",
             "imported_details",
+            "spotting",
+            "cervical_mucus",
+            "ovulation_test",
+            "pregnancy_test",
+            "pain_level",
+            "energy",
+            "stress",
+            "activity",
+            "medication",
         )
         private val SETTINGS_COLUMNS = arrayOf(
             "cycle_length",
@@ -268,6 +321,7 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             "reminder_days",
             "theme",
             "partner_view",
+            "palette",
         )
         private val FORECAST_COLUMNS = arrayOf(
             "month",

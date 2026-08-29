@@ -16,3 +16,8 @@
 - [x] Complete signed code 4 build and physical Huawei QA
 - [x] Update Google Play listing and submit code 4 to Closed Alpha
 - [ ] Verify Google review approval and tester availability for code 4
+- [x] Add complete local reproductive trackers and fertility status for code 5
+- [x] Add preview-based theme and color-palette settings for code 5
+- [x] Complete signed code 5 build and physical Huawei QA
+- [ ] Commit and push code 5 to GitHub
+- [ ] Submit code 5 to Google Play Closed Alpha

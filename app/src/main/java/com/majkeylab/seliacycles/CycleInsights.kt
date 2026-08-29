@@ -6,6 +6,8 @@ import java.time.temporal.ChronoUnit
 
 enum class CyclePhase { MENSTRUAL, FOLLICULAR, FERTILE, LUTEAL }
 
+enum class FertilityStatus { UNAVAILABLE, OUTSIDE, FERTILE, OVULATION }
+
 enum class EstimateOrigin { SAVED, RECONSTRUCTED, CURRENT }
 
 data class PeriodEstimate(
@@ -32,6 +34,7 @@ data class PersonalMoodTrend(
 data class DailyCycleInsight(
     val phase: CyclePhase?,
     val fertility: FertilityEstimate?,
+    val fertilityStatus: FertilityStatus,
     val moodTrend: PersonalMoodTrend?,
 )
 
@@ -106,6 +109,12 @@ object CycleInsights {
         return DailyCycleInsight(
             phase = phase,
             fertility = fertility,
+            fertilityStatus = when {
+                fertility == null -> FertilityStatus.UNAVAILABLE
+                date == fertility.ovulation -> FertilityStatus.OVULATION
+                date in fertility.fertileStart..fertility.fertileEnd -> FertilityStatus.FERTILE
+                else -> FertilityStatus.OUTSIDE
+            },
             moodTrend = phase?.let { moodTrend(backup, prediction, it) },
         )
     }

@@ -7,6 +7,26 @@ import kotlin.test.assertNull
 
 class CycleInsightsTest {
     @Test
+    fun `reports calendar fertility status at exact boundaries`() {
+        val backup = CycleBackup(
+            logs = period(LocalDate.of(2026, 6, 1)) + period(LocalDate.of(2026, 7, 1)),
+        )
+
+        assertEquals(FertilityStatus.OUTSIDE, CycleInsights.forDate(backup, emptyMap(), LocalDate.of(2026, 7, 11)).fertilityStatus)
+        assertEquals(FertilityStatus.FERTILE, CycleInsights.forDate(backup, emptyMap(), LocalDate.of(2026, 7, 12)).fertilityStatus)
+        assertEquals(FertilityStatus.OVULATION, CycleInsights.forDate(backup, emptyMap(), LocalDate.of(2026, 7, 17)).fertilityStatus)
+        assertEquals(FertilityStatus.FERTILE, CycleInsights.forDate(backup, emptyMap(), LocalDate.of(2026, 7, 18)).fertilityStatus)
+    }
+
+    @Test
+    fun `reports unavailable fertility without cycle history`() {
+        assertEquals(
+            FertilityStatus.UNAVAILABLE,
+            CycleInsights.forDate(CycleBackup(), emptyMap(), LocalDate.of(2026, 7, 17)).fertilityStatus,
+        )
+    }
+
+    @Test
     fun derivesEstimatedOvulationAndFertileWindowFromPeriodStart() {
         val fertility = CycleInsights.fertilityForPeriod(LocalDate.of(2026, 8, 29))
 

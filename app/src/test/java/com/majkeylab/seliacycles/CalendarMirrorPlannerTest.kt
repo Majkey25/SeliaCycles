@@ -11,7 +11,16 @@ class CalendarMirrorPlannerTest {
         val start = LocalDate.of(2026, 7, 2)
         val backup = CycleBackup(
             logs = listOf(
-                DayLog(start, bleeding = true, flow = Flow.MEDIUM, note = "private note"),
+                DayLog(
+                    start,
+                    bleeding = true,
+                    flow = Flow.MEDIUM,
+                    note = "private note",
+                    cervicalMucus = CervicalMucus.EGG_WHITE,
+                    ovulationTest = TestResult.POSITIVE,
+                    pregnancyTest = TestResult.NEGATIVE,
+                    medication = MedicationStatus.TAKEN,
+                ),
                 DayLog(start.plusDays(1), bleeding = true, flow = Flow.LIGHT, symptoms = setOf(Symptom.CRAMPS)),
             ),
             settings = AppSettings(predictionsEnabled = false),

@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()
-            SeliaCyclesTheme(state.backup.settings.theme) {
+            SeliaCyclesTheme(state.backup.settings.theme, state.backup.settings.palette) {
                 SeliaCyclesApp(state, viewModel)
             }
         }

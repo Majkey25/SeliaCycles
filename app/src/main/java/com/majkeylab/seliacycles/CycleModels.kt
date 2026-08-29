@@ -20,11 +20,24 @@ enum class Symptom {
 
 enum class AppTheme { SYSTEM, LIGHT, DARK }
 
+enum class AppPalette { SELIA, ROSE, OCEAN }
+
 enum class Intimacy { SEX, PROTECTED }
+
+enum class CervicalMucus { DRY, STICKY, CREAMY, WATERY, EGG_WHITE, UNUSUAL }
+
+enum class TestResult { NEGATIVE, POSITIVE, INVALID }
+
+enum class WellbeingLevel { LOW, MEDIUM, HIGH }
+
+enum class ActivityLevel { LIGHT, MODERATE, INTENSE }
+
+enum class MedicationStatus { TAKEN, MISSED }
 
 data class DayLog(
     val day: LocalDate,
     val bleeding: Boolean = false,
+    val spotting: Boolean = false,
     val flow: Flow = Flow.NONE,
     val mood: Mood? = null,
     val symptoms: Set<Symptom> = emptySet(),
@@ -33,6 +46,14 @@ data class DayLog(
     val temperatureC: Double? = null,
     val sleepHours: Double? = null,
     val intimacy: Intimacy? = null,
+    val cervicalMucus: CervicalMucus? = null,
+    val ovulationTest: TestResult? = null,
+    val pregnancyTest: TestResult? = null,
+    val painLevel: Int? = null,
+    val energy: WellbeingLevel? = null,
+    val stress: WellbeingLevel? = null,
+    val activity: ActivityLevel? = null,
+    val medication: MedicationStatus? = null,
     val importedDetails: String = "",
 ) {
     init {
@@ -42,12 +63,15 @@ data class DayLog(
         require(weightKg == null || weightKg.isFinite() && weightKg in MIN_WEIGHT_KG..MAX_WEIGHT_KG)
         require(temperatureC == null || temperatureC.isFinite() && temperatureC in MIN_TEMPERATURE_C..MAX_TEMPERATURE_C)
         require(sleepHours == null || sleepHours.isFinite() && sleepHours in 0.0..24.0)
+        require(painLevel == null || painLevel in 0..10)
         require((bleeding && flow != Flow.NONE) || (!bleeding && flow == Flow.NONE))
     }
 
     val isEmpty: Boolean
-        get() = !bleeding && mood == null && symptoms.isEmpty() && note.isBlank() && weightKg == null &&
-            temperatureC == null && sleepHours == null && intimacy == null && importedDetails.isBlank()
+        get() = !bleeding && !spotting && mood == null && symptoms.isEmpty() && note.isBlank() && weightKg == null &&
+            temperatureC == null && sleepHours == null && intimacy == null && cervicalMucus == null &&
+            ovulationTest == null && pregnancyTest == null && painLevel == null && energy == null && stress == null &&
+            activity == null && medication == null && importedDetails.isBlank()
 
     companion object {
         const val MAX_NOTE_LENGTH = 1_000
@@ -69,6 +93,7 @@ data class AppSettings(
     val reminderEnabled: Boolean = false,
     val reminderDays: Int = 2,
     val theme: AppTheme = AppTheme.SYSTEM,
+    val palette: AppPalette = AppPalette.SELIA,
     val partnerViewEnabled: Boolean = false,
 ) {
     init {
