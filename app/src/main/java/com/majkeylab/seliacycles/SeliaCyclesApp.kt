@@ -137,6 +137,7 @@ private enum class SettingsPage(
     CYCLE(R.string.settings_cycle, R.string.settings_cycle_summary, Icons.Outlined.Tune),
     APPEARANCE(R.string.settings_appearance, R.string.settings_appearance_summary, Icons.Outlined.Palette),
     REMINDERS(R.string.section_reminders, R.string.settings_reminders_summary, Icons.Outlined.Notifications),
+    CALENDAR(R.string.settings_calendar, R.string.settings_calendar_summary, Icons.Outlined.CalendarMonth),
     DATA(R.string.settings_data, R.string.settings_data_summary, Icons.Outlined.ImportExport),
     PRIVACY(R.string.section_about, R.string.settings_privacy_summary, Icons.Outlined.Security),
 }
@@ -157,6 +158,12 @@ fun SeliaCyclesApp(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
         if (granted) viewModel.saveSettings(state.backup.settings.copy(reminderEnabled = true))
+        else viewModel.permissionDenied()
+    }
+    val calendarPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { result ->
+        if (CalendarMirror.REQUIRED_PERMISSIONS.all { result[it] == true }) viewModel.calendarPermissionChanged()
         else viewModel.permissionDenied()
     }
 
@@ -217,6 +224,9 @@ fun SeliaCyclesApp(
                         },
                         onInfo = { infoDialog = it },
                         onDeleteAll = { showDeleteConfirm = true },
+                        onRequestCalendarPermission = { calendarPermission.launch(CalendarMirror.REQUIRED_PERMISSIONS) },
+                        onCalendarSelect = viewModel::connectCalendar,
+                        onCalendarDisconnect = viewModel::disconnectCalendar,
                     )
                 }
             }
@@ -270,10 +280,17 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
     val shortDateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val latestStart = prediction.periodStarts.lastOrNull()
     val cycleDay = latestStart?.let { ChronoUnit.DAYS.between(it, today).toInt() + 1 }?.takeIf { it > 0 }
-    val predictedDays = prediction.futurePeriodStarts.takeIf { state.backup.settings.predictionsEnabled }
-        ?.flatMap { start -> (0 until prediction.averagePeriodLength).map { start.plusDays(it.toLong()) } }
-        ?.toSet()
-        .orEmpty()
+    val predictedDays = state.periodEstimates.flatMap { estimate ->
+        generateSequence(estimate.start) { it.plusDays(1) }.takeWhile { it < estimate.endExclusive }.toList()
+    }.toSet()
+    val recordedDays = state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day)
+    val weekLayer: (LocalDate) -> CalendarLayer = { day ->
+        when {
+            day in recordedDays -> CalendarLayer.RECORDED
+            day in predictedDays -> CalendarLayer.PREDICTED
+            else -> CalendarLayer.NONE
+        }
+    }
     val todayLog = state.logsByDay[today]
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -329,17 +346,18 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
                 }
             }
         }
-        if (predictionsEnabled) {
-            MonthlyForecastSection(prediction.monthlyForecasts)
-        }
+        MonthlyForecastSection(state)
+        CycleInsightSection(state.todayInsight, state.backup.settings.partnerViewEnabled)
         SectionLabel(Icons.Outlined.CalendarMonth, R.string.week_heading)
         Row(Modifier.fillMaxWidth()) {
             (-3L..3L).forEach { offset ->
                 val day = today.plusDays(offset)
+                val layer = weekLayer(day)
                 WeekDay(
                     day = day,
-                    recorded = state.logsByDay[day]?.bleeding == true,
-                    predicted = day in predictedDays,
+                    layer = layer,
+                    connectPrevious = offset > -3 && layer != CalendarLayer.NONE && weekLayer(day.minusDays(1)) == layer,
+                    connectNext = offset < 3 && layer != CalendarLayer.NONE && weekLayer(day.plusDays(1)) == layer,
                     onClick = { onEdit(day) },
                     modifier = Modifier.weight(1f),
                 )
@@ -382,12 +400,13 @@ private fun TodayScreen(state: AppState, onEdit: (LocalDate) -> Unit) {
 }
 
 @Composable
-private fun MonthlyForecastSection(forecasts: List<MonthlyForecast>) {
+private fun MonthlyForecastSection(state: AppState) {
     val locale = currentLocale()
     val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         SectionLabel(Icons.Outlined.EventAvailable, R.string.forecast_heading)
-        forecasts.forEachIndexed { index, forecast ->
+        state.prediction.monthlyForecasts.forEachIndexed { index, forecast ->
+            val snapshot = state.forecastSnapshots[forecast.month]
             val icon = when (forecast.status) {
                 ForecastStatus.RECORDED -> Icons.Outlined.CheckCircle
                 ForecastStatus.ESTIMATED -> Icons.Outlined.EventAvailable
@@ -407,12 +426,29 @@ private fun MonthlyForecastSection(forecasts: List<MonthlyForecast>) {
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Text(
-                        when (forecast.status) {
-                            ForecastStatus.RECORDED -> stringResource(
-                                R.string.forecast_recorded,
-                                forecast.start?.format(dateFormat).orEmpty(),
+                    if (forecast.status == ForecastStatus.RECORDED) Text(
+                        stringResource(R.string.forecast_recorded, forecast.start?.format(dateFormat).orEmpty()),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (snapshot != null) {
+                        Text(
+                            stringResource(
+                                if (snapshot.reconstructed) R.string.forecast_reconstructed else R.string.forecast_saved,
+                                snapshot.earliestStart.format(dateFormat),
+                                snapshot.latestStart.format(dateFormat),
+                            ),
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
+                        forecast.start?.takeIf { forecast.status == ForecastStatus.RECORDED }?.let { actual ->
+                            val difference = ChronoUnit.DAYS.between(snapshot.periodStart, actual).toInt()
+                            Text(
+                                stringResource(R.string.forecast_difference, if (difference > 0) "+$difference" else difference.toString()),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall,
                             )
+                        }
+                    } else if (forecast.status != ForecastStatus.RECORDED) Text(
+                        when (forecast.status) {
                             ForecastStatus.ESTIMATED -> stringResource(
                                 R.string.forecast_estimated,
                                 forecast.earliestStart?.format(dateFormat).orEmpty(),
@@ -420,6 +456,7 @@ private fun MonthlyForecastSection(forecasts: List<MonthlyForecast>) {
                             )
                             ForecastStatus.NOT_EXPECTED -> stringResource(R.string.forecast_not_expected)
                             ForecastStatus.UNAVAILABLE -> stringResource(R.string.forecast_unavailable)
+                            ForecastStatus.RECORDED -> ""
                         },
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -430,27 +467,87 @@ private fun MonthlyForecastSection(forecasts: List<MonthlyForecast>) {
 }
 
 @Composable
+private fun CycleInsightSection(insight: DailyCycleInsight, partnerView: Boolean) {
+    val locale = currentLocale()
+    val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SectionLabel(Icons.Outlined.EventAvailable, R.string.cycle_insight)
+        Column(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            insight.phase?.let { Text(stringResource(R.string.cycle_phase_value, stringResource(phaseLabel(it)))) }
+            insight.fertility?.let { fertility ->
+                Text(stringResource(R.string.estimated_ovulation, fertility.ovulation.format(dateFormat)))
+                Text(stringResource(
+                    R.string.fertile_window_value,
+                    fertility.fertileStart.format(dateFormat),
+                    fertility.fertileEnd.format(dateFormat),
+                ))
+            }
+            Text(
+                insight.moodTrend?.let { trend ->
+                    pluralStringResource(
+                        R.plurals.mood_trend_value,
+                        trend.sampleCount,
+                        stringResource(moodLabel(trend.mood)),
+                        trend.sampleCount,
+                    )
+                } ?: stringResource(R.string.mood_trend_unavailable),
+            )
+            Text(
+                stringResource(R.string.fertility_estimate_notice),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        if (partnerView) InfoBlock(R.string.partner_view, R.string.partner_view_active, Icons.Outlined.FavoriteBorder)
+    }
+}
+
+@StringRes
+private fun phaseLabel(phase: CyclePhase): Int = when (phase) {
+    CyclePhase.MENSTRUAL -> R.string.phase_menstrual
+    CyclePhase.FOLLICULAR -> R.string.phase_follicular
+    CyclePhase.FERTILE -> R.string.phase_fertile
+    CyclePhase.LUTEAL -> R.string.phase_luteal
+}
+
+@Composable
 private fun WeekDay(
     day: LocalDate,
-    recorded: Boolean,
-    predicted: Boolean,
+    layer: CalendarLayer,
+    connectPrevious: Boolean,
+    connectNext: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val locale = currentLocale()
-    val background = when {
-        recorded -> MaterialTheme.colorScheme.primary
-        predicted -> MaterialTheme.colorScheme.secondaryContainer
+    val background = when (layer) {
+        CalendarLayer.RECORDED -> MaterialTheme.colorScheme.primary
+        CalendarLayer.PREDICTED -> MaterialTheme.colorScheme.secondaryContainer
         else -> Color.Transparent
     }
-    val foreground = when {
-        recorded -> MaterialTheme.colorScheme.onPrimary
-        predicted -> MaterialTheme.colorScheme.onSecondaryContainer
+    val foreground = when (layer) {
+        CalendarLayer.RECORDED -> MaterialTheme.colorScheme.onPrimary
+        CalendarLayer.PREDICTED -> MaterialTheme.colorScheme.onSecondaryContainer
         else -> MaterialTheme.colorScheme.onSurface
     }
+    val shape = RoundedCornerShape(
+        topStart = if (connectPrevious) 0.dp else 18.dp,
+        bottomStart = if (connectPrevious) 0.dp else 18.dp,
+        topEnd = if (connectNext) 0.dp else 18.dp,
+        bottomEnd = if (connectNext) 0.dp else 18.dp,
+    )
     Column(
-        modifier = modifier.clip(RoundedCornerShape(18.dp)).background(background)
-            .then(if (day == LocalDate.now()) Modifier.border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(18.dp)) else Modifier)
+        modifier = modifier.padding(
+            start = if (connectPrevious) 0.dp else 2.dp,
+            end = if (connectNext) 0.dp else 2.dp,
+        ).clip(shape).background(background)
+            .then(if (day == LocalDate.now() && layer == CalendarLayer.NONE) {
+                Modifier.border(1.dp, MaterialTheme.colorScheme.primary, shape)
+            } else Modifier)
             .clickable(onClick = onClick).padding(vertical = 12.dp, horizontal = 2.dp)
             .semantics { contentDescription = day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)) },
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -492,15 +589,27 @@ private fun CalendarScreen(
     val leading = (shownMonth.atDay(1).dayOfWeek.value - firstDay.value + 7) % 7
     val cells = leading + shownMonth.lengthOfMonth()
     val rows = (cells + 6) / 7
-    val predicted = state.prediction.futurePeriodStarts.takeIf { state.backup.settings.predictionsEnabled }
-        ?.flatMap { start ->
-            (0 until state.prediction.averagePeriodLength).map { start.plusDays(it.toLong()) }
+    val recorded = state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day)
+    val predicted = state.periodEstimates.flatMap { estimate ->
+        generateSequence(estimate.start) { it.plusDays(1) }.takeWhile { it < estimate.endExclusive }.toList()
+    }.toSet()
+    val fertility = state.periodEstimates.map { CycleInsights.fertilityForPeriod(it.start) }
+    val fertile = fertility.flatMap { estimate ->
+        generateSequence(estimate.fertileStart) { it.plusDays(1) }.takeWhile { !it.isAfter(estimate.fertileEnd) }.toList()
+    }.toSet()
+    val ovulation = fertility.mapTo(mutableSetOf(), FertilityEstimate::ovulation)
+    val layerFor: (LocalDate) -> CalendarLayer = { day ->
+        when {
+            day in recorded -> CalendarLayer.RECORDED
+            day in predicted -> CalendarLayer.PREDICTED
+            day in ovulation -> CalendarLayer.OVULATION
+            day in fertile -> CalendarLayer.FERTILE
+            else -> CalendarLayer.NONE
         }
-        ?.toSet()
-        .orEmpty()
+    }
     val previousMonthLabel = stringResource(R.string.previous_month)
     val nextMonthLabel = stringResource(R.string.next_month)
-    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 20.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 20.dp)) {
         Text(stringResource(R.string.calendar_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
         Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(
@@ -541,10 +650,15 @@ private fun CalendarScreen(
                         Spacer(Modifier.weight(1f).aspectRatio(1f))
                     } else {
                         val day = shownMonth.atDay(dayNumber)
+                        val layer = layerFor(day)
                         CalendarDay(
                             day = day,
-                            recorded = state.logsByDay[day]?.bleeding == true,
-                            predicted = day in predicted,
+                            layer = layer,
+                            predictedOverlap = day in recorded && day in predicted,
+                            connectPrevious = column > 0 && dayNumber > 1 && layer != CalendarLayer.NONE &&
+                                layerFor(day.minusDays(1)) == layer,
+                            connectNext = column < 6 && dayNumber < shownMonth.lengthOfMonth() && layer != CalendarLayer.NONE &&
+                                layerFor(day.plusDays(1)) == layer,
                             onClick = { onEdit(day) },
                             enabled = true,
                             modifier = Modifier.weight(1f).aspectRatio(1f),
@@ -553,39 +667,125 @@ private fun CalendarScreen(
                 }
             }
         }
-        Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+        FlowRow(
+            modifier = Modifier.padding(top = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             LegendDot(MaterialTheme.colorScheme.primary, stringResource(R.string.recorded_legend))
             LegendDot(MaterialTheme.colorScheme.secondaryContainer, stringResource(R.string.predicted_legend))
+            LegendDot(MaterialTheme.colorScheme.tertiaryContainer, stringResource(R.string.fertile_legend))
+            LegendDot(MaterialTheme.colorScheme.tertiary, stringResource(R.string.ovulation_legend))
         }
+        MonthComparison(state, shownMonth)
     }
 }
+
+private enum class CalendarLayer { NONE, RECORDED, PREDICTED, FERTILE, OVULATION }
 
 @Composable
 private fun CalendarDay(
     day: LocalDate,
-    recorded: Boolean,
-    predicted: Boolean,
+    layer: CalendarLayer,
+    predictedOverlap: Boolean,
+    connectPrevious: Boolean,
+    connectNext: Boolean,
     onClick: () -> Unit,
     enabled: Boolean,
     modifier: Modifier,
 ) {
-    val background = when {
-        recorded -> MaterialTheme.colorScheme.primary
-        predicted -> MaterialTheme.colorScheme.secondaryContainer
-        else -> Color.Transparent
+    val background = when (layer) {
+        CalendarLayer.RECORDED -> MaterialTheme.colorScheme.primary
+        CalendarLayer.PREDICTED -> MaterialTheme.colorScheme.secondaryContainer
+        CalendarLayer.FERTILE -> MaterialTheme.colorScheme.tertiaryContainer
+        CalendarLayer.OVULATION -> MaterialTheme.colorScheme.tertiary
+        CalendarLayer.NONE -> Color.Transparent
     }
-    val foreground = when {
-        recorded -> MaterialTheme.colorScheme.onPrimary
-        predicted -> MaterialTheme.colorScheme.onSecondaryContainer
-        else -> MaterialTheme.colorScheme.onSurface
+    val foreground = when (layer) {
+        CalendarLayer.RECORDED -> MaterialTheme.colorScheme.onPrimary
+        CalendarLayer.PREDICTED -> MaterialTheme.colorScheme.onSecondaryContainer
+        CalendarLayer.FERTILE -> MaterialTheme.colorScheme.onTertiaryContainer
+        CalendarLayer.OVULATION -> MaterialTheme.colorScheme.onTertiary
+        CalendarLayer.NONE -> MaterialTheme.colorScheme.onSurface
     }
+    val shape = RoundedCornerShape(
+        topStart = if (connectPrevious) 0.dp else 24.dp,
+        bottomStart = if (connectPrevious) 0.dp else 24.dp,
+        topEnd = if (connectNext) 0.dp else 24.dp,
+        bottomEnd = if (connectNext) 0.dp else 24.dp,
+    )
     val date = day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(currentLocale()))
+    val labels = if (predictedOverlap) {
+        listOf(stringResource(R.string.recorded_legend), stringResource(R.string.predicted_legend))
+    } else {
+        when (layer) {
+            CalendarLayer.RECORDED -> listOf(stringResource(R.string.recorded_legend))
+            CalendarLayer.PREDICTED -> listOf(stringResource(R.string.predicted_legend))
+            CalendarLayer.FERTILE -> listOf(stringResource(R.string.fertile_legend))
+            CalendarLayer.OVULATION -> listOf(stringResource(R.string.ovulation_legend))
+            CalendarLayer.NONE -> emptyList()
+        }
+    }
+    val description = (listOf(date) + labels).joinToString(", ")
     Box(
-        modifier = modifier.padding(3.dp).clip(CircleShape).background(background)
-            .then(if (day == LocalDate.now()) Modifier.border(1.dp, MaterialTheme.colorScheme.primary, CircleShape) else Modifier)
-            .clickable(enabled = enabled, onClick = onClick).semantics { contentDescription = date },
+        modifier = modifier.padding(
+            start = if (connectPrevious) 0.dp else 3.dp,
+            end = if (connectNext) 0.dp else 3.dp,
+            top = 3.dp,
+            bottom = 3.dp,
+        )
+            .clip(shape).background(background)
+            .then(if (predictedOverlap) Modifier.border(2.dp, MaterialTheme.colorScheme.secondary, shape) else Modifier)
+            .then(if (day == LocalDate.now() && !predictedOverlap) Modifier.border(1.dp, MaterialTheme.colorScheme.primary, shape) else Modifier)
+            .clickable(enabled = enabled, onClick = onClick).semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) { Text(day.dayOfMonth.toString(), color = foreground) }
+}
+
+@Composable
+private fun MonthComparison(state: AppState, month: YearMonth) {
+    val actual = state.prediction.periodStarts.lastOrNull { YearMonth.from(it) == month }
+    val snapshot = state.forecastSnapshots[month]
+    val estimate = state.periodEstimates.firstOrNull { YearMonth.from(it.start) == month }
+    if (actual == null && estimate == null) return
+    val locale = currentLocale()
+    val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp).clip(RoundedCornerShape(18.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        Text(stringResource(R.string.month_comparison), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        actual?.let { Text(stringResource(R.string.forecast_recorded, it.format(dateFormat))) }
+        snapshot?.let {
+            Text(
+                stringResource(
+                    if (it.reconstructed) R.string.forecast_reconstructed else R.string.forecast_saved,
+                    it.earliestStart.format(dateFormat),
+                    it.latestStart.format(dateFormat),
+                ),
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        } ?: estimate?.let {
+            Text(
+                stringResource(
+                    R.string.forecast_estimated,
+                    (it.earliestStart ?: it.start).format(dateFormat),
+                    (it.latestStart ?: it.start).format(dateFormat),
+                ),
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        }
+        estimate?.let {
+            val fertility = CycleInsights.fertilityForPeriod(it.start)
+            Text(stringResource(R.string.estimated_ovulation, fertility.ovulation.format(dateFormat)))
+            Text(stringResource(
+                R.string.fertile_window_value,
+                fertility.fertileStart.format(dateFormat),
+                fertility.fertileEnd.format(dateFormat),
+            ))
+        }
+    }
 }
 
 @Composable
@@ -646,6 +846,9 @@ private fun SettingsScreen(
     onReminderChange: (Boolean) -> Unit,
     onInfo: (InfoDialog) -> Unit,
     onDeleteAll: () -> Unit,
+    onRequestCalendarPermission: () -> Unit,
+    onCalendarSelect: (Long) -> Unit,
+    onCalendarDisconnect: () -> Unit,
 ) {
     val settings = state.backup.settings
     var pageName by rememberSaveable { mutableStateOf<String?>(null) }
@@ -708,6 +911,13 @@ private fun SettingsScreen(
                         }
                     }
                 }
+                SettingsPage.CALENDAR -> CalendarSyncSettings(
+                    state = state,
+                    onSave = onSave,
+                    onRequestPermission = onRequestCalendarPermission,
+                    onSelect = onCalendarSelect,
+                    onDisconnect = onCalendarDisconnect,
+                )
                 SettingsPage.DATA -> {
                     InfoBlock(R.string.device_transfer, R.string.device_transfer_body, Icons.Outlined.Security)
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
@@ -724,6 +934,97 @@ private fun SettingsScreen(
             }
         }
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun CalendarSyncSettings(
+    state: AppState,
+    onSave: (AppSettings) -> Unit,
+    onRequestPermission: () -> Unit,
+    onSelect: (Long) -> Unit,
+    onDisconnect: () -> Unit,
+) {
+    val selected = state.deviceCalendars.firstOrNull { it.id == state.selectedCalendarId }
+    InfoBlock(R.string.calendar_sync, R.string.calendar_sync_body, Icons.Outlined.CalendarMonth)
+    SwitchRow(
+        R.string.partner_view,
+        state.backup.settings.partnerViewEnabled,
+        Icons.Outlined.FavoriteBorder,
+    ) { onSave(state.backup.settings.copy(partnerViewEnabled = it)) }
+    Text(
+        stringResource(R.string.partner_view_body),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall,
+    )
+    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+    when {
+        !state.calendarPermissionGranted -> Button(
+            onClick = onRequestPermission,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !state.busy,
+        ) {
+            Icon(Icons.Outlined.CalendarMonth, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.calendar_choose))
+        }
+        state.deviceCalendars.isEmpty() -> Text(
+            stringResource(R.string.calendar_none),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        else -> {
+            if (state.selectedCalendarId != null) {
+                Text(
+                    selected?.let { stringResource(R.string.calendar_active, it.displayName) }
+                        ?: stringResource(R.string.calendar_unavailable),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            state.deviceCalendars.forEach { calendar ->
+                DeviceCalendarRow(
+                    calendar = calendar,
+                    selected = calendar.id == state.selectedCalendarId,
+                    enabled = !state.busy,
+                    onClick = { onSelect(calendar.id) },
+                )
+            }
+            if (state.selectedCalendarId != null) {
+                OutlinedButton(onClick = onDisconnect, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
+                    Text(stringResource(R.string.calendar_disconnect))
+                }
+            }
+        }
+    }
+    Text(
+        stringResource(R.string.calendar_sync_notice),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall,
+    )
+}
+
+@Composable
+private fun DeviceCalendarRow(
+    calendar: DeviceCalendar,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+            .background(if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
+            .clickable(enabled = enabled, onClick = onClick).padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.size(14.dp).clip(CircleShape).background(Color(calendar.color)))
+        Column(Modifier.weight(1f)) {
+            Text(calendar.displayName, fontWeight = FontWeight.SemiBold)
+            if (calendar.accountName.isNotBlank() && calendar.accountName != calendar.displayName) {
+                Text(calendar.accountName, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        if (selected) Icon(Icons.Outlined.CheckCircle, contentDescription = stringResource(R.string.calendar_selected))
     }
 }
 

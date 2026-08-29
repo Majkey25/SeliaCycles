@@ -8,7 +8,7 @@
   <img src="docs/play-store/assets/icon-512.png" width="180" alt="Selia Cycles calendar and drop icon">
 </p>
 
-Selia Cycles is a local-only period calendar for Android. It records bleeding, flow, symptoms, mood, notes, weight, basal temperature, sleep, and intimacy without an account, ads, analytics, or network permission.
+Selia Cycles is a private period calendar for Android. It records bleeding, flow, symptoms, mood, notes, weight, basal temperature, sleep, and intimacy without an account, ads, analytics, or network permission.
 
 ## Features
 
@@ -16,13 +16,17 @@ Selia Cycles is a local-only period calendar for Android. It records bleeding, f
 - Robust personal estimates that normalize missed tracking cycles and reject isolated outliers.
 - Recorded or estimated windows for this month and next month.
 - Real bleeding starts immediately re-anchor future estimates.
+- Saved monthly estimates stay visible beside recorded reality.
+- Estimated ovulation, fertile window, cycle phase, and personal mood trends with clear evidence limits.
+- Connected period and fertility spans in the month calendar.
+- Optional mirror to an existing Google Calendar, Outlook, Exchange, or local Android calendar.
 - English, Czech, Slovak, German, Polish, and Spanish.
 - System, light, and dark themes.
 - Optional local period reminders.
 - Android device-to-device transfer during new-device setup.
 - One-action deletion of all local app data.
 
-Existing local records remain in the SQLite database across normal app updates. Selia Cycles has no manual import, export, cloud sync, or partner account feature.
+Existing local records remain in the SQLite database across normal app updates. Selia Cycles has no manual import/export, Selia cloud, or partner account. If calendar mirroring is enabled, short cycle labels are copied through Android to the selected provider; notes and raw health details are never mirrored.
 
 ## Build
 

@@ -14,6 +14,10 @@ import kotlinx.coroutines.withContext
 
 data class AppState(
     val backup: CycleBackup = CycleBackup(),
+    val forecastSnapshots: Map<java.time.YearMonth, ForecastSnapshot> = emptyMap(),
+    val calendarPermissionGranted: Boolean = false,
+    val selectedCalendarId: Long? = null,
+    val deviceCalendars: List<DeviceCalendar> = emptyList(),
     val loading: Boolean = true,
     val busy: Boolean = false,
     @param:StringRes val message: Int? = null,
@@ -25,10 +29,15 @@ data class AppState(
         defaultCycleLength = backup.settings.cycleLength,
         defaultPeriodLength = backup.settings.periodLength,
     )
+
+    val periodEstimates: List<PeriodEstimate> = CycleInsights.periodEstimates(backup, forecastSnapshots)
+
+    val todayInsight: DailyCycleInsight = CycleInsights.forDate(backup, forecastSnapshots)
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val store = CycleStore(application)
+    private val calendarMirror = CalendarMirror(application)
     private val storeMutex = Mutex()
     private val _state = MutableStateFlow(AppState())
     val state = _state.asStateFlow()
@@ -50,8 +59,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun clearAll() = runStoreAction {
+        if (calendarMirror.selectedCalendarId() != null) calendarMirror.disconnect()
         store.clearAll()
         ReminderWorker.sync(getApplication(), AppSettings())
+    }
+
+    fun calendarPermissionChanged() = reload()
+
+    fun connectCalendar(calendarId: Long) = runStoreAction {
+        calendarMirror.connect(
+            calendarId = calendarId,
+            backup = store.load(),
+            snapshots = store.loadForecastSnapshots().associateBy(ForecastSnapshot::month),
+        )
+    }
+
+    fun disconnectCalendar() = runStoreAction {
+        calendarMirror.disconnect()
     }
 
     fun permissionDenied() {
@@ -69,15 +93,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun reload(@StringRes message: Int? = null) = viewModelScope.launch {
-        val backup = runCatching {
+        val loaded = runCatching {
             withContext(Dispatchers.IO) {
                 storeMutex.withLock {
-                    store.load().also { ReminderWorker.sync(getApplication(), it.settings) }
+                    val backup = store.load().also { ReminderWorker.sync(getApplication(), it.settings) }
+                    val existingSnapshots = store.loadForecastSnapshots()
+                    val missingSnapshots = ForecastSnapshotPlanner.missingSnapshots(
+                        backup = backup,
+                        existing = existingSnapshots.associateBy(ForecastSnapshot::month),
+                    )
+                    store.saveForecastSnapshots(missingSnapshots)
+                    val forecastSnapshots = (existingSnapshots + missingSnapshots).associateBy(ForecastSnapshot::month)
+                    val calendar = runCatching { calendarMirror.snapshot(backup, forecastSnapshots) }
+                    LoadedState(
+                        backup = backup,
+                        forecastSnapshots = forecastSnapshots,
+                        calendar = calendar.getOrElse {
+                            CalendarMirrorSnapshot(
+                                permissionGranted = calendarMirror.hasPermissions(),
+                                selectedCalendarId = calendarMirror.selectedCalendarId(),
+                                calendars = emptyList(),
+                            )
+                        },
+                        calendarFailed = calendar.isFailure,
+                    )
                 }
             }
         }
-        _state.value = backup.fold(
-            onSuccess = { AppState(backup = it, loading = false, message = message) },
+        _state.value = loaded.fold(
+            onSuccess = {
+                AppState(
+                    backup = it.backup,
+                    forecastSnapshots = it.forecastSnapshots,
+                    calendarPermissionGranted = it.calendar.permissionGranted,
+                    selectedCalendarId = it.calendar.selectedCalendarId,
+                    deviceCalendars = it.calendar.calendars,
+                    loading = false,
+                    message = message ?: if (it.calendarFailed) R.string.calendar_sync_failed else null,
+                )
+            },
             onFailure = { _state.value.copy(loading = false, busy = false, message = R.string.operation_failed) },
         )
     }
@@ -86,3 +140,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         store.close()
     }
 }
+
+private data class LoadedState(
+    val backup: CycleBackup,
+    val forecastSnapshots: Map<java.time.YearMonth, ForecastSnapshot>,
+    val calendar: CalendarMirrorSnapshot,
+    val calendarFailed: Boolean,
+)

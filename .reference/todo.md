@@ -9,4 +9,10 @@
 - [x] Commit and push
 - [x] Verify GitHub CI
 - [x] Submit Google Play declarations, listing, signed AAB, and Closed testing release for review
-- [ ] Verify Google review approval and tester availability
+- [x] Verify Google review approval and tester availability for code 3
+- [x] Preserve monthly estimate-versus-reality history
+- [x] Add ovulation, fertile window, personal mood evidence, and Partner view
+- [x] Add connected calendar spans and native calendar mirroring
+- [x] Complete signed code 4 build and physical Huawei QA
+- [ ] Update Google Play declarations/listing and submit code 4 to Closed Alpha
+- [ ] Verify Google review approval and tester availability for code 4

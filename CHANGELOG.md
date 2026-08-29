@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0-beta.1 - 2026-08-29
+
+### Added
+
+- Saved or reconstructed monthly estimates shown beside recorded reality.
+- Estimated ovulation, fertile window, cycle phase, and evidence-gated personal mood trend.
+- Connected calendar spans with visible recorded/estimated overlap.
+- Optional native calendar mirror for installed Google Calendar, Outlook, Exchange, or local providers.
+- Optional plain-language Partner view without a partner account.
+
+### Changed
+
+- Calendar mirroring exposes short cycle labels only; private notes, symptoms, measurements, intimacy, and raw moods remain local.
+
 ## 0.3.0-beta.1 - 2026-08-28
 
 ### Added

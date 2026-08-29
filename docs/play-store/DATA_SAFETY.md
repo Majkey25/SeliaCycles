@@ -1,6 +1,6 @@
 # Google Play declarations
 
-These answers describe version 0.3.0-beta.1.
+These answers describe version 0.4.0-beta.1.
 
 ## Data safety
 
@@ -12,10 +12,13 @@ These answers describe version 0.3.0-beta.1.
 - Local deletion: **Settings > Data and transfer > Delete all data**.
 - Network permission: **No**.
 - Android device-to-device transfer may copy private app data during new-device setup. Normal cloud backup is blocked.
+- Optional Android calendar read/write permission lists writable calendars and mirrors short cycle labels to the calendar the user selects.
+- Selia Cycles does not transmit calendar or cycle data. A selected calendar provider may synchronize the user-directed copies under its own terms.
+- The calendar transfer is an explicit user-initiated action with an in-app disclosure before the runtime permission and target selection; Google Play lists this as an exception from the Data safety "shared" disclosure.
 
 ## Health apps declaration
 
-- Health feature: **Period Tracking**.
+- Health feature: **Period Tracking**, which Google defines to include ovulation tracking/prediction and fertility awareness.
 - Medical device: **No**.
 - Diagnosis or treatment: **No**.
 - Research: **No**.

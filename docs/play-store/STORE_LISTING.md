@@ -14,9 +14,9 @@ Selia Cycles keeps period tracking clear and private.
 
 Record bleeding, flow, symptoms, mood, notes, and optional measurements through one simple daily action. The modern calendar separates recorded days from estimates.
 
-Personal estimates use recent history, handle missed tracking cycles, and reduce the effect of isolated unusual gaps. The Today screen shows this month and next month. A real recorded period start immediately updates future estimates.
+Personal estimates use recent history, handle missed tracking cycles, and reduce the effect of isolated unusual gaps. Saved monthly estimates remain visible beside reality. A real recorded period start immediately updates future months. Estimated ovulation, fertile windows, cycle phase, and evidence-gated personal mood trends add context without claiming medical certainty.
 
-Everything stays in private storage on the device. Selia Cycles has no account, cloud sync, ads, analytics, or network permission. Android can transfer the database directly while setting up a new device.
+Private details stay in app storage. Selia Cycles has no account, app cloud, ads, analytics, or network permission. Android can transfer the database directly while setting up a new device. An optional calendar mirror can copy short cycle labels to an existing Google Calendar, Outlook, Exchange, or local calendar chosen by the user; the calendar provider controls its own account sync.
 
 Available in English, Czech, Slovak, German, Polish, and Spanish. Requires Android 10 or newer.
 
@@ -36,9 +36,9 @@ Selia Cycles nabízí přehledné a soukromé sledování menstruace.
 
 Jednou jednoduchou akcí zapisuj krvácení, intenzitu, příznaky, náladu, poznámku a volitelná měření. Moderní kalendář jasně odlišuje zapsané dny od odhadu.
 
-Osobní odhad vychází z poslední historie, umí zohlednit vynechané zápisy a omezuje vliv jednorázových neobvyklých mezer. Obrazovka Dnes ukazuje tento i příští měsíc. Nový skutečný začátek menstruace okamžitě upraví budoucí odhady.
+Osobní odhad vychází z poslední historie, umí zohlednit vynechané zápisy a omezuje vliv jednorázových neobvyklých mezer. Uložený měsíční odhad zůstává vedle reality a nový skutečný začátek upraví budoucí měsíce. Aplikace přidává odhad ovulace, plodné období, fázi cyklu a osobní trend nálady jen při dostatku vlastních dat.
 
-Všechna data zůstávají v soukromém úložišti zařízení. Selia Cycles nemá účet, cloudovou synchronizaci, reklamy, analytiku ani oprávnění k síti. Android může databázi přenést přímo při nastavení nového zařízení.
+Soukromé podrobnosti zůstávají v úložišti aplikace. Selia Cycles nemá účet, vlastní cloud, reklamy, analytiku ani oprávnění k síti. Volitelně může přes Android zrcadlit krátké štítky cyklu do vybraného Google Kalendáře, Outlooku, Exchange nebo místního kalendáře; synchronizaci účtu řídí poskytovatel kalendáře.
 
 Aplikace je v češtině, angličtině, slovenštině, němčině, polštině a španělštině. Vyžaduje Android 10 nebo novější.
 
@@ -46,4 +46,4 @@ Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
 
 ## Closed test release notes
 
-`Local-only redesign: robust personal prediction, this-month and next-month estimates, simpler settings, and no account or cloud.`
+`Saved prediction-versus-reality history, estimated fertility and ovulation, personal mood trends, connected calendar spans, and optional Google Calendar or Outlook mirroring.`

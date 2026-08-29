@@ -69,6 +69,7 @@ data class AppSettings(
     val reminderEnabled: Boolean = false,
     val reminderDays: Int = 2,
     val theme: AppTheme = AppTheme.SYSTEM,
+    val partnerViewEnabled: Boolean = false,
 ) {
     init {
         require(cycleLength in 15..90)
