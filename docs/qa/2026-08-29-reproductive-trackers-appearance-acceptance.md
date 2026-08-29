@@ -53,4 +53,13 @@ Target: `BQLDU19927002646`, Huawei YAL-L21, Android 10. Every ADB command was pi
 - Version code: 5.
 - Version name: `0.5.0-beta.1`.
 - Store listing and Closed Alpha release notes describe the new local trackers, daily fertility estimate, and appearance previews.
-- GitHub and Google Play publication are recorded separately after their external verification completes.
+- Commit `74b368f` was pushed to `main`; GitHub Android CI run `33253905286` passed.
+- Google Play accepted the signed code-5 AAB as `5 (0.5.0-beta.1)`, API 29+, target SDK 36.
+- Release name: `Selia Cycles 0.5.0-beta.1 — Trackers`.
+- Closed Alpha retains the existing 177 countries/regions and tester configuration; code 4 remains available while code 5 is reviewed.
+- Device coverage is unchanged: 0 phones, tablets, TVs, cars, Chromebooks, or Android XR devices were lost.
+- The same two non-blocking warnings remain: no deobfuscation file because minification is disabled, and no native symbols for a transitive library.
+- The default English full description was updated. Google Play currently has no Czech store-listing locale configured; the prepared Czech copy remains in `docs/play-store/STORE_LISTING.md`.
+- Google Play Publishing Overview confirmed that exactly 2 changes were submitted: Closed Alpha code 5 and the English full-description update.
+- Submission status: `Probíhá kontrola změn` (changes under review).
+- Controlled publishing is off, so Google will automatically publish approved changes to Closed Alpha.
