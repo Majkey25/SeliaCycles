@@ -64,3 +64,15 @@ Target: `BQLDU19927002646`, Huawei YAL-L21, Android 10. Every ADB command was pi
 
 - [Saved estimate, fertility, ovulation, and mood evidence](screenshots/phone-fertility-insight.png)
 - [Connected adjacent recorded days](screenshots/phone-connected-period-span.png)
+
+## Google Play Closed Alpha
+
+- Code 3 remained published and available to selected testers during the update.
+- Google Play accepted the correctly signed code 4 AAB as `0.4.0-beta.1`, min API 29, target API 36.
+- Release name: `Selia Cycles 0.4.0-beta.1 — Cycle insights`.
+- Release notes cover saved estimate-versus-reality history, fertility/ovulation, personal mood trends, connected spans, and optional Google Calendar/Outlook mirroring.
+- The English store listing now discloses saved forecasts, fertility estimates, mood evidence limits, and the optional user-directed calendar provider mirror.
+- Two non-blocking warnings remain: no deobfuscation file because minification is disabled, and no native symbols for the transitive AndroidX graphics-path library.
+- The Closed Alpha track remains active in 177 countries/regions with the existing tester groups.
+- Play Console status: `Probíhá kontrola`; code 4 and the store-listing update were submitted together as 2 changes.
+- Controlled publishing is off, so code 4 publishes automatically after Google approves it.
