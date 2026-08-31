@@ -8,8 +8,10 @@ import kotlin.test.assertTrue
 
 class AppPaletteTest {
     @Test
-    fun `Selia palette remains the default`() {
-        assertEquals(AppPalette.SELIA, AppSettings().palette)
+    fun `new users start with the current light Ocean appearance`() {
+        assertEquals(AppTheme.LIGHT, AppSettings().theme)
+        assertEquals(AppPalette.OCEAN, AppSettings().palette)
+        assertEquals(null, AppSettings().cycleLengthOverride)
     }
 
     @Test
