@@ -1,20 +1,24 @@
 # Selia Cycles privacy policy
 
-Effective: August 29, 2026
+Effective: August 30, 2026
 
 Selia Cycles is published by MajkeyLab. Contact `majkeylab@gmail.com` about this policy.
 
 ## Data stored by the app
 
-Selia Cycles stores menstrual dates, spotting, flow, symptoms, mood, notes, cervical mucus, ovulation and pregnancy test results, pain, energy, stress, activity, medication status, weight, basal temperature, sleep, intimacy, saved forecast baselines, reminder settings, and display settings in private storage on the Android device.
+Selia Cycles stores menstrual dates, spotting, flow, symptoms, mood, notes, cervical mucus, ovulation and pregnancy test results, pain, energy, stress, activity, medication status, weight, basal temperature, sleep, intimacy, optional age and height, tracking goal, life situation, saved forecast baselines, reminder settings, and display settings in private storage on the Android device.
 
 The app has no account, ads, analytics, telemetry, Selia cloud, or network permission. MajkeyLab does not receive cycle data.
+
+## Optional My Calendar import
+
+When the user selects a My Calendar `.pc` backup, Selia Cycles reads the file locally, previews the dated records, and merges confirmed records into private app storage. The file and imported health data are not uploaded. Existing Selia values take priority for the same day.
 
 ## Optional calendar mirror
 
 If the user enables calendar mirroring, Selia Cycles requests Android calendar read/write permission, lists visible writable calendars, and copies short labels for recorded periods, period estimates, fertile windows, and estimated ovulation into the selected calendar. Notes, symptoms, measurements, spotting, cervical mucus, test results, medication, intimacy, and raw mood logs are never copied.
 
-The selected calendar provider, such as Google Calendar, Outlook, Exchange, or a local calendar, controls whether those labels are uploaded to an account and who can access them. Events are private by default. Enabling Partner view uses the selected calendar's normal sharing visibility. Its privacy terms apply. Selia stores the selected device calendar row ID in Android no-backup storage because the ID is device-specific.
+The selected calendar provider, such as Google Calendar, Outlook, Exchange, or a local calendar, controls whether those labels are uploaded to an account and who can access them. Events are private by default. For view-only partner access, the user creates and shares a separate calendar in the provider, then selects it in Selia. Selia cannot grant or enforce provider access. Its privacy terms apply. Selia stores the selected device calendar row ID in Android no-backup storage because the ID is device-specific.
 
 ## Device transfer
 
@@ -34,7 +38,7 @@ Android app-private storage protects local data. No storage method removes all r
 
 ## Medical disclaimer
 
-Selia Cycles provides personal tracking, reconstructed forecasts, fertility estimates, and personal mood trends. It does not diagnose a condition, confirm ovulation, predict mood with certainty, or provide contraception.
+Selia Cycles provides personal tracking, reconstructed forecasts, fertility estimates, phase education, optional self-care timers, and personal mood trends. It does not diagnose or treat a condition, confirm ovulation, predict symptoms with certainty, or provide contraception.
 
 ## Policy changes
 

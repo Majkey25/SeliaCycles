@@ -23,19 +23,16 @@ import java.util.concurrent.TimeUnit
 
 class ReminderWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
-        val backup = CycleStore(applicationContext).use(CycleStore::load)
-        if (!backup.settings.reminderEnabled) return Result.success()
+        val (backup, snapshots) = CycleStore(applicationContext).use { store ->
+            store.load() to store.loadForecastSnapshots().associateBy(ForecastSnapshot::month)
+        }
+        if (!backup.settings.reminderEnabled || !backup.settings.canPredictPeriods) return Result.success()
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
         ) return Result.success()
 
-        val prediction = CyclePredictor.predict(
-            bleedingDays = backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
-            defaultCycleLength = backup.settings.cycleLength,
-            defaultPeriodLength = backup.settings.periodLength,
-        )
-        val next = prediction.nextPeriodStart ?: return Result.success()
+        val next = CycleInsights.forDate(backup, snapshots).nextPeriodStart ?: return Result.success()
         if (ChronoUnit.DAYS.between(LocalDate.now(), next) != backup.settings.reminderDays.toLong()) {
             return Result.success()
         }
@@ -79,7 +76,7 @@ class ReminderWorker(context: Context, parameters: WorkerParameters) : Coroutine
 
         fun sync(context: Context, settings: AppSettings) {
             val workManager = WorkManager.getInstance(context)
-            if (!settings.reminderEnabled) {
+            if (!settings.reminderEnabled || !settings.canPredictPeriods) {
                 workManager.cancelUniqueWork(WORK_NAME)
                 return
             }

@@ -25,12 +25,15 @@ object ForecastSnapshotPlanner {
         existing: Map<YearMonth, ForecastSnapshot>,
         referenceDate: LocalDate = LocalDate.now(),
     ): List<ForecastSnapshot> {
+        if (!backup.settings.canPredictPeriods) return emptyList()
         val currentMonth = YearMonth.from(referenceDate)
-        return (HISTORY_MONTHS downTo 0L).mapNotNull { monthsAgo ->
-            val month = currentMonth.minusMonths(monthsAgo)
+        val firstMonth = backup.logs.asSequence().filter(DayLog::bleeding).map { YearMonth.from(it.day) }.minOrNull()
+            ?: return emptyList()
+        return generateSequence(firstMonth) { it.plusMonths(1) }
+            .takeWhile { !it.isAfter(currentMonth) }.mapNotNull { month ->
             if (month in existing) return@mapNotNull null
             snapshotForMonth(backup, month, currentMonth)
-        }
+        }.toList()
     }
 
     private fun snapshotForMonth(
@@ -61,5 +64,4 @@ object ForecastSnapshotPlanner {
         )
     }
 
-    private const val HISTORY_MONTHS = 12L
 }

@@ -12,23 +12,37 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 
 ## Features
 
-- Calendar-first Material 3 UI with one clear daily action.
+- Calendar-first Material 3 UI with one-tap Period started / Period ended actions.
+- Swipeable month calendar with connected tracks, muted adjacent-month dates, and adjacent-day navigation into the correct full month.
+- Calendar color key stays fully hidden below one explanation control until requested.
+- Clear customizable color roles: prominent red menstruation and blue user-entry markers, with ovulation and fertility kept visually separate.
+- Next period, fertile window, and ovulation stay together in one visible cycle timeline.
+- Optional phase guidance and local self-care timers with cautious medical wording.
+- Phase guidance covers physical signs, emotions, and energy for menstrual, follicular, estimated ovulation/fertile, and luteal phases.
+- Cycle-length analysis plus recent period-duration, fertile-window, and estimated-ovulation timelines.
+- Clean line-only cycle-length graph with exact values per recorded cycle.
+- Saved-prediction accuracy summarizes average start-date error and results inside the original range.
 - Robust personal estimates that normalize missed tracking cycles and reject isolated outliers.
 - Recorded or estimated windows for this month and next month.
 - Real bleeding starts immediately re-anchor future estimates.
 - Saved monthly estimates stay visible beside recorded reality.
+- Saved estimates extend across the complete recorded history; only future estimates keep changing.
 - Estimated ovulation, fertile window, cycle phase, and personal mood trends with clear evidence limits.
 - Daily fertility status plus recorded cervical-mucus and ovulation-test signals; no false ovulation confirmation.
 - Complete reproductive and wellbeing trackers kept behind one optional More details control.
+- Optional Simple mode for period-only use; it hides fertility details without deleting stored data.
 - Connected period and fertility spans in the month calendar.
 - Optional mirror to an existing Google Calendar, Outlook, Exchange, or local Android calendar.
 - English, Czech, Slovak, German, Polish, and Spanish.
-- System, light, and dark theme previews with Selia, Rose, and Ocean color palettes.
+- Profile settings for tracking goal, life situation, body context, and luteal phase.
+- Clear device, sun, and moon theme controls plus six palettes, a pencil-marked custom option, a color picker, and optional exact hex values.
+- Local My Calendar `.pc` import with a merge preview and no upload.
 - Optional local period reminders.
 - Android device-to-device transfer during new-device setup.
 - One-action deletion of all local app data.
+- Direct edit and confirmed connected-period removal from any recorded calendar day while preserving other notes.
 
-Existing local records remain in the SQLite database across normal app updates. Selia Cycles has no manual import/export, Selia cloud, or partner account. If calendar mirroring is enabled, short cycle labels are copied through Android to the selected provider; notes and raw health details are never mirrored.
+Existing local records remain in the SQLite database across normal app updates. Selia Cycles has no Selia cloud or partner account. A selected My Calendar `.pc` backup is read and merged locally. If calendar mirroring is enabled, short cycle labels are copied through Android to the selected provider; notes and raw health details are never mirrored.
 
 ## Build
 
@@ -43,6 +57,7 @@ The default release bundle is unsigned. Publication uses an external upload keys
 ## Privacy and medical scope
 
 See the [privacy policy](PRIVACY.md) and [Google Play declarations](docs/play-store/DATA_SAFETY.md).
+The public policy is published at <https://majkey25.github.io/SeliaCycles/>.
 
 Predictions are calendar estimates. They do not diagnose a condition, confirm ovulation, or provide contraception.
 

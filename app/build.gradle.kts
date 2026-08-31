@@ -20,8 +20,8 @@ android {
         applicationId = "com.majkeylab.seliacycles"
         minSdk = 29
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.5.0-beta.1"
+        versionCode = 9
+        versionName = "0.9.0-beta.1"
     }
 
     signingConfigs {
@@ -82,6 +82,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("com.github.skydoves:colorpicker-compose:1.1.4")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation(kotlin("test"))

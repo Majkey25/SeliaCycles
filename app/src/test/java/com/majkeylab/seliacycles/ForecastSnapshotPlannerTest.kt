@@ -45,16 +45,40 @@ class ForecastSnapshotPlannerTest {
     }
 
     @Test
-    fun storesNoFutureMonthsAndNoEstimateWithoutPriorData() {
+    fun storesOnlyPastAndCurrentBaselinesSoFutureCanUpdate() {
         val reference = LocalDate.of(2026, 8, 20)
         val snapshots = ForecastSnapshotPlanner.missingSnapshots(
-            backup = CycleBackup(),
+            backup = CycleBackup(
+                logs = period(LocalDate.of(2026, 6, 1)) +
+                    period(LocalDate.of(2026, 7, 2)) +
+                    period(LocalDate.of(2026, 8, 2)),
+            ),
             existing = emptyMap(),
             referenceDate = reference,
         )
 
-        assertTrue(snapshots.isEmpty())
-        assertTrue(snapshots.none { it.month > YearMonth.from(reference) })
+        assertTrue(snapshots.any { it.month == YearMonth.of(2026, 8) })
+        assertTrue(snapshots.none { it.month > YearMonth.of(2026, 8) })
+        assertTrue(ForecastSnapshotPlanner.missingSnapshots(
+            backup = CycleBackup(),
+            existing = emptyMap(),
+            referenceDate = reference,
+        ).isEmpty())
+    }
+
+    @Test
+    fun `reconstructs estimates across the full recorded history`() {
+        val snapshots = ForecastSnapshotPlanner.missingSnapshots(
+            backup = CycleBackup(
+                logs = period(LocalDate.of(2024, 1, 1)) +
+                    period(LocalDate.of(2024, 2, 1)),
+            ),
+            existing = emptyMap(),
+            referenceDate = LocalDate.of(2026, 8, 20),
+        )
+
+        assertTrue(snapshots.any { it.month == YearMonth.of(2024, 3) })
+        assertTrue(snapshots.none { it.month > YearMonth.of(2026, 8) })
     }
 
     private fun period(start: LocalDate): List<DayLog> = (0L..2L).map { offset ->

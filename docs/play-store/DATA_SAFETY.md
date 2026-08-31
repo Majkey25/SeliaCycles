@@ -1,6 +1,6 @@
 # Google Play declarations
 
-These answers describe version 0.5.0-beta.1.
+These answers describe version 0.9.0-beta.1.
 
 ## Data safety
 
@@ -12,6 +12,7 @@ These answers describe version 0.5.0-beta.1.
 - Local deletion: **Settings > Data and transfer > Delete all data**.
 - Network permission: **No**.
 - Android device-to-device transfer may copy private app data during new-device setup. Normal cloud backup is blocked.
+- User-selected My Calendar `.pc` backups are read and merged locally. They are not uploaded.
 - Optional Android calendar read/write permission lists writable calendars and mirrors short cycle labels to the calendar the user selects.
 - Selia Cycles does not transmit calendar or cycle data. A selected calendar provider may synchronize the user-directed copies under its own terms.
 - The calendar transfer is an explicit user-initiated action with an in-app disclosure before the runtime permission and target selection; Google Play lists this as an exception from the Data safety "shared" disclosure.
@@ -28,7 +29,7 @@ These answers describe version 0.5.0-beta.1.
 ## Store setup
 
 - Category: **Health & Fitness**.
-- Initial target audience: **18 and over**.
+- Target audience: **13–15, 16–17, and 18 and over**. The app does not target children under 13.
 - Privacy policy URL: `https://majkey25.github.io/SeliaCycles/`.
 - Contact email: `majkeylab@gmail.com`.
 - Contains ads: **No**.

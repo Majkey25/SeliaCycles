@@ -7,6 +7,45 @@ import kotlin.test.assertTrue
 
 class CalendarMirrorPlannerTest {
     @Test
+    fun `hormonal contraception omits fertility mirror events`() {
+        val bleeding = listOf(LocalDate.of(2026, 6, 1), LocalDate.of(2026, 7, 1)).map {
+            DayLog(it, bleeding = true, flow = Flow.UNKNOWN)
+        }
+        val events = CalendarMirrorPlanner.plan(
+            CycleBackup(
+                logs = bleeding,
+                settings = AppSettings(profile = UserProfile(lifeSituation = LifeSituation.HORMONAL_CONTRACEPTION)),
+            ),
+            emptyMap(),
+            LocalDate.of(2026, 7, 15),
+        )
+
+        assertTrue(events.none { it.kind == MirrorEventKind.FERTILE || it.kind == MirrorEventKind.OVULATION })
+    }
+
+    @Test
+    fun `future recorded period keeps its preceding fertility events`() {
+        val futureStart = LocalDate.of(2026, 9, 26)
+        val backup = CycleBackup(
+            logs = listOf(
+                LocalDate.of(2026, 6, 1),
+                LocalDate.of(2026, 7, 1),
+                LocalDate.of(2026, 8, 28),
+                futureStart,
+            ).map { DayLog(it, bleeding = true, flow = Flow.UNKNOWN) },
+        )
+
+        val events = CalendarMirrorPlanner.plan(backup, emptyMap(), LocalDate.of(2026, 8, 30))
+
+        assertTrue(events.any {
+            it == MirrorEvent(MirrorEventKind.FERTILE, LocalDate.of(2026, 9, 7), LocalDate.of(2026, 9, 14))
+        })
+        assertTrue(events.any {
+            it == MirrorEvent(MirrorEventKind.OVULATION, LocalDate.of(2026, 9, 12), LocalDate.of(2026, 9, 13))
+        })
+    }
+
+    @Test
     fun groupsRecordedBleedingDaysWithoutExposingPrivateDetails() {
         val start = LocalDate.of(2026, 7, 2)
         val backup = CycleBackup(
@@ -61,7 +100,7 @@ class CalendarMirrorPlannerTest {
     }
 
     @Test
-    fun limitsRecordedHistoryToTheRollingTwelveMonthWindow() {
+    fun keepsAllRecordedHistoryFromTheLocalCycleLog() {
         val old = LocalDate.of(2025, 7, 1)
         val recent = LocalDate.of(2025, 8, 1)
         val events = CalendarMirrorPlanner.plan(
@@ -73,7 +112,7 @@ class CalendarMirrorPlannerTest {
             LocalDate.of(2026, 8, 20),
         )
 
-        assertTrue(events.none { it.start == old })
+        assertTrue(events.any { it.start == old })
         assertTrue(events.any { it.start == recent })
     }
 

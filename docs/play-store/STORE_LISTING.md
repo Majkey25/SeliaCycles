@@ -12,13 +12,15 @@ Full description:
 
 Selia Cycles keeps period tracking clear and private.
 
-Record bleeding, spotting, flow, symptoms, mood, cervical mucus, ovulation and pregnancy tests, pain, energy, stress, activity, medication, notes, and optional measurements through one simple daily action. Extra trackers stay behind More details so the basic log remains fast. The modern calendar separates recorded days from estimates.
+Mark Period started or Period ended with one tap. Start fills your usual period length automatically. A recorded period can be edited or removed directly from its day without deleting other notes. Optional symptoms, mood, cervical mucus, tests, wellbeing, notes, and measurements stay behind Edit record. Simple mode hides fertility and ovulation details for period-only use without deleting data.
 
-Personal estimates use recent history, handle missed tracking cycles, and reduce the effect of isolated unusual gaps. Saved monthly estimates remain visible beside reality. A real recorded period start immediately updates future months. Estimated ovulation, fertile windows, daily fertility status, recorded fertility signs, cycle phase, and evidence-gated personal mood trends add context without claiming medical certainty.
+Personal estimates use recent history, handle missed tracking cycles, and reduce the effect of isolated unusual gaps. Saved monthly estimates remain visible across recorded history, with average prediction error and in-range results summarized in History. A real recorded period start immediately updates future months. Estimated ovulation, fertile windows, daily fertility status, recorded fertility signs, cycle phase, and evidence-gated personal mood trends add context without claiming medical certainty. Short guidance explains why the first few cycles can move while the estimate learns.
 
-Private details stay in app storage. Selia Cycles has no account, app cloud, ads, analytics, or network permission. Android can transfer the database directly while setting up a new device. An optional calendar mirror can copy short cycle labels to an existing Google Calendar, Outlook, Exchange, or local calendar chosen by the user; the calendar provider controls its own account sync.
+Private details stay in app storage. Selia Cycles has no account, app cloud, ads, analytics, or network permission. Android can transfer the database directly while setting up a new device, and My Calendar `.pc` backups can be imported locally. An optional calendar mirror can copy short cycle labels to an existing Google Calendar, Outlook, Exchange, or local calendar chosen by the user; the calendar provider controls its own account sync.
 
-Choose System, Light, or Dark mode from visual previews and use the Selia, Rose, or Ocean color palette. Available in English, Czech, Slovak, German, Polish, and Spanish. Requires Android 10 or newer.
+Phase guidance names the current phase and separates possible physical signs from emotions and energy. The calendar shows muted dates from adjacent months and switches to the correct full month when one is opened. Its color key stays fully hidden until requested. Menstruation remains prominent red and optional user entries use a blue marker; custom palettes can change both.
+
+Choose System, Light, or Dark mode from visual previews and use six presets or your own custom color palette. Available in English, Czech, Slovak, German, Polish, and Spanish. Requires Android 10 or newer.
 
 Estimates are informational. They are not medical advice or contraception.
 
@@ -34,16 +36,18 @@ Full description:
 
 Selia Cycles nabízí přehledné a soukromé sledování menstruace.
 
-Jednou jednoduchou akcí zapisuj krvácení, špinění, intenzitu, příznaky, náladu, cervikální hlen, ovulační a těhotenské testy, bolest, energii, stres, pohyb, léky, poznámku a volitelná měření. Rozšířené trackery zůstávají pod volbou Další údaje, takže základní zápis je rychlý. Moderní kalendář jasně odlišuje zapsané dny od odhadu.
+Jedním klepnutím označ začátek nebo konec menstruace. Začátek automaticky doplní obvyklou délku. Zapsanou menstruaci lze přímo z jejího dne upravit nebo odstranit bez smazání ostatních poznámek. Volitelné příznaky, nálada, cervikální hlen, testy, kondice, poznámka a měření zůstávají pod volbou Upravit záznam. Jednoduchý režim skryje plodnost a ovulaci pro používání zaměřené jen na menstruaci, aniž by data smazal.
 
-Osobní odhad vychází z poslední historie, umí zohlednit vynechané zápisy a omezuje vliv jednorázových neobvyklých mezer. Uložený měsíční odhad zůstává vedle reality a nový skutečný začátek upraví budoucí měsíce. Aplikace přidává dnešní odhad plodnosti, odhad ovulace, plodné období, zaznamenané známky plodnosti, fázi cyklu a osobní trend nálady jen při dostatku vlastních dat.
+Osobní odhad vychází z poslední historie, umí zohlednit vynechané zápisy a omezuje vliv jednorázových neobvyklých mezer. Uložený měsíční odhad zůstává vedle reality v celé zaznamenané historii; Historie ukazuje průměrnou odchylku a počet výsledků v původním rozmezí. Nový skutečný začátek upraví budoucí měsíce. Aplikace přidává dnešní odhad plodnosti, odhad ovulace, plodné období, zaznamenané známky plodnosti, fázi cyklu a osobní trend nálady jen při dostatku vlastních dat. Krátké vysvětlení upozorní, že první cykly mohou být nepravidelné a odhad se teprve učí.
 
-Soukromé podrobnosti zůstávají v úložišti aplikace. Selia Cycles nemá účet, vlastní cloud, reklamy, analytiku ani oprávnění k síti. Volitelně může přes Android zrcadlit krátké štítky cyklu do vybraného Google Kalendáře, Outlooku, Exchange nebo místního kalendáře; synchronizaci účtu řídí poskytovatel kalendáře.
+Soukromé podrobnosti zůstávají v úložišti aplikace. Selia Cycles nemá účet, vlastní cloud, reklamy, analytiku ani oprávnění k síti. Zálohu `.pc` z My Calendar lze importovat místně. Volitelně může aplikace přes Android zrcadlit krátké štítky cyklu do vybraného Google Kalendáře, Outlooku, Exchange nebo místního kalendáře; synchronizaci účtu řídí poskytovatel kalendáře.
 
-Vyber si podle náhledů systémový, světlý nebo tmavý režim a paletu Selia, Růžová nebo Oceán. Aplikace je v češtině, angličtině, slovenštině, němčině, polštině a španělštině. Vyžaduje Android 10 nebo novější.
+Vysvětlení pojmenuje aktuální fázi a odděluje možné fyzické projevy od emocí a energie. Kalendář ukazuje tlumené dny sousedních měsíců a po jejich otevření přepne na správný celý měsíc. Barevná legenda zůstává úplně skrytá, dokud ji uživatel nerozbalí. Menstruace je výrazně červená a vlastní záznam má modrou značku; ve vlastní paletě lze obě barvy změnit.
+
+Vyber si podle náhledů systémový, světlý nebo tmavý režim, šest palet nebo vlastní barvy. Aplikace je v češtině, angličtině, slovenštině, němčině, polštině a španělštině. Vyžaduje Android 10 nebo novější.
 
 Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
 
 ## Closed test release notes
 
-`New fertility and wellbeing trackers, a clear daily fertility estimate, and visual theme previews with Selia, Rose, and Ocean palettes. All raw tracker data stays private on the device.`
+`Direct period editing and removal, Simple mode, a clean cycle line graph, stable day scrolling, adjacent-month dates, clearer icons, richer self-care, and customizable calendar colors.`

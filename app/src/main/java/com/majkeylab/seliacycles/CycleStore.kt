@@ -49,7 +49,21 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
                 reminder_days INTEGER NOT NULL,
                 theme TEXT NOT NULL,
                 partner_view INTEGER NOT NULL CHECK (partner_view IN (0, 1)),
-                palette TEXT NOT NULL
+                palette TEXT NOT NULL,
+                luteal_phase INTEGER NOT NULL,
+                custom_primary INTEGER NOT NULL,
+                custom_secondary INTEGER NOT NULL,
+                custom_tertiary INTEGER NOT NULL,
+                custom_entry INTEGER NOT NULL,
+                profile_age INTEGER,
+                profile_height INTEGER,
+                profile_weight REAL,
+                profile_goal TEXT NOT NULL,
+                life_situation TEXT NOT NULL,
+                show_phase_guidance INTEGER NOT NULL CHECK (show_phase_guidance IN (0, 1)),
+                show_self_care INTEGER NOT NULL CHECK (show_self_care IN (0, 1)),
+                show_cycle_details INTEGER NOT NULL CHECK (show_cycle_details IN (0, 1)),
+                simple_mode INTEGER NOT NULL CHECK (simple_mode IN (0, 1))
             )
             """.trimIndent(),
         )
@@ -81,6 +95,28 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             database.execSQL("ALTER TABLE day_logs ADD COLUMN medication TEXT")
             database.execSQL("ALTER TABLE settings ADD COLUMN palette TEXT NOT NULL DEFAULT 'SELIA'")
         }
+        if (oldVersion < 5) {
+            database.execSQL("ALTER TABLE settings ADD COLUMN luteal_phase INTEGER NOT NULL DEFAULT 14")
+            database.execSQL("ALTER TABLE settings ADD COLUMN custom_primary INTEGER NOT NULL DEFAULT 16036864")
+            database.execSQL("ALTER TABLE settings ADD COLUMN custom_secondary INTEGER NOT NULL DEFAULT 12986408")
+            database.execSQL("ALTER TABLE settings ADD COLUMN custom_tertiary INTEGER NOT NULL DEFAULT 35195")
+            database.execSQL("ALTER TABLE settings ADD COLUMN profile_age INTEGER")
+            database.execSQL("ALTER TABLE settings ADD COLUMN profile_height INTEGER")
+            database.execSQL("ALTER TABLE settings ADD COLUMN profile_weight REAL")
+            database.execSQL("ALTER TABLE settings ADD COLUMN profile_goal TEXT NOT NULL DEFAULT 'TRACK_CYCLE'")
+            database.execSQL("ALTER TABLE settings ADD COLUMN life_situation TEXT NOT NULL DEFAULT 'REGULAR_CYCLES'")
+        }
+        if (oldVersion < 6) {
+            database.execSQL("ALTER TABLE settings ADD COLUMN show_phase_guidance INTEGER NOT NULL DEFAULT 1 CHECK (show_phase_guidance IN (0, 1))")
+            database.execSQL("ALTER TABLE settings ADD COLUMN show_self_care INTEGER NOT NULL DEFAULT 1 CHECK (show_self_care IN (0, 1))")
+            database.execSQL("ALTER TABLE settings ADD COLUMN show_cycle_details INTEGER NOT NULL DEFAULT 1 CHECK (show_cycle_details IN (0, 1))")
+        }
+        if (oldVersion < 7) {
+            database.execSQL("ALTER TABLE settings ADD COLUMN custom_entry INTEGER NOT NULL DEFAULT 1402304")
+        }
+        if (oldVersion < 8) {
+            database.execSQL("ALTER TABLE settings ADD COLUMN simple_mode INTEGER NOT NULL DEFAULT 0 CHECK (simple_mode IN (0, 1))")
+        }
     }
 
     fun load(): CycleBackup = CycleBackup(
@@ -99,6 +135,19 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
                 SQLiteDatabase.CONFLICT_REPLACE,
             ) != -1L)
         }
+    }
+
+    fun replaceLogs(logs: List<DayLog>) = writableDatabase.runInTransaction {
+        delete("day_logs", null, null)
+        logs.forEach { insertOrThrow("day_logs", null, logValues(it)) }
+    }
+
+    fun mergeImported(incoming: List<DayLog>) = writableDatabase.runInTransaction {
+        val merged = readLogs(this).associateByTo(mutableMapOf(), DayLog::day)
+        incoming.forEach { log -> merged[log.day] = merged[log.day]?.let { mergeDayLogs(it, log) } ?: log }
+        if (merged.size > CycleBackup.MAX_LOGS) throw IllegalArgumentException("Too many imported records")
+        delete("day_logs", null, null)
+        merged.values.sortedBy(DayLog::day).forEach { insertOrThrow("day_logs", null, logValues(it)) }
     }
 
     fun saveSettings(settings: AppSettings) {
@@ -128,7 +177,7 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
                 )
             }
         }
-    }
+    }.filter { it.month <= YearMonth.now() }
 
     fun saveForecastSnapshots(snapshots: List<ForecastSnapshot>) = writableDatabase.runInTransaction {
         snapshots.forEach { snapshot ->
@@ -187,6 +236,19 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             theme = AppTheme.valueOf(cursor.getString(6)),
             partnerViewEnabled = cursor.getInt(7) == 1,
             palette = AppPalette.valueOf(cursor.getString(8)),
+            lutealPhaseLength = cursor.getInt(9),
+            customPalette = CustomPalette(cursor.getInt(10), cursor.getInt(11), cursor.getInt(12), cursor.getInt(13)),
+            profile = UserProfile(
+                age = cursor.getNullableInt(14),
+                heightCm = cursor.getNullableInt(15),
+                weightKg = cursor.getNullableDouble(16),
+                goal = TrackingGoal.valueOf(cursor.getString(17)),
+                lifeSituation = LifeSituation.valueOf(cursor.getString(18)),
+            ),
+            showPhaseGuidance = cursor.getInt(19) == 1,
+            showSelfCare = cursor.getInt(20) == 1,
+            showCycleDetails = cursor.getInt(21) == 1,
+            simpleMode = cursor.getInt(22) == 1,
         )
     }
 
@@ -254,6 +316,20 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         put("theme", settings.theme.name)
         put("partner_view", settings.partnerViewEnabled)
         put("palette", settings.palette.name)
+        put("luteal_phase", settings.lutealPhaseLength)
+        put("custom_primary", settings.customPalette.primaryRgb)
+        put("custom_secondary", settings.customPalette.secondaryRgb)
+        put("custom_tertiary", settings.customPalette.tertiaryRgb)
+        put("custom_entry", settings.customPalette.entryRgb)
+        put("profile_age", settings.profile.age)
+        put("profile_height", settings.profile.heightCm)
+        put("profile_weight", settings.profile.weightKg)
+        put("profile_goal", settings.profile.goal.name)
+        put("life_situation", settings.profile.lifeSituation.name)
+        put("show_phase_guidance", settings.showPhaseGuidance)
+        put("show_self_care", settings.showSelfCare)
+        put("show_cycle_details", settings.showCycleDetails)
+        put("simple_mode", settings.simpleMode)
     }
 
     private fun createForecastSnapshotsTable(database: SQLiteDatabase) {
@@ -289,7 +365,7 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
 
     companion object {
         private const val DATABASE_NAME = "selia-cycles.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 8
         private val LOG_COLUMNS = arrayOf(
             "day",
             "bleeding",
@@ -322,6 +398,20 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             "theme",
             "partner_view",
             "palette",
+            "luteal_phase",
+            "custom_primary",
+            "custom_secondary",
+            "custom_tertiary",
+            "custom_entry",
+            "profile_age",
+            "profile_height",
+            "profile_weight",
+            "profile_goal",
+            "life_situation",
+            "show_phase_guidance",
+            "show_self_care",
+            "show_cycle_details",
+            "simple_mode",
         )
         private val FORECAST_COLUMNS = arrayOf(
             "month",

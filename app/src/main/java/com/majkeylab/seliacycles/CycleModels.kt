@@ -20,7 +20,50 @@ enum class Symptom {
 
 enum class AppTheme { SYSTEM, LIGHT, DARK }
 
-enum class AppPalette { SELIA, ROSE, OCEAN }
+enum class AppPalette { SELIA, ROSE, OCEAN, FOREST, SUNSET, LILAC, CUSTOM }
+
+data class CustomPalette(
+    val primaryRgb: Int = 0xF4B400,
+    val secondaryRgb: Int = 0xC62828,
+    val tertiaryRgb: Int = 0x00897B,
+    val entryRgb: Int = 0x1565C0,
+) {
+    init {
+        require(primaryRgb in RGB_RANGE)
+        require(secondaryRgb in RGB_RANGE)
+        require(tertiaryRgb in RGB_RANGE)
+        require(entryRgb in RGB_RANGE)
+    }
+
+    private companion object {
+        val RGB_RANGE = 0..0xFFFFFF
+    }
+}
+
+enum class TrackingGoal { TRACK_CYCLE, TRYING_TO_CONCEIVE, AVOID_PREGNANCY }
+
+enum class LifeSituation { REGULAR_CYCLES, PREGNANT, HORMONAL_CONTRACEPTION, PERIMENOPAUSE, MENOPAUSE }
+
+data class UserProfile(
+    val age: Int? = null,
+    val heightCm: Int? = null,
+    val weightKg: Double? = null,
+    val goal: TrackingGoal = TrackingGoal.TRACK_CYCLE,
+    val lifeSituation: LifeSituation = LifeSituation.REGULAR_CYCLES,
+) {
+    init {
+        require(age == null || age in MIN_AGE..MAX_AGE)
+        require(heightCm == null || heightCm in MIN_HEIGHT_CM..MAX_HEIGHT_CM)
+        require(weightKg == null || weightKg.isFinite() && weightKg in DayLog.MIN_WEIGHT_KG..DayLog.MAX_WEIGHT_KG)
+    }
+
+    companion object {
+        const val MIN_AGE = 8
+        const val MAX_AGE = 100
+        const val MIN_HEIGHT_CM = 100
+        const val MAX_HEIGHT_CM = 250
+    }
+}
 
 enum class Intimacy { SEX, PROTECTED }
 
@@ -73,6 +116,12 @@ data class DayLog(
             ovulationTest == null && pregnancyTest == null && painLevel == null && energy == null && stress == null &&
             activity == null && medication == null && importedDetails.isBlank()
 
+    val hasCalendarMarker: Boolean
+        get() = spotting || mood != null || symptoms.isNotEmpty() || note.isNotBlank() || weightKg != null ||
+            temperatureC != null || sleepHours != null || intimacy != null || cervicalMucus != null ||
+            ovulationTest != null || pregnancyTest != null || painLevel != null || energy != null || stress != null ||
+            activity != null || medication != null || importedDetails.isNotBlank()
+
     companion object {
         const val MAX_NOTE_LENGTH = 1_000
         const val MAX_IMPORTED_DETAILS_LENGTH = 2_000
@@ -85,6 +134,37 @@ data class DayLog(
     }
 }
 
+fun mergeDayLogs(current: DayLog, incoming: DayLog): DayLog {
+    require(current.day == incoming.day)
+    val bleeding = current.bleeding || incoming.bleeding
+    return current.copy(
+        bleeding = bleeding,
+        spotting = current.spotting || incoming.spotting,
+        flow = when {
+            !bleeding -> Flow.NONE
+            current.bleeding && current.flow != Flow.UNKNOWN -> current.flow
+            incoming.bleeding -> incoming.flow.takeUnless { it == Flow.NONE } ?: Flow.UNKNOWN
+            else -> Flow.UNKNOWN
+        },
+        mood = current.mood ?: incoming.mood,
+        symptoms = current.symptoms + incoming.symptoms,
+        note = current.note.takeIf(String::isNotBlank) ?: incoming.note,
+        weightKg = current.weightKg ?: incoming.weightKg,
+        temperatureC = current.temperatureC ?: incoming.temperatureC,
+        sleepHours = current.sleepHours ?: incoming.sleepHours,
+        intimacy = current.intimacy ?: incoming.intimacy,
+        cervicalMucus = current.cervicalMucus ?: incoming.cervicalMucus,
+        ovulationTest = current.ovulationTest ?: incoming.ovulationTest,
+        pregnancyTest = current.pregnancyTest ?: incoming.pregnancyTest,
+        painLevel = current.painLevel ?: incoming.painLevel,
+        energy = current.energy ?: incoming.energy,
+        stress = current.stress ?: incoming.stress,
+        activity = current.activity ?: incoming.activity,
+        medication = current.medication ?: incoming.medication,
+        importedDetails = current.importedDetails.takeIf(String::isNotBlank) ?: incoming.importedDetails,
+    )
+}
+
 data class AppSettings(
     val cycleLength: Int = 28,
     val periodLength: Int = 5,
@@ -92,16 +172,32 @@ data class AppSettings(
     val predictionsEnabled: Boolean = true,
     val reminderEnabled: Boolean = false,
     val reminderDays: Int = 2,
+    val lutealPhaseLength: Int = 14,
     val theme: AppTheme = AppTheme.SYSTEM,
     val palette: AppPalette = AppPalette.SELIA,
+    val customPalette: CustomPalette = CustomPalette(),
     val partnerViewEnabled: Boolean = false,
+    val profile: UserProfile = UserProfile(),
+    val showPhaseGuidance: Boolean = true,
+    val showSelfCare: Boolean = true,
+    val showCycleDetails: Boolean = true,
+    val simpleMode: Boolean = false,
 ) {
     init {
         require(cycleLength in 15..90)
         require(periodLength in 1..14)
         require(firstDayOfWeek == DayOfWeek.MONDAY || firstDayOfWeek == DayOfWeek.SUNDAY)
         require(reminderDays in 0..14)
+        require(lutealPhaseLength in 7..19)
     }
+
+    val canPredictPeriods: Boolean
+        get() = predictionsEnabled && profile.lifeSituation != LifeSituation.PREGNANT &&
+            profile.lifeSituation != LifeSituation.MENOPAUSE
+
+    val canEstimateFertility: Boolean
+        get() = !simpleMode && canPredictPeriods && profile.lifeSituation != LifeSituation.HORMONAL_CONTRACEPTION &&
+            profile.lifeSituation != LifeSituation.PERIMENOPAUSE
 }
 
 data class CycleBackup(

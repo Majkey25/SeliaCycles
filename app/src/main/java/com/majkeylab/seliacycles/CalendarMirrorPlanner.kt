@@ -50,9 +50,9 @@ object CalendarMirrorPlanner {
         snapshots: Map<java.time.YearMonth, ForecastSnapshot>,
         referenceDate: LocalDate = LocalDate.now(),
     ): List<MirrorEvent> {
-        val firstDay = referenceDate.minusMonths(HISTORY_MONTHS).withDayOfMonth(1)
-        val lastDay = referenceDate.plusMonths(FORECAST_MONTHS).with(TemporalAdjusters.lastDayOfMonth())
         val bleedingDays = backup.logs.filter(DayLog::bleeding).map(DayLog::day).sorted()
+        val firstDay = bleedingDays.firstOrNull()?.withDayOfMonth(1) ?: referenceDate.withDayOfMonth(1)
+        val lastDay = referenceDate.plusMonths(FORECAST_MONTHS).with(TemporalAdjusters.lastDayOfMonth())
         val periods = bleedingDays.fold(mutableListOf<MutableList<LocalDate>>()) { groups, day ->
             val current = groups.lastOrNull()
             if (current == null || ChronoUnit.DAYS.between(current.last(), day) > MAX_PERIOD_GAP_DAYS) {
@@ -68,8 +68,7 @@ object CalendarMirrorPlanner {
         val estimates = CycleInsights.periodEstimates(backup, snapshots, referenceDate)
             .filter { it.endExclusive >= firstDay && it.start <= lastDay }
         val estimated = estimates.map { MirrorEvent(MirrorEventKind.ESTIMATED, it.start, it.endExclusive) }
-        val fertility = estimates.flatMap { estimate ->
-            val value = CycleInsights.fertilityForPeriod(estimate.start)
+        val fertility = CycleInsights.fertilityEstimates(backup, snapshots, referenceDate).flatMap { value ->
             listOf(
                 MirrorEvent(MirrorEventKind.FERTILE, value.fertileStart, value.fertileEnd.plusDays(1)),
                 MirrorEvent(MirrorEventKind.OVULATION, value.ovulation, value.ovulation.plusDays(1)),
@@ -78,7 +77,6 @@ object CalendarMirrorPlanner {
         return (recorded + estimated + fertility).sortedWith(compareBy(MirrorEvent::start, MirrorEvent::kind))
     }
 
-    private const val HISTORY_MONTHS = 12L
     private const val FORECAST_MONTHS = 12L
     private const val MAX_PERIOD_GAP_DAYS = 2L
 }

@@ -119,17 +119,14 @@ class CalendarMirror(private val context: Context) {
     private fun existingEvents(): List<StoredMirrorEvent> = resolver.query(
         CalendarContract.Events.CONTENT_URI,
         EVENT_ID_COLUMNS,
-        null,
-        null,
+        "${CalendarContract.Events.CUSTOM_APP_PACKAGE} = ? AND ${CalendarContract.Events.CUSTOM_APP_URI} LIKE ?",
+        arrayOf(context.packageName, "$CUSTOM_URI_PREFIX%"),
         null,
     )?.use { cursor ->
         buildList {
             while (cursor.moveToNext()) {
-                val packageName = cursor.getString(1)
-                val uri = cursor.getString(2).orEmpty()
-                if (packageName == context.packageName && uri.startsWith(CUSTOM_URI_PREFIX)) {
-                    add(StoredMirrorEvent(cursor.getLong(0), uri.removePrefix(CUSTOM_URI_PREFIX)))
-                }
+                val uri = cursor.getString(1).orEmpty()
+                add(StoredMirrorEvent(cursor.getLong(0), uri.removePrefix(CUSTOM_URI_PREFIX)))
             }
         }
     }.orEmpty()
@@ -188,7 +185,6 @@ class CalendarMirror(private val context: Context) {
         )
         private val EVENT_ID_COLUMNS = arrayOf(
             BaseColumns._ID,
-            CalendarContract.Events.CUSTOM_APP_PACKAGE,
             CalendarContract.Events.CUSTOM_APP_URI,
         )
     }
