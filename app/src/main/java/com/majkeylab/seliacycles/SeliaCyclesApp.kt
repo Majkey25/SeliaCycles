@@ -237,6 +237,25 @@ private enum class SelfCareActivity(
         4,
         Icons.Outlined.AirlineSeatReclineNormal,
     ),
+    BACK_STRETCH(R.string.self_care_back_stretch, R.string.self_care_back_stretch_steps, 4, Icons.Outlined.FitnessCenter),
+    KNEES_TO_CHEST(
+        R.string.self_care_knees_to_chest,
+        R.string.self_care_knees_to_chest_steps,
+        5,
+        Icons.Outlined.AirlineSeatReclineNormal,
+    ),
+    PELVIC_ROCKING(
+        R.string.self_care_pelvic_rocking,
+        R.string.self_care_pelvic_rocking_steps,
+        4,
+        Icons.Outlined.AccessibilityNew,
+    ),
+    MUSCLE_RELAXATION(
+        R.string.self_care_muscle_relaxation,
+        R.string.self_care_muscle_relaxation_steps,
+        6,
+        Icons.Outlined.Psychology,
+    ),
 }
 
 private enum class SettingsPage(
@@ -265,6 +284,8 @@ fun SeliaCyclesApp(
     var infoDialog by remember { mutableStateOf<InfoDialog?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showSelfCare by remember { mutableStateOf(false) }
+    var showPhaseDetails by remember { mutableStateOf(false) }
+    var calendarTargetDay by remember { mutableStateOf<LocalDate?>(null) }
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
 
@@ -338,11 +359,22 @@ fun SeliaCyclesApp(
                                 viewModel.endPeriod(LocalDate.now(), suggestedPeriodStart(state, LocalDate.now()))
                             },
                             onSelfCare = { showSelfCare = true },
+                            onOpenCalendar = { day ->
+                                calendarTargetDay = day
+                                screen = Screen.CALENDAR
+                            },
+                            onOpenHistory = { screen = Screen.HISTORY },
+                            onOpenPhase = { showPhaseDetails = true },
                         )
-                        Screen.CALENDAR -> CalendarScreen(state, onEdit = {
-                            selectedDay = it
-                            daySheetMode = DaySheetMode.OVERVIEW
-                        })
+                        Screen.CALENDAR -> CalendarScreen(
+                            state = state,
+                            targetDay = calendarTargetDay,
+                            onTargetConsumed = { calendarTargetDay = null },
+                            onEdit = {
+                                selectedDay = it
+                                daySheetMode = DaySheetMode.OVERVIEW
+                            },
+                        )
                         Screen.HISTORY -> HistoryScreen(state)
                         Screen.SETTINGS -> SettingsScreen(
                             state = state,
@@ -440,6 +472,11 @@ fun SeliaCyclesApp(
         )
     }
     if (showSelfCare) SelfCareSheet(onDismiss = { showSelfCare = false })
+    if (showPhaseDetails) PhaseDetailsSheet(
+        insight = state.todayInsight,
+        onSelfCare = { showPhaseDetails = false; showSelfCare = true },
+        onDismiss = { showPhaseDetails = false },
+    )
 }
 
 @Composable
@@ -449,6 +486,9 @@ private fun TodayScreen(
     onStartPeriod: () -> Unit,
     onEndPeriod: () -> Unit,
     onSelfCare: () -> Unit,
+    onOpenCalendar: (LocalDate) -> Unit,
+    onOpenHistory: () -> Unit,
+    onOpenPhase: () -> Unit,
 ) {
     val today = LocalDate.now()
     val prediction = state.prediction
@@ -460,27 +500,12 @@ private fun TodayScreen(
     val shortDateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val latestStart = prediction.periodStarts.lastOrNull { !it.isAfter(today) }
     val cycleDay = latestStart?.let { ChronoUnit.DAYS.between(it, today).toInt() + 1 }?.takeIf { it > 0 }
-    val predictedDays = state.periodEstimates.flatMap { estimate ->
-        generateSequence(estimate.start) { it.plusDays(1) }.takeWhile { it < estimate.endExclusive }.toList()
-    }.toSet()
-    val recordedDays = state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day)
-    val fertileDays = insight.fertility?.let { fertility ->
-        generateSequence(fertility.fertileStart) { it.plusDays(1) }
-            .takeWhile { !it.isAfter(fertility.fertileEnd) }.toSet()
-    }.orEmpty()
-    val ovulationDays = insight.fertility?.let { setOf(it.ovulation) }.orEmpty()
-    val weekTracks: (LocalDate) -> CalendarDayTracks = { day ->
-        calendarDayTracks(day, recordedDays, predictedDays, fertileDays, ovulationDays)
-    }
-    val periodColor = calendarPeriodRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
-    val onPeriodColor = periodColor.contrastColor()
     val todayAction = PeriodActions.todayAction(state.backup.settings, today)
     val primaryOnClick: () -> Unit = when (todayAction) {
         TodayPrimaryAction.START_PERIOD -> onStartPeriod
         TodayPrimaryAction.END_PERIOD -> onEndPeriod
         TodayPrimaryAction.OPEN_LOG -> fun() { onOpenDay(today) }
     }
-    var showCycleDetails by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 12.dp, vertical = 20.dp),
@@ -488,7 +513,7 @@ private fun TodayScreen(
     ) {
         Text(stringResource(R.string.today_heading), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
         Box(
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).clickable { onOpenCalendar(today) }
                 .background(Brush.linearGradient(paletteGradientColors(
                     state.backup.settings.palette,
                     state.backup.settings.customPalette,
@@ -565,87 +590,30 @@ private fun TodayScreen(
             predictionsEnabled = predictionsEnabled,
             dateFormat = shortDateFormat,
             distance = distance,
+            onOpenDate = onOpenCalendar,
         )
         if (prediction.periodStarts.size in 1..2) {
             InfoBlock(R.string.first_cycles_title, R.string.first_cycles_body, Icons.Outlined.Autorenew)
         }
         if (state.backup.settings.showPhaseGuidance) {
-            PhaseGuidanceCard(insight, onSelfCare.takeIf { state.backup.settings.showSelfCare })
-        } else if (state.backup.settings.showSelfCare && insight.phase == CyclePhase.MENSTRUAL) {
-            OutlinedButton(onClick = onSelfCare, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Outlined.Healing, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.self_care_title))
-            }
+            CompactPhaseCard(insight, onOpenPhase)
         }
-        if (state.backup.settings.showCycleDetails) {
-            TextButton(
-                onClick = { showCycleDetails = !showCycleDetails },
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            ) {
-                Icon(Icons.Outlined.Insights, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.more_about_cycle))
-                Spacer(Modifier.width(4.dp))
-                Icon(
-                    if (showCycleDetails) Icons.Outlined.Remove else Icons.Default.Add,
-                    contentDescription = null,
-                )
-            }
-        }
-        if (state.backup.settings.showCycleDetails && showCycleDetails) {
-            insight.moodTrend?.let { trend ->
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Icon(Icons.Outlined.SentimentSatisfied, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Text(
-                        pluralStringResource(
-                            R.plurals.mood_trend_value,
-                            trend.sampleCount,
-                            stringResource(moodLabel(trend.mood)),
-                            trend.sampleCount,
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            SectionLabel(Icons.Outlined.CalendarMonth, R.string.week_heading)
-            Row(Modifier.fillMaxWidth()) {
-                (-3L..3L).forEach { offset ->
-                    val day = today.plusDays(offset)
-                    val tracks = weekTracks(day)
-                    WeekDay(
-                        day = day,
-                        tracks = tracks,
-                        periodConnectPrevious = offset > -3 && tracks.period != CalendarPeriodLayer.NONE &&
-                            tracks.period == weekTracks(day.minusDays(1)).period,
-                        periodConnectNext = offset < 3 && tracks.period != CalendarPeriodLayer.NONE &&
-                            tracks.period == weekTracks(day.plusDays(1)).period,
-                        fertileConnectPrevious = offset > -3 && tracks.fertile && weekTracks(day.minusDays(1)).fertile,
-                        fertileConnectNext = offset < 3 && tracks.fertile && weekTracks(day.plusDays(1)).fertile,
-                        periodColor = periodColor,
-                        onPeriodColor = onPeriodColor,
-                        onClick = { onOpenDay(day) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-            OutlinedButton(onClick = { onOpenDay(today) }, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Outlined.Tune, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.day_overview))
-            }
-            if (prediction.periodStarts.isNotEmpty()) {
-                Text(
-                    pluralStringResource(
-                        R.plurals.based_on_periods,
-                        prediction.periodStarts.size,
-                        prediction.periodStarts.size,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-            MonthlyForecastSection(state)
+        if (state.backup.settings.showSelfCare) DashboardLinkRow(
+            icon = Icons.Outlined.Healing,
+            title = R.string.self_care_title,
+            body = R.string.self_care_dashboard_body,
+            onClick = onSelfCare,
+        )
+        if (state.backup.settings.showCycleDetails) DashboardLinkRow(
+            icon = Icons.Outlined.Insights,
+            title = R.string.cycle_analysis_title,
+            body = R.string.cycle_analysis_dashboard_body,
+            onClick = onOpenHistory,
+        )
+        OutlinedButton(onClick = { onOpenDay(today) }, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Outlined.Tune, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.day_overview))
         }
     }
 }
@@ -718,6 +686,68 @@ private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Uni
                     Text(stringResource(R.string.self_care_title))
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CompactPhaseCard(insight: DailyCycleInsight, onClick: () -> Unit) {
+    val phase = insight.phase ?: return
+    DashboardLinkRow(
+        icon = when (phase) {
+            CyclePhase.MENSTRUAL -> Icons.Outlined.WaterDrop
+            CyclePhase.FOLLICULAR -> Icons.Outlined.Autorenew
+            CyclePhase.FERTILE -> Icons.Outlined.Spa
+            CyclePhase.LUTEAL -> Icons.Outlined.Timelapse
+        },
+        title = phaseHeadingLabel(phase),
+        body = R.string.phase_dashboard_body,
+        onClick = onClick,
+    )
+}
+
+@Composable
+private fun DashboardLinkRow(
+    icon: ImageVector,
+    @StringRes title: Int,
+    @StringRes body: Int,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant).clickable(onClick = onClick).padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center,
+        ) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer) }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(stringResource(title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(body), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        }
+        Icon(Icons.Outlined.ChevronRight, contentDescription = null)
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun PhaseDetailsSheet(insight: DailyCycleInsight, onSelfCare: () -> Unit, onDismiss: () -> Unit) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        dragHandle = null,
+        sheetGesturesEnabled = false,
+    ) {
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            SheetHeader(R.string.phase_details_title, onDismiss)
+            PhaseGuidanceCard(insight, onSelfCare)
+            Spacer(Modifier.height(20.dp))
         }
     }
 }
@@ -834,7 +864,9 @@ private fun UpcomingCycleSection(
     predictionsEnabled: Boolean,
     dateFormat: DateTimeFormatter,
     distance: Int?,
+    onOpenDate: (LocalDate) -> Unit,
 ) {
+    val targets = TodayDashboard.targets(insight)
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         SectionLabel(Icons.Outlined.EventAvailable, R.string.upcoming_cycle)
         Column(
@@ -853,7 +885,9 @@ private fun UpcomingCycleSection(
                 distance == 0 -> stringResource(R.string.predicted_today)
                 else -> insight.nextPeriodStart.format(dateFormat)
             }
-            UpcomingCycleRow(Icons.Outlined.WaterDrop, R.string.next_period, nextText)
+            UpcomingCycleRow(Icons.Outlined.WaterDrop, R.string.next_period, nextText) {
+                targets.period?.let(onOpenDate)
+            }
             insight.fertility?.let { fertility ->
                 HorizontalDivider()
                 UpcomingCycleRow(
@@ -864,13 +898,13 @@ private fun UpcomingCycleSection(
                         fertility.fertileStart.format(dateFormat),
                         fertility.fertileEnd.format(dateFormat),
                     ),
-                )
+                ) { onOpenDate(targets.fertile ?: fertility.fertileStart) }
                 HorizontalDivider()
                 UpcomingCycleRow(
                     Icons.Outlined.WbSunny,
                     R.string.ovulation_legend,
                     fertility.ovulation.format(dateFormat),
-                )
+                ) { onOpenDate(targets.ovulation ?: fertility.ovulation) }
             }
         }
         if (insight.fertility != null) Text(
@@ -882,9 +916,9 @@ private fun UpcomingCycleSection(
 }
 
 @Composable
-private fun UpcomingCycleRow(icon: ImageVector, @StringRes label: Int, value: String) {
+private fun UpcomingCycleRow(icon: ImageVector, @StringRes label: Int, value: String, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -893,87 +927,7 @@ private fun UpcomingCycleRow(icon: ImageVector, @StringRes label: Int, value: St
             Text(stringResource(label), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelLarge)
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         }
-    }
-}
-
-@Composable
-private fun MonthlyForecastSection(state: AppState) {
-    val locale = currentLocale()
-    val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        SectionLabel(Icons.Outlined.EventAvailable, R.string.forecast_heading)
-        if (!state.backup.settings.canPredictPeriods) {
-            Text(
-                stringResource(profileNotice(state.backup.settings.profile.lifeSituation)),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            return@Column
-        }
-        Column(
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal = 16.dp),
-        ) {
-            state.prediction.monthlyForecasts.forEachIndexed { index, forecast ->
-                if (index > 0) HorizontalDivider()
-                val snapshot = state.forecastSnapshots[forecast.month]
-                val icon = if (forecast.status == ForecastStatus.RECORDED) {
-                    Icons.Outlined.CheckCircle
-                } else {
-                    Icons.Outlined.EventAvailable
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text(
-                            stringResource(if (index == 0) R.string.this_month else R.string.following_month),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        if (forecast.status == ForecastStatus.RECORDED) Text(
-                            stringResource(R.string.forecast_recorded, forecast.start?.format(dateFormat).orEmpty()),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        if (snapshot != null) {
-                            Text(
-                                stringResource(
-                                    if (snapshot.reconstructed) R.string.forecast_reconstructed else R.string.forecast_saved,
-                                    snapshot.earliestStart.format(dateFormat),
-                                    snapshot.latestStart.format(dateFormat),
-                                ),
-                                color = MaterialTheme.colorScheme.secondary,
-                            )
-                            CycleAnalysis.closestRecordedStart(snapshot, state.prediction.periodStarts)?.let { actual ->
-                                val difference = ChronoUnit.DAYS.between(snapshot.periodStart, actual).toInt()
-                                Text(
-                                    stringResource(
-                                        R.string.forecast_difference,
-                                        if (difference > 0) "+$difference" else difference.toString(),
-                                    ),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
-                            }
-                        } else if (forecast.status != ForecastStatus.RECORDED) Text(
-                            when (forecast.status) {
-                                ForecastStatus.ESTIMATED -> stringResource(
-                                    R.string.forecast_estimated,
-                                    forecast.earliestStart?.format(dateFormat).orEmpty(),
-                                    forecast.latestStart?.format(dateFormat).orEmpty(),
-                                )
-                                ForecastStatus.NOT_EXPECTED -> stringResource(R.string.forecast_not_expected)
-                                ForecastStatus.UNAVAILABLE -> stringResource(R.string.forecast_unavailable)
-                                ForecastStatus.RECORDED -> ""
-                            },
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-        }
+        Icon(Icons.Outlined.ChevronRight, contentDescription = null)
     }
 }
 
@@ -983,94 +937,6 @@ private fun phaseHeadingLabel(phase: CyclePhase): Int = when (phase) {
     CyclePhase.FOLLICULAR -> R.string.phase_heading_follicular
     CyclePhase.FERTILE -> R.string.phase_heading_fertile
     CyclePhase.LUTEAL -> R.string.phase_heading_luteal
-}
-
-@Composable
-private fun WeekDay(
-    day: LocalDate,
-    tracks: CalendarDayTracks,
-    periodConnectPrevious: Boolean,
-    periodConnectNext: Boolean,
-    fertileConnectPrevious: Boolean,
-    fertileConnectNext: Boolean,
-    periodColor: Color,
-    onPeriodColor: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val locale = currentLocale()
-    val periodBackground = when (tracks.period) {
-        CalendarPeriodLayer.RECORDED -> periodColor
-        CalendarPeriodLayer.PREDICTED -> MaterialTheme.colorScheme.secondaryContainer
-        CalendarPeriodLayer.NONE -> Color.Transparent
-    }
-    val foreground = when (tracks.period) {
-        CalendarPeriodLayer.RECORDED -> onPeriodColor
-        CalendarPeriodLayer.PREDICTED -> MaterialTheme.colorScheme.onSecondaryContainer
-        CalendarPeriodLayer.NONE -> if (tracks.fertile) {
-            MaterialTheme.colorScheme.onTertiaryContainer
-        } else MaterialTheme.colorScheme.onSurface
-    }
-    val periodShape = RoundedCornerShape(
-        topStartPercent = if (periodConnectPrevious) 0 else 50,
-        bottomStartPercent = if (periodConnectPrevious) 0 else 50,
-        topEndPercent = if (periodConnectNext) 0 else 50,
-        bottomEndPercent = if (periodConnectNext) 0 else 50,
-    )
-    val fertileShape = RoundedCornerShape(
-        topStartPercent = if (fertileConnectPrevious) 0 else 50,
-        bottomStartPercent = if (fertileConnectPrevious) 0 else 50,
-        topEndPercent = if (fertileConnectNext) 0 else 50,
-        bottomEndPercent = if (fertileConnectNext) 0 else 50,
-    )
-    val labels = buildList {
-        when (tracks.period) {
-            CalendarPeriodLayer.RECORDED -> add(stringResource(R.string.recorded_legend))
-            CalendarPeriodLayer.PREDICTED -> add(stringResource(R.string.predicted_legend))
-            CalendarPeriodLayer.NONE -> Unit
-        }
-        if (tracks.fertile) add(stringResource(R.string.fertile_legend))
-        if (tracks.ovulation) add(stringResource(R.string.ovulation_legend))
-    }
-    val description = (listOf(
-        day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)),
-    ) + labels).joinToString(", ")
-    Box(
-        modifier = modifier.height(64.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (tracks.fertile) Box(
-            Modifier.fillMaxWidth().height(48.dp).padding(
-                start = if (fertileConnectPrevious) 0.dp else 2.dp,
-                end = if (fertileConnectNext) 0.dp else 2.dp,
-            ).clip(fertileShape).background(MaterialTheme.colorScheme.tertiaryContainer),
-        )
-        if (tracks.period != CalendarPeriodLayer.NONE) Box(
-            Modifier.fillMaxWidth().height(38.dp).padding(
-                start = if (periodConnectPrevious) 0.dp else 2.dp,
-                end = if (periodConnectNext) 0.dp else 2.dp,
-            ).clip(periodShape).background(periodBackground),
-        )
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(day.dayOfWeek.getDisplayName(TextStyle.NARROW, locale), color = foreground, style = MaterialTheme.typography.labelSmall)
-            Box(
-                Modifier.size(26.dp).clip(CircleShape)
-                    .then(if (tracks.ovulation) Modifier.background(MaterialTheme.colorScheme.primaryContainer) else Modifier)
-                    .then(if (day == LocalDate.now()) Modifier.border(1.5.dp, MaterialTheme.colorScheme.outline, CircleShape) else Modifier),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    day.dayOfMonth.toString(),
-                    color = if (tracks.ovulation) MaterialTheme.colorScheme.onPrimaryContainer else foreground,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-        }
-        Box(
-            Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClick)
-                .semantics { contentDescription = description },
-        )
-    }
 }
 
 @StringRes
@@ -1094,6 +960,8 @@ private fun moodLabel(mood: Mood): Int = when (mood) {
 @Composable
 private fun CalendarScreen(
     state: AppState,
+    targetDay: LocalDate?,
+    onTargetConsumed: () -> Unit,
     onEdit: (LocalDate) -> Unit,
 ) {
     val pagerState = rememberPagerState(
@@ -1117,6 +985,13 @@ private fun CalendarScreen(
     val periodColor = calendarPeriodRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
     val onPeriodColor = periodColor.contrastColor()
     val entryColor = calendarEntryRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
+    LaunchedEffect(targetDay) {
+        targetDay?.takeIf { it in DayLog.MIN_DATE..DayLog.MAX_DATE }?.let { day ->
+            pagerState.scrollToPage(CalendarPaging.pageFor(YearMonth.from(day)))
+            overviewExpanded = false
+            onTargetConsumed()
+        }
+    }
     LaunchedEffect(pagerState.settledPage) { overviewExpanded = false }
     Column(Modifier.fillMaxSize()) {
         Row(

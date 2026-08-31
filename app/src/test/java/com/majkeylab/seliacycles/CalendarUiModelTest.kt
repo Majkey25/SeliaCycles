@@ -55,4 +55,21 @@ class CalendarUiModelTest {
         assertTrue(DayLog(day, intimacy = Intimacy.SEX).hasCalendarMarker)
         assertTrue(DayLog(day, painLevel = 8).hasCalendarMarker)
     }
+
+    @Test
+    fun `Today dashboard targets exact prediction dates`() {
+        val period = LocalDate.of(2026, 9, 11)
+        val fertility = CycleInsights.fertilityForPeriod(period)
+        val targets = TodayDashboard.targets(DailyCycleInsight(
+            nextPeriodStart = period,
+            phase = CyclePhase.FOLLICULAR,
+            fertility = fertility,
+            fertilityStatus = FertilityStatus.OUTSIDE,
+            moodTrend = null,
+        ))
+
+        assertEquals(period, targets.period)
+        assertEquals(fertility.fertileStart, targets.fertile)
+        assertEquals(fertility.ovulation, targets.ovulation)
+    }
 }
