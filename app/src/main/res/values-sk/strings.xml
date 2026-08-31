@@ -76,8 +76,6 @@
     <string name="daily_measurements">Denné merania</string>
     <string name="daily_measurements_body">Hmotnosť, bazálna teplota, spánok a intimita sú voliteľné v časti Ďalšie údaje každého denného záznamu.</string>
     <string name="predictions">Odhady menštruácie</string>
-    <string name="simple_mode">Jednoduchý režim</string>
-    <string name="simple_mode_body">Zameria aplikáciu na menštruáciu. Plodnosť, ovuláciu a súvisiace znaky skryje bez vymazania údajov.</string>
     <string name="default_cycle_length">Dĺžka cyklu pre odhad</string>
     <string name="default_period_length">Dĺžka menštruácie pre odhad</string>
     <string name="use_automatic_estimate">Použiť automatický odhad</string>

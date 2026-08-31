@@ -76,8 +76,6 @@
     <string name="daily_measurements">Mediciones diarias</string>
     <string name="daily_measurements_body">El peso, la temperatura basal, el sueño y la intimidad son opcionales en Más detalles.</string>
     <string name="predictions">Estimaciones del periodo</string>
-    <string name="simple_mode">Modo sencillo</string>
-    <string name="simple_mode_body">Centra la aplicación en el periodo. Oculta la fertilidad, la ovulación y los signos relacionados sin borrar datos.</string>
     <string name="default_cycle_length">Duración del ciclo para la predicción</string>
     <string name="default_period_length">Duración del periodo para la predicción</string>
     <string name="use_automatic_estimate">Usar predicción automática</string>

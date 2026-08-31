@@ -61,6 +61,20 @@ class PeriodActionsTest {
     }
 
     @Test
+    fun `future bleeding is removed while other future details stay`() {
+        val today = start
+        val future = start.plusDays(1)
+
+        val result = PeriodActions.removeFutureBleeding(
+            listOf(DayLog(today, bleeding = true, flow = Flow.UNKNOWN), DayLog(future, bleeding = true, flow = Flow.HEAVY, note = "keep")),
+            today,
+        )
+
+        assertTrue(result.single { it.day == today }.bleeding)
+        assertEquals(DayLog(future, note = "keep"), result.single { it.day == future })
+    }
+
+    @Test
     fun `today action respects paused reproductive states`() {
         assertEquals(TodayPrimaryAction.START_PERIOD, PeriodActions.todayAction(AppSettings(), start))
         assertEquals(

@@ -54,11 +54,11 @@ class ProfileSettingsTest {
     }
 
     @Test
-    fun `simple mode keeps period estimates but hides fertility estimates`() {
+    fun `legacy simple mode flag no longer hides fertility estimates`() {
         val settings = AppSettings(simpleMode = true)
 
         assertTrue(settings.canPredictPeriods)
-        assertFalse(settings.canEstimateFertility)
+        assertTrue(settings.canEstimateFertility)
     }
 
     private fun settings(situation: LifeSituation): AppSettings = AppSettings(

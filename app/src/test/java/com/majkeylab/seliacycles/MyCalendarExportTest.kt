@@ -22,6 +22,14 @@ class MyCalendarExportTest {
     }
 
     @Test
+    fun `My Calendar sidecar encoding is symmetric`() {
+        val json = """[{"period":5,"date_str":"2026-08-31"}]"""
+        val encoded = encryptedMyCalendarJson(json)
+
+        assertEquals(json, encryptedMyCalendarJson(encoded.decodeToString()).decodeToString())
+    }
+
+    @Test
     fun `Selia payload preserves every local field`() {
         val day = LocalDate.of(2026, 8, 31)
         val transfer = SeliaTransfer(

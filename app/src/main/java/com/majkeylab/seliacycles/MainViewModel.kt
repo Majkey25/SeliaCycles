@@ -2,6 +2,7 @@ package com.majkeylab.seliacycles
 
 import android.app.Application
 import android.net.Uri
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -122,6 +123,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         result.fold(
             onSuccess = { preview -> _state.value = _state.value.copy(busy = false, myCalendarPreview = preview) },
             onFailure = { error ->
+                Log.e("SeliaCycles", "My Calendar import failed", error)
                 _state.value = _state.value.copy(
                     busy = false,
                     message = when ((error as? MyCalendarFormatException)?.failure) {
@@ -154,6 +156,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
+        result.exceptionOrNull()?.let { Log.e("SeliaCycles", "My Calendar export failed", it) }
         reload(if (result.isSuccess) R.string.my_calendar_export_complete else R.string.operation_failed)
     }
 

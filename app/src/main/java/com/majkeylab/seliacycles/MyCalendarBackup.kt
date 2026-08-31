@@ -336,10 +336,15 @@ class MyCalendarImporter(context: Context) {
         ).use(Cursor::moveToFirst)
         if (!exists) return null
         return database.query("SeliaBackup", arrayOf("version", "payload"), null, null, null, null, null).use { cursor ->
-            if (!cursor.moveToFirst() || cursor.getInt(0) != 1 || cursor.moveToNext()) {
+            if (!cursor.moveToFirst() || cursor.getInt(0) != 1) {
                 throw MyCalendarFormatException("Unsupported Selia backup", failure = MyCalendarFailure.UNSUPPORTED)
             }
-            SeliaBackupCodec.decode(cursor.getBlob(1))
+            val payload = cursor.getBlob(1)
+            if (cursor.moveToNext()) throw MyCalendarFormatException(
+                "Unsupported Selia backup",
+                failure = MyCalendarFailure.UNSUPPORTED,
+            )
+            SeliaBackupCodec.decode(payload)
         }
     }
 

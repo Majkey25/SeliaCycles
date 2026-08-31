@@ -122,8 +122,6 @@
     <string name="daily_measurements">Daily measurements</string>
     <string name="daily_measurements_body">Weight, basal temperature, sleep and intimacy are optional under More details in each daily entry.</string>
     <string name="predictions">Period predictions</string>
-    <string name="simple_mode">Simple mode</string>
-    <string name="simple_mode_body">Focuses on period tracking. Fertility, ovulation, and related signs are hidden without deleting data.</string>
     <string name="default_cycle_length">Cycle length for prediction</string>
     <string name="default_period_length">Period length for prediction</string>
     <string name="use_automatic_estimate">Use automatic estimate</string>

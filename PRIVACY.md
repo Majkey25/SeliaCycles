@@ -14,6 +14,10 @@ The app has no account, ads, analytics, telemetry, Selia cloud, or network permi
 
 When the user selects a My Calendar `.pc` backup, Selia Cycles reads the file locally, previews the dated records, and merges confirmed records into private app storage. The file and imported health data are not uploaded. Existing Selia values take priority for the same day.
 
+## Optional `.pc` export
+
+When the user chooses an export destination, Selia Cycles creates a local `.pc` backup containing cycle records and app settings. The export is not uploaded by Selia Cycles and is not encrypted. Anyone with access to the file may be able to read health data, so the user should store or share it securely.
+
 ## Optional calendar mirror
 
 If the user enables calendar mirroring, Selia Cycles requests Android calendar read/write permission, lists visible writable calendars, and copies short labels for recorded periods, period estimates, fertile windows, and estimated ovulation into the selected calendar. Notes, symptoms, measurements, spotting, cervical mucus, test results, medication, intimacy, and raw mood logs are never copied.

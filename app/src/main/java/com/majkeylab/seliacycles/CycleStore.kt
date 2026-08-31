@@ -125,6 +125,15 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             database.execSQL("ALTER TABLE settings ADD COLUMN period_length_override INTEGER")
             database.execSQL("ALTER TABLE settings ADD COLUMN active_period_start INTEGER")
         }
+        if (oldVersion < 10) {
+            val today = LocalDate.now()
+            database.replaceDayLogs(readLogs(database), today)
+            database.execSQL("UPDATE settings SET simple_mode = 0")
+            database.execSQL(
+                "UPDATE settings SET active_period_start = NULL WHERE active_period_start > ?",
+                arrayOf(today.toEpochDay()),
+            )
+        }
     }
 
     fun load(): CycleBackup = CycleBackup(
@@ -133,50 +142,47 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
     )
 
     fun saveLog(log: DayLog) {
-        if (log.isEmpty) {
+        val normalized = PeriodActions.removeFutureBleeding(listOf(log), LocalDate.now()).singleOrNull()
+        if (normalized == null || normalized.isEmpty) {
             writableDatabase.delete("day_logs", "day = ?", arrayOf(log.day.toEpochDay().toString()))
         } else {
             check(writableDatabase.insertWithOnConflict(
                 "day_logs",
                 null,
-                logValues(log),
+                logValues(normalized),
                 SQLiteDatabase.CONFLICT_REPLACE,
             ) != -1L)
         }
     }
 
     fun replaceLogs(logs: List<DayLog>) = writableDatabase.runInTransaction {
-        delete("day_logs", null, null)
-        logs.forEach { insertOrThrow("day_logs", null, logValues(it)) }
+        replaceDayLogs(logs)
     }
 
     fun savePeriodState(logs: List<DayLog>, settings: AppSettings) = writableDatabase.runInTransaction {
-        delete("day_logs", null, null)
-        logs.forEach { insertOrThrow("day_logs", null, logValues(it)) }
-        check(update("settings", settingsValues(settings), "id = 1", null) == 1)
+        replaceDayLogs(logs)
+        check(update("settings", settingsValues(settings.normalized()), "id = 1", null) == 1)
     }
 
     fun mergeImported(incoming: List<DayLog>) = writableDatabase.runInTransaction {
         val merged = readLogs(this).associateByTo(mutableMapOf(), DayLog::day)
         incoming.forEach { log -> merged[log.day] = merged[log.day]?.let { mergeDayLogs(it, log) } ?: log }
         if (merged.size > CycleBackup.MAX_LOGS) throw IllegalArgumentException("Too many imported records")
-        delete("day_logs", null, null)
-        merged.values.sortedBy(DayLog::day).forEach { insertOrThrow("day_logs", null, logValues(it)) }
+        replaceDayLogs(merged.values.toList())
     }
 
     fun mergeTransfer(transfer: SeliaTransfer) = writableDatabase.runInTransaction {
         val merged = readLogs(this).associateByTo(mutableMapOf(), DayLog::day)
         transfer.backup.logs.forEach { log -> merged[log.day] = merged[log.day]?.let { mergeDayLogs(it, log) } ?: log }
         if (merged.size > CycleBackup.MAX_LOGS) throw IllegalArgumentException("Too many imported records")
-        delete("day_logs", null, null)
-        merged.values.sortedBy(DayLog::day).forEach { insertOrThrow("day_logs", null, logValues(it)) }
-        check(update("settings", settingsValues(transfer.backup.settings), "id = 1", null) == 1)
+        replaceDayLogs(merged.values.toList())
+        check(update("settings", settingsValues(transfer.backup.settings.normalized()), "id = 1", null) == 1)
         delete("forecast_snapshots", null, null)
         transfer.snapshots.forEach { snapshot -> insertOrThrow("forecast_snapshots", null, forecastValues(snapshot)) }
     }
 
     fun saveSettings(settings: AppSettings) {
-        check(writableDatabase.update("settings", settingsValues(settings), "id = 1", null) == 1)
+        check(writableDatabase.update("settings", settingsValues(settings.normalized()), "id = 1", null) == 1)
     }
 
     fun loadForecastSnapshots(): List<ForecastSnapshot> = readableDatabase.query(
@@ -216,13 +222,23 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
     }
 
     fun replace(backup: CycleBackup) = writableDatabase.runInTransaction {
-        delete("day_logs", null, null)
+        replaceDayLogs(backup.logs)
         delete("forecast_snapshots", null, null)
-        backup.logs.forEach { insertOrThrow("day_logs", null, logValues(it)) }
-        check(update("settings", settingsValues(backup.settings), "id = 1", null) == 1)
+        check(update("settings", settingsValues(backup.settings.normalized()), "id = 1", null) == 1)
     }
 
     fun clearAll() = replace(CycleBackup())
+
+    private fun SQLiteDatabase.replaceDayLogs(logs: List<DayLog>, today: LocalDate = LocalDate.now()) {
+        delete("day_logs", null, null)
+        PeriodActions.removeFutureBleeding(logs, today).sortedBy(DayLog::day)
+            .forEach { insertOrThrow("day_logs", null, logValues(it)) }
+    }
+
+    private fun AppSettings.normalized(today: LocalDate = LocalDate.now()): AppSettings = copy(
+        simpleMode = false,
+        activePeriodStart = activePeriodStart?.takeUnless { it.isAfter(today) },
+    )
 
     private fun readLogs(database: SQLiteDatabase): List<DayLog> = database.query(
         "day_logs",
@@ -400,7 +416,7 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
 
     companion object {
         private const val DATABASE_NAME = "selia-cycles.db"
-        private const val DATABASE_VERSION = 9
+        private const val DATABASE_VERSION = 10
         private val LOG_COLUMNS = arrayOf(
             "day",
             "bleeding",

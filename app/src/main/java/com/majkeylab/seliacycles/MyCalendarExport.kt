@@ -20,6 +20,8 @@ import java.time.temporal.ChronoUnit
 import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import org.json.JSONArray
+import org.json.JSONObject
 
 data class SeliaTransfer(
     val backup: CycleBackup,
@@ -64,25 +66,34 @@ class MyCalendarExporter(context: Context) {
 
     fun write(transfer: SeliaTransfer, output: OutputStream) {
         require(transfer.backup.logs.isNotEmpty())
+        val prediction = CyclePredictor.predict(
+            bleedingDays = transfer.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
+            defaultCycleLength = transfer.backup.settings.cycleLength,
+            defaultPeriodLength = transfer.backup.settings.periodLength,
+            cycleLengthOverride = transfer.backup.settings.cycleLengthOverride,
+            periodLengthOverride = transfer.backup.settings.periodLengthOverride,
+            activePeriodStart = transfer.backup.settings.activePeriodStart,
+        )
         val databaseFile = kotlin.io.path.createTempFile(cacheDirectory.toPath(), "selia-export-", ".db").toFile()
         try {
             SQLiteDatabase.openOrCreateDatabase(databaseFile, null).use { database ->
                 createSchema(database)
+                database.delete("android_metadata", null, null)
                 database.insertOrThrow("android_metadata", null, ContentValues().apply { put("locale", Locale.getDefault().toLanguageTag()) })
                 database.insertOrThrow("User", null, ContentValues().apply {
-                    put("uid", 1)
+                    put("uid", MY_CALENDAR_UID)
                     put("update_time", System.currentTimeMillis())
                     put("name", "Selia Cycles")
-                    put("setting", "{}")
+                    put("setting", userSettings(transfer.backup.settings, prediction).toString())
                 })
                 MyCalendarExportMapper.periodRows(transfer.backup.logs).forEach { row ->
                     database.insertOrThrow("Period", null, ContentValues().apply {
-                        put("uid", 1)
+                        put("uid", MY_CALENDAR_UID)
                         put("update_time", System.currentTimeMillis())
                         put("create_date", row.date)
                         put("date", row.date)
                         put("period", row.periodValue)
-                        put("cycle", transfer.backup.settings.cycleLengthOverride ?: transfer.backup.settings.cycleLength)
+                        put("cycle", prediction.averageCycleLength)
                         put("pregnancy", 0)
                         put("pregnancy_date", 0)
                         put("due_date_select", 0)
@@ -92,7 +103,7 @@ class MyCalendarExporter(context: Context) {
                 MyCalendarExportMapper.noteRows(transfer.backup.logs).forEach { row ->
                     database.insertOrThrow("Note", null, ContentValues().apply {
                         put("date", row.date)
-                        put("uid", 1)
+                        put("uid", MY_CALENDAR_UID)
                         put("update_time", System.currentTimeMillis())
                         put("create_date", row.date)
                         put("temperature", row.temperatureC)
@@ -111,7 +122,7 @@ class MyCalendarExporter(context: Context) {
             if (databaseFile.length() > MyCalendarContainerReader.MAX_DATABASE_BYTES) {
                 throw MyCalendarFormatException("Export database is too large")
             }
-            MyCalendarContainerWriter.write(databaseFile.readBytes(), output)
+            MyCalendarContainerWriter.write(databaseFile.readBytes(), output, sidecars(transfer, prediction))
         } finally {
             listOf(databaseFile, databaseFile.resolveSibling("${databaseFile.name}-journal")).forEach { file ->
                 if (file.exists() && !file.delete()) {
@@ -122,9 +133,114 @@ class MyCalendarExporter(context: Context) {
         }
     }
 
+    private fun sidecars(transfer: SeliaTransfer, prediction: CyclePrediction): Map<String, ByteArray> {
+        val settings = transfer.backup.settings
+        val now = System.currentTimeMillis()
+        val periods = JSONArray()
+        MyCalendarExportMapper.periodRows(transfer.backup.logs).forEach { row ->
+            val date = row.date.toLocalDate()
+            periods.put(JSONObject()
+                .put("start", date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .put("period", row.periodValue)
+                .put("cycle", prediction.averageCycleLength)
+                .put("pregnancy", false)
+                .put("uid", MY_CALENDAR_UID)
+                .put("pregnancy_date", 0)
+                .put("due_date_select", 0)
+                .put("dueDateSelect", 0)
+                .put("update_time", now)
+                .put("updateTime", now)
+                .put("date_str", date.toString())
+                .put("createDate", now)
+                .put("maskPeriods", "[]")
+                .put("temp2", "")
+                .put("temp3", ""))
+        }
+        val result = linkedMapOf(
+            "1.user" to encryptedMyCalendarJson(JSONArray().put(JSONObject()
+                .put("answer", "")
+                .put("email", "")
+                .put("password", "")
+                .put("question", "")
+                .put("setting", userSettings(settings, prediction).toString())
+                .put("uid", MY_CALENDAR_UID)
+                .put("name", "Selia Cycles")
+                .put("pwdType", 0)
+                .put("avatarUrl", "")
+                .put("firebaseName", "")
+                .put("temp2", "")
+                .put("temp3", "")).toString()),
+            "1.period" to encryptedMyCalendarJson(periods.toString()),
+            "1.pill" to encryptedMyCalendarJson("[]"),
+            "1.pill_record" to encryptedMyCalendarJson("[]"),
+        )
+        MyCalendarExportMapper.noteRows(transfer.backup.logs).chunked(NOTES_PER_FILE)
+            .ifEmpty { listOf(emptyList()) }
+            .forEachIndexed { index, rows -> result["${index + 1}.note"] = encryptedMyCalendarJson(noteJson(rows, now).toString()) }
+        return result
+    }
+
+    private fun noteJson(rows: List<MyCalendarNoteRow>, now: Long): JSONArray = JSONArray().apply {
+        rows.forEach { row ->
+            val date = row.date.toLocalDate()
+            put(JSONObject()
+                .put("date", date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .put("height", 0)
+                .put("temperature", row.temperatureC ?: 0.0)
+                .put("uid", MY_CALENDAR_UID)
+                .put("weight", row.weightKg ?: 0.0)
+                .put("condom", row.condom > 0)
+                .put("mood", "")
+                .put("note", row.note)
+                .put("pill", "")
+                .put("symptom", "")
+                .put("intimate", row.intimate > 0)
+                .put("ovulation_test", 0)
+                .put("fertilityTest", 0)
+                .put("pregnancyTest", 0)
+                .put("cervicalFluid", "0,0,0,0,0,0,")
+                .put("lastCMInput", "0:0")
+                .put("lastTestInput", "0:0")
+                .put("cervicalPosition", 0)
+                .put("cervicalTexture", 0)
+                .put("cervix", 0)
+                .put("pill_new", "")
+                .put("frequencyTaken", "")
+                .put("sextimes", if (row.intimate > 0) 1 else 0)
+                .put("noSex", 0)
+                .put("organsm", 0)
+                .put("date_str", date.toString())
+                .put("creatDate", now)
+                .put("masturbate", 0)
+                .put("condom_int", row.condom)
+                .put("waist", 0)
+                .put("neck", 0)
+                .put("hip", 0)
+                .put("cloud_uid", MY_CALENDAR_UID)
+                .put("neWeight", "")
+                .put("sleep", row.sleep)
+                .put("lochia", 0)
+                .put("breast", "")
+                .put("workout", ""))
+        }
+    }
+
+    private fun userSettings(settings: AppSettings, prediction: CyclePrediction): JSONObject = JSONObject()
+        .put("1", JSONArray()
+            .put(JSONObject().put("key", "menses_length").put("value", prediction.averagePeriodLength))
+            .put(JSONObject().put("key", "period_length").put("value", prediction.averageCycleLength)))
+        .put("2", JSONArray())
+        .put("3", JSONArray()
+            .put(JSONObject().put("key", "show_predict_period").put("value", settings.predictionsEnabled))
+            .put(JSONObject().put("key", "is_pregnant").put("value", settings.profile.lifeSituation == LifeSituation.PREGNANT)))
+        .put("4", JSONArray())
+        .put("5", JSONArray())
+        .put("6", JSONArray())
+
+    private fun Int.toLocalDate(): LocalDate = LocalDate.parse(toString(), DateTimeFormatter.BASIC_ISO_DATE)
+
     private fun createSchema(database: SQLiteDatabase) {
         listOf(
-            "CREATE TABLE android_metadata (locale TEXT)",
             "CREATE TABLE User (_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, uid INTEGER, update_time INTEGER, name TEXT, setting TEXT, temp1 TEXT, temp2 TEXT)",
             "CREATE TABLE Period (_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, uid INTEGER, update_time INTEGER, create_date INTEGER, date INTEGER, period INTEGER, cycle INTEGER, pregnancy INTEGER, pregnancy_date INTEGER, due_date_select INTEGER, mask_periods TEXT, temp1 TEXT, temp2 TEXT)",
             "CREATE TABLE Note (_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, date INTEGER, uid INTEGER, update_time INTEGER, create_date INTEGER, height REAL, temperature REAL, weight REAL, symptom TEXT, mood TEXT, note TEXT, pill TEXT, intimate INTEGER, condom INTEGER, sextimes INTEGER, organsm INTEGER, ovulation_test INTEGER, fertility_test INTEGER, pregnancy_test INTEGER, cervical_fluid TEXT, cervical_position INTEGER, cervical_texture INTEGER, cervix INTEGER, water TEXT, masturbate INTEGER, waist REAL, neck REAL, hip REAL, more_weight TEXT, sleep TEXT, breast TEXT, workout TEXT, temp1 TEXT, temp2 TEXT)",
@@ -134,10 +250,15 @@ class MyCalendarExporter(context: Context) {
             "CREATE TABLE SeliaBackup (version INTEGER PRIMARY KEY NOT NULL, payload BLOB NOT NULL)",
         ).forEach(database::execSQL)
     }
+
+    private companion object {
+        const val MY_CALENDAR_UID = 0
+        const val NOTES_PER_FILE = 100
+    }
 }
 
 object MyCalendarContainerWriter {
-    fun write(database: ByteArray, output: OutputStream) {
+    fun write(database: ByteArray, output: OutputStream, sidecars: Map<String, ByteArray> = emptyMap()) {
         require(database.size <= MyCalendarContainerReader.MAX_DATABASE_BYTES)
         ObjectOutputStream(output).use { objectOutput ->
             objectOutput.writeInt(-1)
@@ -151,12 +272,14 @@ object MyCalendarContainerWriter {
                     "1.info" to "7 _ SeliaCycles_Time_${now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z", Locale.ROOT))}"
                         .encodeToByteArray(),
                     "cloud.db" to database,
-                    "1.user" to "[]".encodeToByteArray(),
-                    "1.period" to "[]".encodeToByteArray(),
-                    "1.pill" to "[]".encodeToByteArray(),
-                    "1.note" to "[]".encodeToByteArray(),
-                    "1.pill_record" to "[]".encodeToByteArray(),
                 )
+                entries.putAll(sidecars.ifEmpty { mapOf(
+                    "1.user" to encryptedMyCalendarJson("[]"),
+                    "1.period" to encryptedMyCalendarJson("[]"),
+                    "1.pill" to encryptedMyCalendarJson("[]"),
+                    "1.note" to encryptedMyCalendarJson("[]"),
+                    "1.pill_record" to encryptedMyCalendarJson("[]"),
+                ) })
                 entries.forEach { (name, value) ->
                     zip.putNextEntry(ZipEntry(name))
                     zip.write(value)
@@ -165,6 +288,15 @@ object MyCalendarContainerWriter {
             }
         }
     }
+}
+
+internal fun encryptedMyCalendarJson(json: String): ByteArray {
+    val value = json.toCharArray()
+    val key = "Period"
+    for (index in value.indices step 2) {
+        value[index] = (value[index].code xor key[(index / 2) % key.length].code).toChar()
+    }
+    return String(value).encodeToByteArray()
 }
 
 object SeliaBackupCodec {

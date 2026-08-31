@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.0-beta.3 - 2026-08-31
+
+### Added
+
+- Local My Calendar-compatible `.pc` export with full-fidelity Selia data for lossless re-import.
+- Compact linked Today dashboard and expanded guided relief care.
+
+### Fixed
+
+- Manual cycle and period lengths now immediately control future estimates.
+- Starting a period records only the confirmed day; ending it fills the completed span.
+- Future-period cards now open the matching date and phase cards open focused guidance.
+- New installs use the Light theme and Ocean palette.
+- ImageGen-designed launcher artwork now uses a white rounded calendar and red drop on a black circular mark with transparent adaptive-icon margins.
+
 ## 0.9.0-beta.2 - 2026-08-31
 
 ### Fixed

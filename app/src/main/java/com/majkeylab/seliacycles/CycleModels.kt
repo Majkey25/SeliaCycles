@@ -202,7 +202,7 @@ data class AppSettings(
             profile.lifeSituation != LifeSituation.MENOPAUSE
 
     val canEstimateFertility: Boolean
-        get() = !simpleMode && canPredictPeriods && profile.lifeSituation != LifeSituation.HORMONAL_CONTRACEPTION &&
+        get() = canPredictPeriods && profile.lifeSituation != LifeSituation.HORMONAL_CONTRACEPTION &&
             profile.lifeSituation != LifeSituation.PERIMENOPAUSE
 }
 

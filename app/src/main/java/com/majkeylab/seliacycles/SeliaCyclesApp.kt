@@ -112,7 +112,6 @@ import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VerifiedUser
-import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material.icons.outlined.MonitorWeight
@@ -970,6 +969,7 @@ private fun CalendarScreen(
     )
     val scope = rememberCoroutineScope()
     var overviewExpanded by remember { mutableStateOf(false) }
+    var focusedDay by remember { mutableStateOf<LocalDate?>(null) }
     val recorded = state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day)
     val predicted = state.periodEstimates.flatMap { estimate ->
         generateSequence(estimate.start) { it.plusDays(1) }.takeWhile { it < estimate.endExclusive }.toList()
@@ -988,6 +988,7 @@ private fun CalendarScreen(
     LaunchedEffect(targetDay) {
         targetDay?.takeIf { it in DayLog.MIN_DATE..DayLog.MAX_DATE }?.let { day ->
             pagerState.scrollToPage(CalendarPaging.pageFor(YearMonth.from(day)))
+            focusedDay = day
             overviewExpanded = false
             onTargetConsumed()
         }
@@ -1016,6 +1017,7 @@ private fun CalendarScreen(
             CalendarMonthPage(
                 state = state,
                 shownMonth = CalendarPaging.monthFor(page),
+                focusedDay = focusedDay,
                 overviewExpanded = overviewExpanded,
                 onToggleOverview = { overviewExpanded = !overviewExpanded },
                 onPrevious = { scope.launch { pagerState.animateScrollToPage(page - 1) } },
@@ -1027,6 +1029,7 @@ private fun CalendarScreen(
                 onPeriodColor = onPeriodColor,
                 entryColor = entryColor,
                 onDayClick = { day ->
+                    focusedDay = day
                     val targetPage = CalendarPaging.pageFor(YearMonth.from(day))
                     if (targetPage == page) {
                         onEdit(day)
@@ -1046,6 +1049,7 @@ private fun CalendarScreen(
 private fun CalendarMonthPage(
     state: AppState,
     shownMonth: YearMonth,
+    focusedDay: LocalDate?,
     overviewExpanded: Boolean,
     onToggleOverview: () -> Unit,
     onPrevious: () -> Unit,
@@ -1105,6 +1109,7 @@ private fun CalendarMonthPage(
                     CalendarDay(
                         day = day,
                         tracks = tracks,
+                        selected = focusedDay == day,
                         hasDetails = state.logsByDay[day]?.hasCalendarMarker == true,
                         inShownMonth = YearMonth.from(day) == shownMonth,
                         periodConnectPrevious = column > 0 && tracks.period != CalendarPeriodLayer.NONE &&
@@ -1190,6 +1195,7 @@ private fun CalendarMonthPage(
 private fun CalendarDay(
     day: LocalDate,
     tracks: CalendarDayTracks,
+    selected: Boolean,
     hasDetails: Boolean,
     inShownMonth: Boolean,
     periodConnectPrevious: Boolean,
@@ -1266,7 +1272,9 @@ private fun CalendarDay(
         Box(
             Modifier.size(36.dp).clip(CircleShape)
                 .then(if (tracks.ovulation) Modifier.background(MaterialTheme.colorScheme.primaryContainer) else Modifier)
-                .then(if (day == LocalDate.now()) {
+                .then(if (selected) {
+                    Modifier.border(3.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                } else if (day == LocalDate.now()) {
                     Modifier.border(2.dp, MaterialTheme.colorScheme.outline, CircleShape)
                 } else Modifier),
             contentAlignment = Alignment.Center,
@@ -1694,14 +1702,6 @@ private fun SettingsScreen(
                     SwitchRow(R.string.predictions, settings.predictionsEnabled, Icons.Outlined.Insights) {
                         onSave(settings.copy(predictionsEnabled = it))
                     }
-                    SwitchRow(R.string.simple_mode, settings.simpleMode, Icons.Outlined.VisibilityOff) {
-                        onSave(settings.copy(simpleMode = it))
-                    }
-                    Text(
-                        stringResource(R.string.simple_mode_body),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
                     Stepper(
                         R.string.default_cycle_length,
                         settings.cycleLengthOverride ?: state.prediction.averageCycleLength,
@@ -2545,7 +2545,8 @@ private fun DayOverviewSheet(
     val log = state.logsByDay[day]
     val insight = CycleInsights.forDate(state.backup, state.forecastSnapshots, day)
     val comparison = DayOverview.compare(day, state.backup, state.forecastSnapshots)
-    val canEndPeriod = log?.bleeding == true || suggestedPeriodStart(state, day) != null
+    val canChangePeriod = !day.isAfter(LocalDate.now())
+    val canEndPeriod = canChangePeriod && (log?.bleeding == true || suggestedPeriodStart(state, day) != null)
     val periodEstimate = state.periodEstimates.firstOrNull { day >= it.start && day < it.endExclusive }
     val statusLabels = buildList {
         if (log?.bleeding == true) add(R.string.selected_day_recorded)
@@ -2588,26 +2589,28 @@ private fun DayOverviewSheet(
             ) {
                 SheetHeader(R.string.day_overview, onDismiss)
                 Text(day.format(dateFormat), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                SectionLabel(Icons.Outlined.WaterDrop, R.string.quick_period)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (log?.bleeding == true) {
-                        Button(onClick = onEndPeriod, modifier = Modifier.fillMaxWidth()) {
-                            Icon(Icons.Outlined.CheckCircle, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.period_end_action))
+                if (canChangePeriod) {
+                    SectionLabel(Icons.Outlined.WaterDrop, R.string.quick_period)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        if (log?.bleeding == true) {
+                            Button(onClick = onEndPeriod, modifier = Modifier.fillMaxWidth()) {
+                                Icon(Icons.Outlined.CheckCircle, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.period_end_action))
+                            }
+                        } else {
+                            Button(onClick = onStartPeriod, modifier = Modifier.weight(1f)) {
+                                Icon(Icons.Outlined.Opacity, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.period_start_action))
+                            }
                         }
-                    } else {
-                        Button(onClick = onStartPeriod, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Outlined.Opacity, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.period_start_action))
-                        }
-                    }
-                    if (log?.bleeding != true && canEndPeriod) {
-                        OutlinedButton(onClick = onEndPeriod, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Outlined.CheckCircle, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.period_end_action))
+                        if (log?.bleeding != true && canEndPeriod) {
+                            OutlinedButton(onClick = onEndPeriod, modifier = Modifier.weight(1f)) {
+                                Icon(Icons.Outlined.CheckCircle, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.period_end_action))
+                            }
                         }
                     }
                 }
