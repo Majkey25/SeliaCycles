@@ -214,8 +214,8 @@
     <string name="phase_guidance_title">Možné tělesné projevy</string>
     <string name="phase_feelings_title">Nálada a energie</string>
     <string name="phase_feelings_menstrual">Můžeš mít méně energie, potřebovat více klidu nebo být citlivější a zaměřená do sebe. Některé ženy žádnou emoční změnu nepozorují.</string>
-    <string name="phase_feelings_follicular">Energie, motivace, soustředění nebo sebevědomí mohou postupně růst. Můžeš být společenskější nebo mít chuť na náročnější úkoly.</string>
-    <string name="phase_feelings_fertile">Některé ženy se cítí energičtější, sebevědomější, společenské nebo mají větší chuť na blízkost. Tyto pocity nepotvrzují ovulaci.</string>
+    <string name="phase_feelings_follicular">Energie, motivace, soustředění nebo sebevědomí mohou postupně růst. Můžeš mít větší chuť být mezi lidmi nebo se pustit do náročnějších úkolů.</string>
+    <string name="phase_feelings_fertile">Některé ženy mohou mít více energie, cítit se sebevědoměji nebo mít větší chuť na kontakt s lidmi a blízkost. Tyto pocity nepotvrzují ovulaci.</string>
     <string name="phase_feelings_ovulation">Některé ženy mají více energie, sebevědomí, empatie nebo sexuální touhy. Mnoho žen žádnou změnu nepozoruje.</string>
     <string name="phase_feelings_luteal">Energie může postupně klesat. Můžeš být citlivější, podrážděná, úzkostná, kreativní nebo potřebovat více klidu. Průběh se liší.</string>
     <string name="phase_guidance_menstrual">Během menstruace se mohou objevit křeče, bolest v bedrech, bolest hlavy, nadýmání nebo únava. Průběh je u každé ženy jiný.</string>

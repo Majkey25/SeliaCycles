@@ -1,4 +1,4 @@
-# Selia Cycles 0.9.0-beta.1 acceptance
+# Selia Cycles 0.9.0-beta.2 acceptance
 
 Date: 2026-08-31
 
@@ -10,7 +10,7 @@ Date: 2026-08-31
 - Android Lint: 0 errors and 8 toolchain, dependency-update, or resource-folder warnings.
 - Release AAB: `jar verified`.
 - Upload certificate SHA-256: `A4:F0:7E:70:CC:0D:E4:22:44:11:FD:CD:EB:81:E3:E1:1D:5B:4B:A9:49:23:0C:F1:08:F3:76:3A:39:FD:4A:1E`.
-- Signed AAB SHA-256: `DEBA5A37D43575B717DFAD0164471964C3E41082062A6B54824C254F0E8B3ED5`.
+- Signed AAB SHA-256: `A6EC75D924F4105E47733742687B3C17176396B0F2B9E85A82B78CFF8A97171B`.
 
 ## Behavior evidence
 
@@ -34,7 +34,11 @@ Date: 2026-08-31
 
 Target: `BQLDU19927002646`, Huawei YAL-L21, Android 10. No emulator was used.
 
-- Installed code 9 in place with `adb install -r`; existing cycle data remained present.
+- Installed code 9 in place with `adb install -r`; existing cycle data remained present before the icon and Czech-copy code 10 rebuild.
+- The device copy used the standard debug certificate (`768843C2E67E38838C8BD7751443A4CFA5B21DBFE6DB077F93677100DBCCCDA6`). The production release certificate intentionally differs, so its incompatible update was rejected without uninstalling or losing data. The matching debug code 10 update then installed successfully.
+- Package state reports version code 10 and `0.9.0-beta.2`; the retained local data still renders cycle day 19, the next period, fertile window, ovulation estimate, and follicular phase.
+- The live Czech follicular guidance now reads `Můžeš mít větší chuť být mezi lidmi...`; no `společenskější` wording remains.
+- Huawei launcher search renders the supplied double-ring, three-arrow mark in black with the centered red drop on white; the adaptive safe crop keeps every arrow visible.
 - Cold launch returned a live PID and no matching Selia `FATAL EXCEPTION` entry.
 - Czech Home showed the explicit `Konec menstruace` action and the current cycle overview.
 - Czech History showed `Průměrná odchylka: 5 dní` and `V uloženém rozmezí: 2 z 6` for the retained local data.
@@ -64,7 +68,7 @@ Target: `BQLDU19927002646`, Huawei YAL-L21, Android 10. No emulator was used.
 
 ## Google Play assets
 
-- Icon: 512x512 RGBA, SHA-256 `1325087B11D4F942F5ED99CA01190426028B61128506F30930CB63C956786C9E`.
+- Icon: 512x512 RGB, SHA-256 `DFA301830F0537736540551451D35999B4BE1C695FAC6ECDE5629F004DE24544`.
 - Feature graphic: 1024x500 RGB, SHA-256 `2E5B4B83A0E449EBB88DD5EDBDA0175A121E726ECF785A1F3132B2643982D89C`.
 - Settings screenshot remains 1080x1920 RGB.
 - Home: 1080x1920 RGB, SHA-256 `365E99344495456279D8FA4BF66695C624D72C99FC68B6B4D6BE5EFAF57C62B1`.
@@ -74,8 +78,8 @@ Target: `BQLDU19927002646`, Huawei YAL-L21, Android 10. No emulator was used.
 
 ## External state
 
-- Code 9 is not committed or pushed.
-- Code 9 is not uploaded to Google Play.
-- Updated GitHub Pages policy and Play assets are local until a commit and push.
+- The complete redesign is committed and pushed on `main` as `7c835cfee6a43e11b3c5511c4fc40179f0bfa695`; its Android CI and GitHub Pages workflows passed.
+- Code 9 was uploaded only into an unsubmitted Google Play draft and will be superseded by the corrected code 10 build before tester rollout.
+- Code 10 and the corrected Google Play icon remain local until final verification and publication.
 - No separate physical tablet was connected; large-screen acceptance uses the physical Huawei at a verified 800dp override.
 - Performance evidence is a single debug-device run; a release/profileable repeated trace remains optional before production rollout.

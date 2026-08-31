@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.2 - 2026-08-31
+
+### Fixed
+
+- Launcher and Google Play icons now preserve the supplied three-arrow, double-ring geometry with an inverted white/black palette, unchanged red drop, and separate safe crops for Play and adaptive launcher masks.
+- Czech phase guidance now uses natural phrasing for wanting more contact with people instead of an awkward comparative adjective.
+
 ## 0.9.0-beta.1 - 2026-08-30
 
 ### Added
