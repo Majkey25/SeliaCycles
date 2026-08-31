@@ -78,8 +78,10 @@ Target: `BQLDU19927002646`, Huawei YAL-L21, Android 10. No emulator was used.
 
 ## External state
 
-- The complete redesign is committed and pushed on `main` as `7c835cfee6a43e11b3c5511c4fc40179f0bfa695`; its Android CI and GitHub Pages workflows passed.
-- Code 9 was uploaded only into an unsubmitted Google Play draft and will be superseded by the corrected code 10 build before tester rollout.
-- Code 10 and the corrected Google Play icon remain local until final verification and publication.
+- The complete redesign, corrected launcher/copy, and aligned Play feature graphic are committed and pushed on `main` through `f8087bd184b459743823d534175fd77bd7786362`. Android CI passed for the code 10 commit `154da6b9dbaf09d0d2fbea8fa2eb6d86fa838a36`; the later commit changes only Play artwork and this evidence file.
+- The code 9 bundle was removed from the unsubmitted draft. The prepared Alpha release contains only code 10 (`0.9.0-beta.2`).
+- Google Play accepted and submitted three changes for review: the code 10 closed-test release at 100%, the corrected 512x512 icon, and the aligned 1024x500 feature graphic. Fast checks completed and the authoritative status is `Probíhá kontrola změn`.
+- Play reports only advisory missing-mapping and native-symbol warnings. R8 minification is disabled, so no mapping file exists; the bundled AndroidX native library provides no symbol archive to upload.
+- Managed publishing is disabled, so the Alpha release will become available to selected testers after Google approves it. Play states that review is usually completed within seven days but can take longer.
 - No separate physical tablet was connected; large-screen acceptance uses the physical Huawei at a verified 800dp override.
 - Performance evidence is a single debug-device run; a release/profileable repeated trace remains optional before production rollout.
