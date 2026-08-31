@@ -121,8 +121,9 @@
     <string name="predictions">Period predictions</string>
     <string name="simple_mode">Simple mode</string>
     <string name="simple_mode_body">Focuses on period tracking. Fertility, ovulation, and related signs are hidden without deleting data.</string>
-    <string name="default_cycle_length">Default cycle length</string>
-    <string name="default_period_length">Default period length</string>
+    <string name="default_cycle_length">Cycle length for prediction</string>
+    <string name="default_period_length">Period length for prediction</string>
+    <string name="use_automatic_estimate">Use automatic estimate</string>
     <string name="first_day_of_week">First day of week</string>
     <string name="monday">Monday</string>
     <string name="sunday">Sunday</string>

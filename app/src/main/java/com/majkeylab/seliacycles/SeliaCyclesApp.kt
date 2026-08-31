@@ -1821,11 +1821,30 @@ private fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
                     )
-                    Stepper(R.string.default_cycle_length, settings.cycleLength, 15..90, Icons.Outlined.Autorenew) {
-                        onSave(settings.copy(cycleLength = it))
+                    Stepper(
+                        R.string.default_cycle_length,
+                        settings.cycleLengthOverride ?: state.prediction.averageCycleLength,
+                        15..90,
+                        Icons.Outlined.Autorenew,
+                    ) {
+                        onSave(settings.copy(cycleLength = it, cycleLengthOverride = it))
                     }
-                    Stepper(R.string.default_period_length, settings.periodLength, 1..14, Icons.Outlined.WaterDrop) {
-                        onSave(settings.copy(periodLength = it))
+                    Stepper(
+                        R.string.default_period_length,
+                        settings.periodLengthOverride ?: state.prediction.averagePeriodLength,
+                        1..14,
+                        Icons.Outlined.WaterDrop,
+                    ) {
+                        onSave(settings.copy(periodLength = it, periodLengthOverride = it))
+                    }
+                    if (settings.cycleLengthOverride != null || settings.periodLengthOverride != null) {
+                        TextButton(onClick = {
+                            onSave(settings.copy(cycleLengthOverride = null, periodLengthOverride = null))
+                        }) {
+                            Icon(Icons.Outlined.Refresh, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.use_automatic_estimate))
+                        }
                     }
                     ChoiceRow(
                         label = R.string.first_day_of_week,

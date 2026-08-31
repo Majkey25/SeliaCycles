@@ -197,6 +197,9 @@ object CycleInsights {
         defaultCycleLength = backup.settings.cycleLength,
         defaultPeriodLength = backup.settings.periodLength,
         referenceDate = referenceDate,
+        cycleLengthOverride = backup.settings.cycleLengthOverride,
+        periodLengthOverride = backup.settings.periodLengthOverride,
+        activePeriodStart = backup.settings.activePeriodStart,
     )
 
     private data class MoodSample(val mood: Mood, val cycleStart: LocalDate)

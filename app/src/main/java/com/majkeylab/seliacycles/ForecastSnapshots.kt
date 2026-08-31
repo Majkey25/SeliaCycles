@@ -52,6 +52,9 @@ object ForecastSnapshotPlanner {
             defaultCycleLength = backup.settings.cycleLength,
             defaultPeriodLength = backup.settings.periodLength,
             referenceDate = firstDay,
+            cycleLengthOverride = backup.settings.cycleLengthOverride,
+            periodLengthOverride = backup.settings.periodLengthOverride,
+            activePeriodStart = backup.settings.activePeriodStart,
         ).monthlyForecasts.first { it.month == month }
         if (forecast.status != ForecastStatus.ESTIMATED) return null
         return ForecastSnapshot(

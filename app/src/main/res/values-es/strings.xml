@@ -78,8 +78,9 @@
     <string name="predictions">Estimaciones del periodo</string>
     <string name="simple_mode">Modo sencillo</string>
     <string name="simple_mode_body">Centra la aplicación en el periodo. Oculta la fertilidad, la ovulación y los signos relacionados sin borrar datos.</string>
-    <string name="default_cycle_length">Duración predeterminada del ciclo</string>
-    <string name="default_period_length">Duración predeterminada del periodo</string>
+    <string name="default_cycle_length">Duración del ciclo para la predicción</string>
+    <string name="default_period_length">Duración del periodo para la predicción</string>
+    <string name="use_automatic_estimate">Usar predicción automática</string>
     <string name="first_day_of_week">Primer día de la semana</string>
     <string name="monday">Lunes</string>
     <string name="sunday">Domingo</string>

@@ -227,6 +227,25 @@ class CyclePredictorTest {
         assertEquals(LocalDate.of(2026, 8, 3), result.monthlyForecasts[0].end)
     }
 
+    @Test
+    fun manualCycleLengthOverridesImportedHistoryForFutureMonths() {
+        val result = CyclePredictor.predict(
+            bleedingDays = periodDays(
+                LocalDate.of(2026, 3, 26),
+                LocalDate.of(2026, 4, 23),
+                LocalDate.of(2026, 6, 11),
+                LocalDate.of(2026, 7, 9),
+            ),
+            defaultCycleLength = 28,
+            defaultPeriodLength = 5,
+            referenceDate = LocalDate.of(2026, 8, 31),
+            cycleLengthOverride = 32,
+        )
+
+        assertEquals(32, result.averageCycleLength)
+        assertEquals(LocalDate.of(2026, 9, 11), result.nextPeriodStart)
+    }
+
     private fun periodDays(vararg starts: LocalDate): Set<LocalDate> =
         starts.flatMap { start -> (0L..4L).map(start::plusDays) }.toSet()
 }

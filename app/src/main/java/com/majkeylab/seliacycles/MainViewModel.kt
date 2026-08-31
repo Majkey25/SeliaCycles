@@ -30,6 +30,9 @@ data class AppState(
         bleedingDays = backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
         defaultCycleLength = backup.settings.cycleLength,
         defaultPeriodLength = backup.settings.periodLength,
+        cycleLengthOverride = backup.settings.cycleLengthOverride,
+        periodLengthOverride = backup.settings.periodLengthOverride,
+        activePeriodStart = backup.settings.activePeriodStart,
     )
 
     val periodEstimates: List<PeriodEstimate> = CycleInsights.periodEstimates(backup, forecastSnapshots)
@@ -59,6 +62,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             bleedingDays = backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
             defaultCycleLength = backup.settings.cycleLength,
             defaultPeriodLength = backup.settings.periodLength,
+            cycleLengthOverride = backup.settings.cycleLengthOverride,
+            periodLengthOverride = backup.settings.periodLengthOverride,
+            activePeriodStart = backup.settings.activePeriodStart,
         ).averagePeriodLength
         store.replaceLogs(PeriodActions.start(day, backup.logs, usualLength))
     }

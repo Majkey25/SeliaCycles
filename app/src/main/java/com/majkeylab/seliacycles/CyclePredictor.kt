@@ -38,9 +38,14 @@ object CyclePredictor {
         defaultCycleLength: Int,
         defaultPeriodLength: Int,
         referenceDate: LocalDate = LocalDate.now(),
+        cycleLengthOverride: Int? = null,
+        periodLengthOverride: Int? = null,
+        activePeriodStart: LocalDate? = null,
     ): CyclePrediction {
         require(defaultCycleLength in MIN_CYCLE_LENGTH..MAX_CYCLE_LENGTH)
         require(defaultPeriodLength in 1..14)
+        require(cycleLengthOverride == null || cycleLengthOverride in MIN_CYCLE_LENGTH..MAX_CYCLE_LENGTH)
+        require(periodLengthOverride == null || periodLengthOverride in 1..14)
 
         val periods = bleedingDays.sorted().fold(mutableListOf<MutableList<LocalDate>>()) { groups, day ->
             val current = groups.lastOrNull()
@@ -56,10 +61,11 @@ object CyclePredictor {
             ChronoUnit.DAYS.between(first, second).toInt()
         }
         val cycleLengths = robustCycleLengths(rawIntervals, defaultCycleLength)
-        val cycleLength = cycleLengths.weightedAverageOr(defaultCycleLength)
-        val periodLength = periods.map { period ->
+        val cycleLength = cycleLengthOverride ?: cycleLengths.weightedAverageOr(defaultCycleLength)
+        val learnedPeriodLength = periods.filterNot { it.first() == activePeriodStart }.map { period ->
             ChronoUnit.DAYS.between(period.first(), period.last()).toInt() + 1
         }.filter { it in 1..14 }.takeLast(MAX_RECENT_PERIODS).weightedAverageOr(defaultPeriodLength)
+        val periodLength = periodLengthOverride ?: learnedPeriodLength
         val uncertainty = when (cycleLengths.size) {
             0, 1 -> DEFAULT_UNCERTAINTY_DAYS
             else -> max(1, cycleLengths.weightedAverageOf { abs(it - cycleLength).toDouble() }.roundToInt())
@@ -69,7 +75,8 @@ object CyclePredictor {
             cycleLength = cycleLength,
             referenceMonth = YearMonth.from(referenceDate),
         )
-        val next = predictions.firstOrNull()
+        val futurePredictions = predictions.filterNot { it.day.isBefore(referenceDate) }
+        val next = futurePredictions.firstOrNull()
         val nextWindow = next?.uncertainty(uncertainty)
         val months = (0L..1L).map { YearMonth.from(referenceDate).plusMonths(it) }
 
@@ -81,7 +88,7 @@ object CyclePredictor {
             uncertaintyDays = uncertainty,
             earliestPeriodStart = nextWindow?.first,
             latestPeriodStart = nextWindow?.second,
-            futurePeriodStarts = predictions.map(PredictedStart::day),
+            futurePeriodStarts = futurePredictions.map(PredictedStart::day),
             monthlyForecasts = months.map { month ->
                 monthlyForecast(month, periods, predictions, periodLength, uncertainty)
             },

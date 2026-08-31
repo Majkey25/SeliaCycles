@@ -78,8 +78,9 @@
     <string name="predictions">Prognozy miesiączki</string>
     <string name="simple_mode">Tryb prosty</string>
     <string name="simple_mode_body">Skupia aplikację na miesiączce. Płodność, owulacja i powiązane objawy są ukrywane bez usuwania danych.</string>
-    <string name="default_cycle_length">Domyślna długość cyklu</string>
-    <string name="default_period_length">Domyślna długość miesiączki</string>
+    <string name="default_cycle_length">Długość cyklu do prognozy</string>
+    <string name="default_period_length">Długość miesiączki do prognozy</string>
+    <string name="use_automatic_estimate">Użyj automatycznej prognozy</string>
     <string name="first_day_of_week">Pierwszy dzień tygodnia</string>
     <string name="monday">Poniedziałek</string>
     <string name="sunday">Niedziela</string>

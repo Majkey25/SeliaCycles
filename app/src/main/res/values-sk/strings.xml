@@ -78,8 +78,9 @@
     <string name="predictions">Odhady menštruácie</string>
     <string name="simple_mode">Jednoduchý režim</string>
     <string name="simple_mode_body">Zameria aplikáciu na menštruáciu. Plodnosť, ovuláciu a súvisiace znaky skryje bez vymazania údajov.</string>
-    <string name="default_cycle_length">Predvolená dĺžka cyklu</string>
-    <string name="default_period_length">Predvolená dĺžka menštruácie</string>
+    <string name="default_cycle_length">Dĺžka cyklu pre odhad</string>
+    <string name="default_period_length">Dĺžka menštruácie pre odhad</string>
+    <string name="use_automatic_estimate">Použiť automatický odhad</string>
     <string name="first_day_of_week">Prvý deň týždňa</string>
     <string name="monday">Pondelok</string>
     <string name="sunday">Nedeľa</string>

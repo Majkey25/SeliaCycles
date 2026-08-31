@@ -78,8 +78,9 @@
     <string name="predictions">Odhady menstruace</string>
     <string name="simple_mode">Jednoduchý režim</string>
     <string name="simple_mode_body">Zaměří aplikaci na menstruaci. Plodnost, ovulaci a související znaky skryje bez smazání dat.</string>
-    <string name="default_cycle_length">Výchozí délka cyklu</string>
-    <string name="default_period_length">Výchozí délka menstruace</string>
+    <string name="default_cycle_length">Délka cyklu pro odhad</string>
+    <string name="default_period_length">Délka menstruace pro odhad</string>
+    <string name="use_automatic_estimate">Použít automatický odhad</string>
     <string name="first_day_of_week">První den týdne</string>
     <string name="monday">Pondělí</string>
     <string name="sunday">Neděle</string>

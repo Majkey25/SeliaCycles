@@ -63,7 +63,10 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
                 show_phase_guidance INTEGER NOT NULL CHECK (show_phase_guidance IN (0, 1)),
                 show_self_care INTEGER NOT NULL CHECK (show_self_care IN (0, 1)),
                 show_cycle_details INTEGER NOT NULL CHECK (show_cycle_details IN (0, 1)),
-                simple_mode INTEGER NOT NULL CHECK (simple_mode IN (0, 1))
+                simple_mode INTEGER NOT NULL CHECK (simple_mode IN (0, 1)),
+                cycle_length_override INTEGER,
+                period_length_override INTEGER,
+                active_period_start INTEGER
             )
             """.trimIndent(),
         )
@@ -116,6 +119,11 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         }
         if (oldVersion < 8) {
             database.execSQL("ALTER TABLE settings ADD COLUMN simple_mode INTEGER NOT NULL DEFAULT 0 CHECK (simple_mode IN (0, 1))")
+        }
+        if (oldVersion < 9) {
+            database.execSQL("ALTER TABLE settings ADD COLUMN cycle_length_override INTEGER")
+            database.execSQL("ALTER TABLE settings ADD COLUMN period_length_override INTEGER")
+            database.execSQL("ALTER TABLE settings ADD COLUMN active_period_start INTEGER")
         }
     }
 
@@ -249,6 +257,9 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             showSelfCare = cursor.getInt(20) == 1,
             showCycleDetails = cursor.getInt(21) == 1,
             simpleMode = cursor.getInt(22) == 1,
+            cycleLengthOverride = cursor.getNullableInt(23),
+            periodLengthOverride = cursor.getNullableInt(24),
+            activePeriodStart = cursor.getNullableLong(25)?.let(LocalDate::ofEpochDay),
         )
     }
 
@@ -305,6 +316,8 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
 
     private fun Cursor.getNullableInt(index: Int): Int? = if (isNull(index)) null else getInt(index)
 
+    private fun Cursor.getNullableLong(index: Int): Long? = if (isNull(index)) null else getLong(index)
+
     private fun settingsValues(settings: AppSettings): ContentValues = ContentValues().apply {
         put("id", 1)
         put("cycle_length", settings.cycleLength)
@@ -330,6 +343,9 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         put("show_self_care", settings.showSelfCare)
         put("show_cycle_details", settings.showCycleDetails)
         put("simple_mode", settings.simpleMode)
+        put("cycle_length_override", settings.cycleLengthOverride)
+        put("period_length_override", settings.periodLengthOverride)
+        put("active_period_start", settings.activePeriodStart?.toEpochDay())
     }
 
     private fun createForecastSnapshotsTable(database: SQLiteDatabase) {
@@ -365,7 +381,7 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
 
     companion object {
         private const val DATABASE_NAME = "selia-cycles.db"
-        private const val DATABASE_VERSION = 8
+        private const val DATABASE_VERSION = 9
         private val LOG_COLUMNS = arrayOf(
             "day",
             "bleeding",
@@ -412,6 +428,9 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             "show_self_care",
             "show_cycle_details",
             "simple_mode",
+            "cycle_length_override",
+            "period_length_override",
+            "active_period_start",
         )
         private val FORECAST_COLUMNS = arrayOf(
             "month",

@@ -168,6 +168,9 @@ fun mergeDayLogs(current: DayLog, incoming: DayLog): DayLog {
 data class AppSettings(
     val cycleLength: Int = 28,
     val periodLength: Int = 5,
+    val cycleLengthOverride: Int? = null,
+    val periodLengthOverride: Int? = null,
+    val activePeriodStart: LocalDate? = null,
     val firstDayOfWeek: DayOfWeek = DayOfWeek.MONDAY,
     val predictionsEnabled: Boolean = true,
     val reminderEnabled: Boolean = false,
@@ -186,6 +189,9 @@ data class AppSettings(
     init {
         require(cycleLength in 15..90)
         require(periodLength in 1..14)
+        require(cycleLengthOverride == null || cycleLengthOverride in 15..90)
+        require(periodLengthOverride == null || periodLengthOverride in 1..14)
+        require(activePeriodStart == null || activePeriodStart in DayLog.MIN_DATE..DayLog.MAX_DATE)
         require(firstDayOfWeek == DayOfWeek.MONDAY || firstDayOfWeek == DayOfWeek.SUNDAY)
         require(reminderDays in 0..14)
         require(lutealPhaseLength in 7..19)

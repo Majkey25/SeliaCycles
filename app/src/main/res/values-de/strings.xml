@@ -78,8 +78,9 @@
     <string name="predictions">Periodenschätzungen</string>
     <string name="simple_mode">Einfacher Modus</string>
     <string name="simple_mode_body">Konzentriert sich auf die Periode. Fruchtbarkeit, Eisprung und zugehörige Zeichen werden ausgeblendet, ohne Daten zu löschen.</string>
-    <string name="default_cycle_length">Standard-Zykluslänge</string>
-    <string name="default_period_length">Standard-Periodenlänge</string>
+    <string name="default_cycle_length">Zykluslänge für die Schätzung</string>
+    <string name="default_period_length">Periodenlänge für die Schätzung</string>
+    <string name="use_automatic_estimate">Automatische Schätzung verwenden</string>
     <string name="first_day_of_week">Erster Wochentag</string>
     <string name="monday">Montag</string>
     <string name="sunday">Sonntag</string>
