@@ -468,8 +468,7 @@ private fun TodayScreen(
     }
     val periodColor = calendarPeriodRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
     val onPeriodColor = periodColor.contrastColor()
-    val todayLog = state.logsByDay[today]
-    val todayAction = PeriodActions.todayAction(state.backup.settings, todayLog?.bleeding == true)
+    val todayAction = PeriodActions.todayAction(state.backup.settings, today)
     val primaryOnClick: () -> Unit = when (todayAction) {
         TodayPrimaryAction.START_PERIOD -> onStartPeriod
         TodayPrimaryAction.END_PERIOD -> onEndPeriod

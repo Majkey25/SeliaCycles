@@ -58,25 +58,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun startPeriod(day: java.time.LocalDate) = runStoreAction {
         val backup = store.load()
-        val usualLength = CyclePredictor.predict(
-            bleedingDays = backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
-            defaultCycleLength = backup.settings.cycleLength,
-            defaultPeriodLength = backup.settings.periodLength,
-            cycleLengthOverride = backup.settings.cycleLengthOverride,
-            periodLengthOverride = backup.settings.periodLengthOverride,
-            activePeriodStart = backup.settings.activePeriodStart,
-        ).averagePeriodLength
-        store.replaceLogs(PeriodActions.start(day, backup.logs, usualLength))
+        store.savePeriodState(
+            PeriodActions.start(day, backup.logs),
+            backup.settings.copy(activePeriodStart = day),
+        )
     }
 
     fun endPeriod(day: java.time.LocalDate, suggestedStart: java.time.LocalDate?) = runStoreAction {
         val backup = store.load()
-        store.replaceLogs(PeriodActions.end(day, backup.logs, suggestedStart))
+        val start = backup.settings.activePeriodStart ?: suggestedStart
+        store.savePeriodState(
+            PeriodActions.end(day, backup.logs, start),
+            backup.settings.copy(activePeriodStart = null),
+        )
     }
 
     fun removePeriod(day: java.time.LocalDate) = runStoreAction {
         val backup = store.load()
-        store.replaceLogs(PeriodActions.remove(day, backup.logs))
+        val logs = PeriodActions.remove(day, backup.logs)
+        val active = backup.settings.activePeriodStart?.takeIf { start -> logs.any { it.day == start && it.bleeding } }
+        store.savePeriodState(logs, backup.settings.copy(activePeriodStart = active))
     }
 
     fun saveSettings(settings: AppSettings) {

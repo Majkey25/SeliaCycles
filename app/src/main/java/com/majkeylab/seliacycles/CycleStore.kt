@@ -150,6 +150,12 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         logs.forEach { insertOrThrow("day_logs", null, logValues(it)) }
     }
 
+    fun savePeriodState(logs: List<DayLog>, settings: AppSettings) = writableDatabase.runInTransaction {
+        delete("day_logs", null, null)
+        logs.forEach { insertOrThrow("day_logs", null, logValues(it)) }
+        check(update("settings", settingsValues(settings), "id = 1", null) == 1)
+    }
+
     fun mergeImported(incoming: List<DayLog>) = writableDatabase.runInTransaction {
         val merged = readLogs(this).associateByTo(mutableMapOf(), DayLog::day)
         incoming.forEach { log -> merged[log.day] = merged[log.day]?.let { mergeDayLogs(it, log) } ?: log }

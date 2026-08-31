@@ -6,19 +6,16 @@ import java.time.temporal.ChronoUnit
 enum class TodayPrimaryAction { START_PERIOD, END_PERIOD, OPEN_LOG }
 
 object PeriodActions {
-    fun todayAction(settings: AppSettings, bleedingToday: Boolean): TodayPrimaryAction = when {
+    fun todayAction(settings: AppSettings, day: LocalDate): TodayPrimaryAction = when {
         !settings.canPredictPeriods -> TodayPrimaryAction.OPEN_LOG
-        bleedingToday -> TodayPrimaryAction.END_PERIOD
+        settings.activePeriodStart?.let { ChronoUnit.DAYS.between(it, day) in 0..13 } == true ->
+            TodayPrimaryAction.END_PERIOD
         else -> TodayPrimaryAction.START_PERIOD
     }
 
-    fun start(day: LocalDate, logs: List<DayLog>, periodLength: Int): List<DayLog> {
-        require(periodLength in 1..14)
+    fun start(day: LocalDate, logs: List<DayLog>): List<DayLog> {
         val byDay = logs.associateByTo(mutableMapOf(), DayLog::day)
-        repeat(periodLength) { offset ->
-            val date = day.plusDays(offset.toLong())
-            byDay[date] = (byDay[date] ?: DayLog(date)).withBleeding()
-        }
+        byDay[day] = (byDay[day] ?: DayLog(day)).withBleeding()
         return byDay.values.sortedBy(DayLog::day)
     }
 
