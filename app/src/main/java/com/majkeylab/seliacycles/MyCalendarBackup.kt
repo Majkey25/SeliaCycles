@@ -127,6 +127,7 @@ data class MyCalendarPreview(
     val lastDay: LocalDate,
     val unsupportedDetails: Int,
     val generation: String?,
+    val seliaTransfer: SeliaTransfer? = null,
 )
 
 object MyCalendarTransformer {
@@ -238,7 +239,21 @@ class MyCalendarImporter(context: Context) {
             SQLiteDatabase.openDatabase(databaseFile.path, null, SQLiteDatabase.OPEN_READONLY).use { database ->
                 requireColumns(database, "Period", PERIOD_COLUMNS.toSet())
                 requireColumns(database, "Note", NOTE_COLUMNS.toSet())
-                MyCalendarTransformer.transform(
+                readSeliaTransfer(database)?.let { transfer ->
+                    val logs = transfer.backup.logs.sortedBy(DayLog::day)
+                    if (logs.isEmpty()) throw MyCalendarFormatException(
+                        "No Selia records",
+                        failure = MyCalendarFailure.EMPTY,
+                    )
+                    MyCalendarPreview(
+                        logs = logs,
+                        firstDay = logs.first().day,
+                        lastDay = logs.last().day,
+                        unsupportedDetails = 0,
+                        generation = container.generation,
+                        seliaTransfer = transfer,
+                    )
+                } ?: MyCalendarTransformer.transform(
                     container.generation,
                     readPeriods(database),
                     readNotes(database),
@@ -312,6 +327,20 @@ class MyCalendarImporter(context: Context) {
             "Unsupported My Calendar database",
             failure = MyCalendarFailure.UNSUPPORTED,
         )
+    }
+
+    private fun readSeliaTransfer(database: SQLiteDatabase): SeliaTransfer? {
+        val exists = database.rawQuery(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'SeliaBackup'",
+            null,
+        ).use(Cursor::moveToFirst)
+        if (!exists) return null
+        return database.query("SeliaBackup", arrayOf("version", "payload"), null, null, null, null, null).use { cursor ->
+            if (!cursor.moveToFirst() || cursor.getInt(0) != 1 || cursor.moveToNext()) {
+                throw MyCalendarFormatException("Unsupported Selia backup", failure = MyCalendarFailure.UNSUPPORTED)
+            }
+            SeliaBackupCodec.decode(cursor.getBlob(1))
+        }
     }
 
     private fun Cursor.getNullableDouble(index: Int): Double? = if (isNull(index)) null else getDouble(index)

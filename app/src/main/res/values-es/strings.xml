@@ -301,12 +301,15 @@
     <string name="my_calendar_import">Importar desde My Calendar</string>
     <string name="my_calendar_import_body">Elige una copia .pc de My Calendar. Selia la lee en el dispositivo y no la sube.</string>
     <string name="my_calendar_import_action">Elegir copia .pc</string>
+    <string name="my_calendar_export_action">Exportar copia .pc</string>
+    <string name="my_calendar_export_body">El archivo .pc no está cifrado para que My Calendar pueda leerlo. Guárdalo de forma privada.</string>
     <string name="my_calendar_preview_title">Importación de My Calendar</string>
     <plurals name="my_calendar_preview_body"><item quantity="one">Se encontró %1$d día registrado entre %2$s y %3$s.</item><item quantity="many">Se encontraron %1$d días registrados entre %2$s y %3$s.</item><item quantity="other">Se encontraron %1$d días registrados entre %2$s y %3$s.</item></plurals>
     <plurals name="my_calendar_unsupported_details"><item quantity="one">%1$d detalle de origen se conserva en la nota porque Selia no tiene un seguimiento equivalente.</item><item quantity="many">%1$d detalles de origen se conservan en la nota porque Selia no tiene un seguimiento equivalente.</item><item quantity="other">%1$d detalles de origen se conservan en la nota porque Selia no tiene un seguimiento equivalente.</item></plurals>
     <string name="my_calendar_merge_notice">La importación añade el historial que falta. Los valores existentes de Selia tienen prioridad en el mismo día.</string>
     <string name="merge_import">Importar datos</string>
     <string name="my_calendar_import_complete">Se importaron los datos de My Calendar.</string>
+    <string name="my_calendar_export_complete">Se exportó la copia .pc.</string>
     <string name="my_calendar_import_unsupported">No es una copia .pc compatible de My Calendar.</string>
     <string name="my_calendar_import_empty">La copia de My Calendar no contiene datos de periodo ni notas con fecha.</string>
     <string name="my_calendar_import_damaged">No se pudo leer la copia de My Calendar.</string>

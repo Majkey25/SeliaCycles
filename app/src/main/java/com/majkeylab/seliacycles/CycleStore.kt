@@ -164,6 +164,17 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         merged.values.sortedBy(DayLog::day).forEach { insertOrThrow("day_logs", null, logValues(it)) }
     }
 
+    fun mergeTransfer(transfer: SeliaTransfer) = writableDatabase.runInTransaction {
+        val merged = readLogs(this).associateByTo(mutableMapOf(), DayLog::day)
+        transfer.backup.logs.forEach { log -> merged[log.day] = merged[log.day]?.let { mergeDayLogs(it, log) } ?: log }
+        if (merged.size > CycleBackup.MAX_LOGS) throw IllegalArgumentException("Too many imported records")
+        delete("day_logs", null, null)
+        merged.values.sortedBy(DayLog::day).forEach { insertOrThrow("day_logs", null, logValues(it)) }
+        check(update("settings", settingsValues(transfer.backup.settings), "id = 1", null) == 1)
+        delete("forecast_snapshots", null, null)
+        transfer.snapshots.forEach { snapshot -> insertOrThrow("forecast_snapshots", null, forecastValues(snapshot)) }
+    }
+
     fun saveSettings(settings: AppSettings) {
         check(writableDatabase.update("settings", settingsValues(settings), "id = 1", null) == 1)
     }
@@ -198,14 +209,7 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
             check(insertWithOnConflict(
                 "forecast_snapshots",
                 null,
-                ContentValues().apply {
-                    put("month", snapshot.month.toEpochMonth())
-                    put("period_start", snapshot.periodStart.toEpochDay())
-                    put("earliest_start", snapshot.earliestStart.toEpochDay())
-                    put("latest_start", snapshot.latestStart.toEpochDay())
-                    put("period_length", snapshot.periodLength)
-                    put("reconstructed", snapshot.reconstructed)
-                },
+                forecastValues(snapshot),
                 SQLiteDatabase.CONFLICT_IGNORE,
             ) != -1L)
         }
@@ -352,6 +356,15 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         put("cycle_length_override", settings.cycleLengthOverride)
         put("period_length_override", settings.periodLengthOverride)
         put("active_period_start", settings.activePeriodStart?.toEpochDay())
+    }
+
+    private fun forecastValues(snapshot: ForecastSnapshot): ContentValues = ContentValues().apply {
+        put("month", snapshot.month.toEpochMonth())
+        put("period_start", snapshot.periodStart.toEpochDay())
+        put("earliest_start", snapshot.earliestStart.toEpochDay())
+        put("latest_start", snapshot.latestStart.toEpochDay())
+        put("period_length", snapshot.periodLength)
+        put("reconstructed", snapshot.reconstructed)
     }
 
     private fun createForecastSnapshotsTable(database: SQLiteDatabase) {

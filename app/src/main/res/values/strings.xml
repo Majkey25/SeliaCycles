@@ -106,12 +106,15 @@
     <string name="my_calendar_import">Import from My Calendar</string>
     <string name="my_calendar_import_body">Choose a My Calendar .pc backup. Selia reads it locally and does not upload it.</string>
     <string name="my_calendar_import_action">Choose .pc backup</string>
+    <string name="my_calendar_export_action">Export .pc backup</string>
+    <string name="my_calendar_export_body">The .pc file is unencrypted so My Calendar can read it. Keep it private.</string>
     <string name="my_calendar_preview_title">My Calendar import</string>
     <plurals name="my_calendar_preview_body"><item quantity="one">Found %1$d recorded day from %2$s to %3$s.</item><item quantity="other">Found %1$d recorded days from %2$s to %3$s.</item></plurals>
     <plurals name="my_calendar_unsupported_details"><item quantity="one">%1$d source detail is preserved in the note because Selia has no matching tracker.</item><item quantity="other">%1$d source details are preserved in the note because Selia has no matching tracker.</item></plurals>
     <string name="my_calendar_merge_notice">Import adds missing history. Existing Selia values win on the same day.</string>
     <string name="merge_import">Import data</string>
     <string name="my_calendar_import_complete">My Calendar data imported.</string>
+    <string name="my_calendar_export_complete">.pc backup exported.</string>
     <string name="my_calendar_import_unsupported">This is not a supported My Calendar .pc backup.</string>
     <string name="my_calendar_import_empty">The My Calendar backup contains no dated period or note data.</string>
     <string name="my_calendar_import_damaged">The My Calendar backup could not be read.</string>

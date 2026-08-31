@@ -301,12 +301,15 @@
     <string name="my_calendar_import">Aus My Calendar importieren</string>
     <string name="my_calendar_import_body">Wähle eine .pc-Sicherung aus My Calendar. Selia liest sie lokal und lädt sie nicht hoch.</string>
     <string name="my_calendar_import_action">.pc-Sicherung auswählen</string>
+    <string name="my_calendar_export_action">.pc-Sicherung exportieren</string>
+    <string name="my_calendar_export_body">Die .pc-Datei ist unverschlüsselt, damit My Calendar sie lesen kann. Bewahre sie geschützt auf.</string>
     <string name="my_calendar_preview_title">My Calendar-Import</string>
     <plurals name="my_calendar_preview_body"><item quantity="one">%1$d erfasster Tag vom %2$s bis %3$s gefunden.</item><item quantity="other">%1$d erfasste Tage vom %2$s bis %3$s gefunden.</item></plurals>
     <plurals name="my_calendar_unsupported_details"><item quantity="one">%1$d Quelldetail bleibt in der Notiz erhalten, weil Selia keinen passenden Tracker hat.</item><item quantity="other">%1$d Quelldetails bleiben in der Notiz erhalten, weil Selia keinen passenden Tracker hat.</item></plurals>
     <string name="my_calendar_merge_notice">Der Import ergänzt fehlende Historie. Vorhandene Selia-Werte haben am selben Tag Vorrang.</string>
     <string name="merge_import">Daten importieren</string>
     <string name="my_calendar_import_complete">My Calendar-Daten wurden importiert.</string>
+    <string name="my_calendar_export_complete">.pc-Sicherung wurde exportiert.</string>
     <string name="my_calendar_import_unsupported">Dies ist keine unterstützte My Calendar-.pc-Sicherung.</string>
     <string name="my_calendar_import_empty">Die My Calendar-Sicherung enthält keine datierten Perioden- oder Notizdaten.</string>
     <string name="my_calendar_import_damaged">Die My Calendar-Sicherung konnte nicht gelesen werden.</string>

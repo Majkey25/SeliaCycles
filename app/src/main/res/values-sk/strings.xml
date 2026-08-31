@@ -301,12 +301,15 @@
     <string name="my_calendar_import">Import z My Calendar</string>
     <string name="my_calendar_import_body">Vyber zálohu .pc z aplikácie My Calendar. Selia ju prečíta lokálne a nikam ju nenahrá.</string>
     <string name="my_calendar_import_action">Vybrať zálohu .pc</string>
+    <string name="my_calendar_export_action">Exportovať zálohu .pc</string>
+    <string name="my_calendar_export_body">Súbor .pc nie je šifrovaný, aby ho My Calendar mohol prečítať. Uchovávaj ho v súkromí.</string>
     <string name="my_calendar_preview_title">Import z My Calendar</string>
     <plurals name="my_calendar_preview_body"><item quantity="one">Nájdený %1$d zapísaný deň od %2$s do %3$s.</item><item quantity="few">Nájdené %1$d zapísané dni od %2$s do %3$s.</item><item quantity="many">Nájdeného %1$d zapísaného dňa od %2$s do %3$s.</item><item quantity="other">Nájdených %1$d zapísaných dní od %2$s do %3$s.</item></plurals>
     <plurals name="my_calendar_unsupported_details"><item quantity="one">%1$d zdrojový údaj je zachovaný v poznámke, pretože Selia nemá zodpovedajúce sledovanie.</item><item quantity="few">%1$d zdrojové údaje sú zachované v poznámke, pretože Selia nemá zodpovedajúce sledovanie.</item><item quantity="many">%1$d zdrojového údaja je zachovaného v poznámke, pretože Selia nemá zodpovedajúce sledovanie.</item><item quantity="other">%1$d zdrojových údajov je zachovaných v poznámke, pretože Selia nemá zodpovedajúce sledovanie.</item></plurals>
     <string name="my_calendar_merge_notice">Import pridá chýbajúcu históriu. Existujúce hodnoty Selia majú v rovnaký deň prednosť.</string>
     <string name="merge_import">Importovať údaje</string>
     <string name="my_calendar_import_complete">Údaje z My Calendar boli importované.</string>
+    <string name="my_calendar_export_complete">Záloha .pc bola exportovaná.</string>
     <string name="my_calendar_import_unsupported">Toto nie je podporovaná záloha .pc z My Calendar.</string>
     <string name="my_calendar_import_empty">Záloha My Calendar neobsahuje žiadne záznamy menštruácie ani poznámky s dátumom.</string>
     <string name="my_calendar_import_damaged">Zálohu My Calendar sa nepodarilo prečítať.</string>

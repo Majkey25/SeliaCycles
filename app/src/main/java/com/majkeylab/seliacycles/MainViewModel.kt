@@ -44,6 +44,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val store = CycleStore(application)
     private val calendarMirror = CalendarMirror(application)
     private val myCalendarImporter = MyCalendarImporter(application)
+    private val myCalendarExporter = MyCalendarExporter(application)
     private val storeMutex = Mutex()
     private val _state = MutableStateFlow(AppState())
     val state = _state.asStateFlow()
@@ -135,7 +136,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun confirmMyCalendarImport() {
         val preview = _state.value.myCalendarPreview ?: return
-        runStoreAction(R.string.my_calendar_import_complete) { store.mergeImported(preview.logs) }
+        runStoreAction(R.string.my_calendar_import_complete) {
+            preview.seliaTransfer?.let(store::mergeTransfer) ?: store.mergeImported(preview.logs)
+        }
+    }
+
+    fun exportMyCalendar(uri: Uri) = viewModelScope.launch {
+        _state.value = _state.value.copy(busy = true, message = null)
+        val result = runCatching {
+            withContext(Dispatchers.IO) {
+                storeMutex.withLock {
+                    val transfer = SeliaTransfer(store.load(), store.loadForecastSnapshots())
+                    require(transfer.backup.logs.isNotEmpty())
+                    getApplication<Application>().contentResolver.openOutputStream(uri, "w")?.use {
+                        myCalendarExporter.write(transfer, it)
+                    } ?: error("Cannot create backup")
+                }
+            }
+        }
+        reload(if (result.isSuccess) R.string.my_calendar_export_complete else R.string.operation_failed)
     }
 
     fun cancelMyCalendarImport() {

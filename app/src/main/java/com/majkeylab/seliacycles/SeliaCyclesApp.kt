@@ -271,6 +271,9 @@ fun SeliaCyclesApp(
     val openMyCalendar = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) viewModel.inspectMyCalendar(uri)
     }
+    val createMyCalendar = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream"),
+    ) { uri -> if (uri != null) viewModel.exportMyCalendar(uri) }
 
     val notificationPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -357,6 +360,9 @@ fun SeliaCyclesApp(
                             onInfo = { infoDialog = it },
                             onDeleteAll = { showDeleteConfirm = true },
                             onMyCalendarImport = { openMyCalendar.launch(arrayOf("application/octet-stream", "*/*")) },
+                            onMyCalendarExport = {
+                                createMyCalendar.launch("Selia-Cycles-${LocalDate.now()}.pc")
+                            },
                             onRequestCalendarPermission = {
                                 calendarPermission.launch(CalendarMirror.REQUIRED_PERMISSIONS)
                             },
@@ -1778,6 +1784,7 @@ private fun SettingsScreen(
     onInfo: (InfoDialog) -> Unit,
     onDeleteAll: () -> Unit,
     onMyCalendarImport: () -> Unit,
+    onMyCalendarExport: () -> Unit,
     onRequestCalendarPermission: () -> Unit,
     onCalendarSelect: (Long) -> Unit,
     onCalendarDisconnect: () -> Unit,
@@ -1922,6 +1929,20 @@ private fun SettingsScreen(
                     InfoBlock(R.string.device_transfer, R.string.device_transfer_body, Icons.Outlined.Devices)
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
                     InfoBlock(R.string.my_calendar_import, R.string.my_calendar_import_body, Icons.Outlined.CalendarMonth)
+                    Text(
+                        stringResource(R.string.my_calendar_export_body),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    OutlinedButton(
+                        onClick = onMyCalendarExport,
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.busy && state.backup.logs.isNotEmpty(),
+                    ) {
+                        Icon(Icons.Outlined.ImportExport, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.my_calendar_export_action))
+                    }
                     OutlinedButton(onClick = onMyCalendarImport, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
                         Icon(Icons.Outlined.ImportExport, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
