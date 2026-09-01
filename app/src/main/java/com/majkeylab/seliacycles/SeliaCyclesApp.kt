@@ -202,7 +202,7 @@ private enum class Screen(
 
 private enum class InfoDialog { PRIVACY, CYCLE }
 
-private enum class DaySheetMode { OVERVIEW, EDIT }
+private enum class DaySheetMode { OVERVIEW, PERIOD, DETAILS }
 
 private data class ChoiceOption<T>(
     val value: T,
@@ -442,12 +442,13 @@ fun SeliaCyclesApp(
     }
 
     selectedDay?.let { day ->
-        if (daySheetMode == DaySheetMode.OVERVIEW) {
-            DayOverviewSheet(
+        when (daySheetMode) {
+            DaySheetMode.OVERVIEW -> DayOverviewSheet(
                 day = day,
                 state = state,
                 onDismiss = { selectedDay = null },
-                onEdit = { daySheetMode = DaySheetMode.EDIT },
+                onEditPeriod = { daySheetMode = DaySheetMode.PERIOD },
+                onEditDetails = { daySheetMode = DaySheetMode.DETAILS },
                 onStartPeriod = {
                     viewModel.startPeriod(day)
                     selectedDay = null
@@ -456,16 +457,25 @@ fun SeliaCyclesApp(
                     viewModel.endPeriod(day, suggestedPeriodStart(state, day))
                     selectedDay = null
                 },
-                onRemovePeriod = {
-                    viewModel.removePeriod(day)
-                    selectedDay = null
-                },
                 onSelfCare = {
                     selfCareInsight = CycleInsights.forDate(state.backup, state.forecastSnapshots, day)
                 },
             )
-        } else {
-            DayLogSheet(
+            DaySheetMode.PERIOD -> PeriodEditorSheet(
+                day = day,
+                logs = state.backup.logs,
+                periodColor = calendarPeriodRgb(
+                    state.backup.settings.palette,
+                    state.backup.settings.customPalette,
+                ).color(),
+                onDismiss = { daySheetMode = DaySheetMode.OVERVIEW },
+                onSave = {
+                    viewModel.savePeriodDays(day, it)
+                    selectedDay = null
+                    daySheetMode = DaySheetMode.OVERVIEW
+                },
+            )
+            DaySheetMode.DETAILS -> DayLogSheet(
                 day = day,
                 initial = state.logsByDay[day],
                 showFertility = state.backup.settings.canEstimateFertility,
@@ -1397,7 +1407,7 @@ private fun CalendarMonthPage(
                     entryColor,
                     stringResource(R.string.calendar_note_marker),
                     stringResource(R.string.calendar_note_marker_detail),
-                    smallMarker = true,
+                    underlineMarker = true,
                 )
             }
         }
@@ -1487,14 +1497,7 @@ private fun CalendarDay(
                 start = if (periodConnectPrevious) 0.dp else 3.dp,
                 end = if (periodConnectNext) 0.dp else 3.dp,
             ).clip(periodShape).background(periodBackground),
-        ) {
-            if (tracks.predictedOverlap) {
-                Box(
-                    Modifier.align(Alignment.BottomCenter).padding(bottom = 2.dp).width(20.dp).height(3.dp)
-                        .clip(CircleShape).background(onPeriodColor.copy(alpha = 0.72f)),
-                )
-            }
-        }
+        )
         Box(
             Modifier.size(36.dp).clip(CircleShape)
                 .then(if (tracks.ovulation) Modifier.background(ovulationColor) else Modifier)
@@ -1512,7 +1515,7 @@ private fun CalendarDay(
             )
         }
         if (hasDetails) Box(
-            Modifier.align(Alignment.TopEnd).padding(5.dp).size(6.dp).clip(CircleShape)
+            Modifier.align(Alignment.BottomCenter).padding(bottom = 2.dp).width(18.dp).height(3.dp).clip(CircleShape)
                 .background(entryColor),
         )
         Box(
@@ -1627,12 +1630,16 @@ private fun LegendItem(
     label: String,
     description: String?,
     modifier: Modifier = Modifier,
-    smallMarker: Boolean = false,
+    underlineMarker: Boolean = false,
 ) {
     Row(modifier, verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        val markerModifier = if (underlineMarker) {
+            Modifier.padding(top = 9.dp).width(18.dp).height(3.dp)
+        } else {
+            Modifier.padding(top = 3.dp).size(18.dp)
+        }
         Box(
-            Modifier.padding(top = if (smallMarker) 8.dp else 3.dp)
-                .size(if (smallMarker) 7.dp else 18.dp).clip(CircleShape).background(background),
+            markerModifier.clip(CircleShape).background(background),
         )
         Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
@@ -2850,10 +2857,10 @@ private fun DayOverviewSheet(
     day: LocalDate,
     state: AppState,
     onDismiss: () -> Unit,
-    onEdit: () -> Unit,
+    onEditPeriod: () -> Unit,
+    onEditDetails: () -> Unit,
     onStartPeriod: () -> Unit,
     onEndPeriod: () -> Unit,
-    onRemovePeriod: () -> Unit,
     onSelfCare: () -> Unit,
 ) {
     val locale = currentLocale()
@@ -2875,23 +2882,7 @@ private fun DayOverviewSheet(
         }
         if (isEmpty() && insight.phase == null) add(R.string.selected_day_regular)
     }
-    var confirmRemovePeriod by remember(day) { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    if (confirmRemovePeriod) {
-        AlertDialog(
-            onDismissRequest = { confirmRemovePeriod = false },
-            title = { Text(stringResource(R.string.remove_period)) },
-            text = { Text(stringResource(R.string.remove_period_body)) },
-            confirmButton = {
-                TextButton(onClick = onRemovePeriod) {
-                    Text(stringResource(R.string.remove_period), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmRemovePeriod = false }) { Text(stringResource(R.string.cancel)) }
-            },
-        )
-    }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -2930,21 +2921,23 @@ private fun DayOverviewSheet(
                             }
                         }
                     }
-                }
-                if (log?.bleeding == true) {
                     OutlinedButton(
-                        onClick = { confirmRemovePeriod = true },
+                        onClick = onEditPeriod,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Icon(Icons.Outlined.DeleteForever, contentDescription = null)
+                        Icon(Icons.Outlined.CalendarMonth, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.remove_period), color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.edit_period))
                     }
                 }
-                OutlinedButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Outlined.Edit, contentDescription = null)
+                OutlinedButton(onClick = onEditDetails, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.AutoMirrored.Outlined.Notes, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.edit_record))
+                    Text(stringResource(if (log?.hasCalendarMarker == true) {
+                        R.string.edit_information
+                    } else {
+                        R.string.add_information
+                    }))
                 }
                 if (statusLabels.isNotEmpty()) {
                     SectionLabel(Icons.Outlined.CalendarMonth, R.string.day_status)
@@ -3018,6 +3011,160 @@ private fun suggestedPeriodStart(state: AppState, day: LocalDate): LocalDate? =
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
+private fun PeriodEditorSheet(
+    day: LocalDate,
+    logs: List<DayLog>,
+    periodColor: Color,
+    onDismiss: () -> Unit,
+    onSave: (Set<LocalDate>) -> Unit,
+) {
+    val today = LocalDate.now()
+    val locale = currentLocale()
+    val initialDays = remember(day, logs) { PeriodActions.periodDays(day, logs) }
+    var selectedDays by remember(day, initialDays) { mutableStateOf(initialDays) }
+    var selectionError by remember(day) { mutableStateOf(false) }
+    val base = initialDays.minOrNull() ?: day
+    val monday = base.minusDays((base.dayOfWeek.value - DayOfWeek.MONDAY.value).toLong())
+    val windowStart = maxOf(DayLog.MIN_DATE, monday.minusWeeks(1))
+    val days = remember(windowStart) { (0L..27L).map(windowStart::plusDays) }
+    val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
+    val selectedDescription = stringResource(R.string.period_day_selected)
+    val notSelectedDescription = stringResource(R.string.period_day_not_selected)
+    val onPeriodColor = periodColor.contrastColor()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        dragHandle = null,
+        sheetGesturesEnabled = false,
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            Column(
+                Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                SheetHeader(R.string.edit_period, onDismiss)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Text(
+                        stringResource(
+                            R.string.period_editor_range,
+                            days.first().format(dateFormat),
+                            days.last().format(dateFormat),
+                        ),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+                Row(Modifier.fillMaxWidth()) {
+                    DayOfWeek.entries.forEach { weekday ->
+                        Text(
+                            weekday.getDisplayName(TextStyle.NARROW, locale),
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+                days.chunked(7).forEach { week ->
+                    Row(Modifier.fillMaxWidth()) {
+                        week.forEach { date ->
+                            val selected = date in selectedDays
+                            val enabled = date in DayLog.MIN_DATE..today
+                            val description = "${date.format(dateFormat)}, ${if (selected) {
+                                selectedDescription
+                            } else {
+                                notSelectedDescription
+                            }}"
+                            Box(
+                                modifier = Modifier.weight(1f).height(48.dp).alpha(if (enabled) 1f else 0.30f),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Box(
+                                    Modifier.size(40.dp).clip(CircleShape)
+                                        .then(if (selected) {
+                                            Modifier.background(periodColor)
+                                        } else {
+                                            Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                                        })
+                                        .clickable(enabled = enabled) {
+                                            val candidate = if (selected) selectedDays - date else selectedDays + date
+                                            if (PeriodActions.isValidSelection(candidate, today)) {
+                                                selectedDays = candidate
+                                                selectionError = false
+                                            } else {
+                                                selectionError = true
+                                            }
+                                        }
+                                        .semantics { contentDescription = description },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        date.dayOfMonth.toString(),
+                                        color = if (selected) onPeriodColor else MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(Icons.Outlined.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Text(
+                        stringResource(R.string.period_editor_body),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Outlined.WaterDrop, contentDescription = null, tint = periodColor)
+                    Text(
+                        pluralStringResource(
+                            R.plurals.period_editor_selected,
+                            selectedDays.size,
+                            selectedDays.size,
+                        ),
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                if (selectionError || !PeriodActions.isValidSelection(selectedDays, today)) {
+                    Text(
+                        stringResource(R.string.period_editor_limit),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Spacer(Modifier.height(4.dp))
+            }
+            HorizontalDivider()
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (initialDays.isNotEmpty() && selectedDays.isNotEmpty()) {
+                    TextButton(onClick = {
+                        selectedDays = emptySet()
+                        selectionError = false
+                    }) {
+                        Text(stringResource(R.string.clear_period), color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                Button(
+                    onClick = { onSave(selectedDays) },
+                    enabled = PeriodActions.isValidSelection(selectedDays, today),
+                ) { Text(stringResource(R.string.save)) }
+            }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun DayLogSheet(
     day: LocalDate,
     initial: DayLog?,
@@ -3025,7 +3172,7 @@ private fun DayLogSheet(
     onDismiss: () -> Unit,
     onSave: (DayLog) -> Unit,
 ) {
-    var flow by remember(day, initial) { mutableStateOf(initial?.flow?.takeIf { initial.bleeding } ?: Flow.NONE) }
+    var flow by remember(day, initial) { mutableStateOf(initial?.flow?.takeIf { initial.bleeding } ?: Flow.UNKNOWN) }
     var spotting by remember(day, initial) { mutableStateOf(initial?.spotting == true) }
     var mood by remember(day, initial) { mutableStateOf(initial?.mood) }
     var symptoms by remember(day, initial) { mutableStateOf(initial?.symptoms.orEmpty()) }
@@ -3067,23 +3214,27 @@ private fun DayLogSheet(
                     .padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                SheetHeader(R.string.edit_day, onDismiss)
+                SheetHeader(
+                    if (initial?.hasCalendarMarker == true) R.string.edit_information else R.string.add_information,
+                    onDismiss,
+                )
                 Text(
                     day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                ChoiceRow(
-                    label = R.string.flow,
-                    choices = listOf(
-                        ChoiceOption(Flow.NONE, R.string.flow_none, Icons.Outlined.RemoveCircleOutline),
-                        ChoiceOption(Flow.UNKNOWN, R.string.flow_unknown, Icons.Outlined.WaterDrop),
-                        ChoiceOption(Flow.LIGHT, R.string.flow_light, Icons.Outlined.WaterDrop),
-                        ChoiceOption(Flow.MEDIUM, R.string.flow_medium, Icons.Outlined.WaterDrop),
-                        ChoiceOption(Flow.HEAVY, R.string.flow_heavy, Icons.Outlined.WaterDrop),
-                    ),
-                    selected = flow,
-                    icon = Icons.Outlined.WaterDrop,
-                ) { flow = it }
+                if (initial?.bleeding == true) {
+                    ChoiceRow(
+                        label = R.string.flow,
+                        choices = listOf(
+                            ChoiceOption(Flow.UNKNOWN, R.string.flow_unknown, Icons.Outlined.WaterDrop),
+                            ChoiceOption(Flow.LIGHT, R.string.flow_light, Icons.Outlined.WaterDrop),
+                            ChoiceOption(Flow.MEDIUM, R.string.flow_medium, Icons.Outlined.WaterDrop),
+                            ChoiceOption(Flow.HEAVY, R.string.flow_heavy, Icons.Outlined.WaterDrop),
+                        ),
+                        selected = flow,
+                        icon = Icons.Outlined.WaterDrop,
+                    ) { flow = it }
+                }
                 ChoiceRow(
                     label = R.string.mood,
                     choices = listOf(
@@ -3215,15 +3366,17 @@ private fun DayLogSheet(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (initial != null) TextButton(onClick = { onSave(DayLog(day)) }) { Text(stringResource(R.string.delete_record)) }
+                if (initial?.hasCalendarMarker == true) {
+                    TextButton(onClick = { onSave(DayLog(day).preservePeriodFrom(initial)) }) {
+                        Text(stringResource(R.string.delete_information))
+                    }
+                }
                 Spacer(Modifier.weight(1f))
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
                 Button(onClick = {
                     onSave(DayLog(
                         day = day,
-                        bleeding = flow != Flow.NONE,
                         spotting = spotting,
-                        flow = flow,
                         mood = mood,
                         symptoms = symptoms,
                         note = note.trim(),
@@ -3240,7 +3393,7 @@ private fun DayLogSheet(
                         activity = activity,
                         medication = medication,
                         importedDetails = initial?.importedDetails.orEmpty(),
-                    ))
+                    ).preservePeriodFrom(initial, flow))
                 }, enabled = canSave) { Text(stringResource(R.string.save)) }
             }
         }

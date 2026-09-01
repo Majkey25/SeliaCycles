@@ -134,6 +134,18 @@ data class DayLog(
     }
 }
 
+fun DayLog.preservePeriodFrom(existing: DayLog?, selectedFlow: Flow = existing?.flow ?: Flow.NONE): DayLog {
+    val bleeding = existing?.bleeding == true
+    return copy(
+        bleeding = bleeding,
+        flow = if (bleeding) {
+            selectedFlow.takeUnless { it == Flow.NONE } ?: requireNotNull(existing).flow
+        } else {
+            Flow.NONE
+        },
+    )
+}
+
 fun mergeDayLogs(current: DayLog, incoming: DayLog): DayLog {
     require(current.day == incoming.day)
     val bleeding = current.bleeding || incoming.bleeding

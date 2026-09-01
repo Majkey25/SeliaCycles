@@ -33,7 +33,7 @@
     <string name="fertile_legend_detail">Dni okolo odhadovanej ovulácie, keď je počatie pravdepodobnejšie.</string>
     <string name="ovulation_legend_detail">Najpravdepodobnejší deň ovulácie; nejde o potvrdenie.</string>
     <string name="calendar_note_marker">Vlastný záznam</string>
-    <string name="calendar_note_marker_detail">Malá bodka znamená poznámku, príznak alebo iný voliteľný údaj.</string>
+    <string name="calendar_note_marker_detail">Modré podčiarknutie znamená poznámku, príznak alebo iný voliteľný údaj.</string>
     <string name="history_heading">História</string>
     <string name="personal_patterns_title">Osobné vzorce</string>
     <string name="personal_patterns_body">Opakujúce sa načasovanie príznakov v dokončených cykloch.</string>
@@ -115,7 +115,6 @@
     <string name="source_nhs">NHS</string>
     <string name="source_acog">ACOG</string>
     <string name="close">Zavrieť</string>
-    <string name="edit_day">Denný záznam</string>
     <string name="flow">Intenzita</string>
     <string name="flow_unknown">Menštruácia</string>
     <string name="flow_light">Slabá</string>
@@ -178,7 +177,6 @@
     <string name="invalid_measurement">Zadaj hodnotu v podporovanom rozsahu.</string>
     <string name="cancel">Zrušiť</string>
     <string name="save">Uložiť</string>
-    <string name="delete_record">Vymazať záznam</string>
     <string name="decrease_value">Znížiť: %1$s</string>
     <string name="increase_value">Zvýšiť: %1$s</string>
     <string name="permission_denied">Oprávnenie bolo zamietnuté. Nič sa nezmenilo.</string>
@@ -357,10 +355,18 @@
     <string name="hex_color_hint">Zadaj 6 hexadecimálnych znakov.</string>
     <string name="reset_colors">Obnoviť vlastné farby</string>
     <string name="day_overview">Prehľad dňa</string>
-    <string name="edit_record">Upraviť záznam</string>
+    <string name="edit_period">Upraviť menštruáciu</string>
+    <string name="add_information">Pridať informácie</string>
+    <string name="edit_information">Upraviť informácie</string>
+    <string name="delete_information">Odstrániť informácie</string>
+    <string name="period_editor_body">Ťuknutím vyber dni, ktoré patria k tejto menštruácii. Ostatné informácie v týchto dňoch zostanú.</string>
+    <string name="period_editor_range">%1$s – %2$s</string>
+    <string name="period_day_selected">vybraný deň menštruácie</string>
+    <string name="period_day_not_selected">nevybraný deň</string>
+    <string name="clear_period">Vymazať menštruáciu</string>
+    <plurals name="period_editor_selected"><item quantity="one">Vybraný %d deň</item><item quantity="few">Vybrané %d dni</item><item quantity="many">Vybraného %d dňa</item><item quantity="other">Vybraných %d dní</item></plurals>
+    <string name="period_editor_limit">Vyber najviac 14 dní v jednom štrnásťdňovom úseku.</string>
     <string name="quick_period">Rýchly zápis menštruácie</string>
-    <string name="remove_period">Odstrániť menštruáciu</string>
-    <string name="remove_period_body">Odstrániť celú túto súvislú menštruáciu? Poznámky a ostatné zapísané hodnoty zostanú.</string>
     <string name="period_start_action">Začiatok menštruácie</string>
     <string name="period_end_action">Koniec menštruácie</string>
     <string name="day_status">Stav dňa</string>

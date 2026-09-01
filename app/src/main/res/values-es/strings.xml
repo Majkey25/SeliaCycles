@@ -33,7 +33,7 @@
     <string name="fertile_legend_detail">Días alrededor de la ovulación estimada en los que el embarazo es más probable.</string>
     <string name="ovulation_legend_detail">Día de ovulación más probable; no es una confirmación.</string>
     <string name="calendar_note_marker">Tu registro</string>
-    <string name="calendar_note_marker_detail">Un punto pequeño indica una nota, síntoma u otro dato opcional.</string>
+    <string name="calendar_note_marker_detail">Un subrayado azul indica una nota, un síntoma u otro dato opcional.</string>
     <string name="history_heading">Historial</string>
     <string name="personal_patterns_title">Patrones personales</string>
     <string name="personal_patterns_body">Momentos repetidos de los síntomas en ciclos completados.</string>
@@ -115,7 +115,6 @@
     <string name="source_nhs">NHS</string>
     <string name="source_acog">ACOG</string>
     <string name="close">Cerrar</string>
-    <string name="edit_day">Registro diario</string>
     <string name="flow">Flujo</string>
     <string name="flow_unknown">Periodo</string>
     <string name="flow_light">Ligero</string>
@@ -178,7 +177,6 @@
     <string name="invalid_measurement">Introduce un valor dentro del intervalo compatible.</string>
     <string name="cancel">Cancelar</string>
     <string name="save">Guardar</string>
-    <string name="delete_record">Eliminar registro</string>
     <string name="decrease_value">Disminuir %1$s</string>
     <string name="increase_value">Aumentar %1$s</string>
     <string name="permission_denied">Permiso denegado. No cambió nada.</string>
@@ -357,10 +355,18 @@
     <string name="hex_color_hint">Introduce 6 caracteres hexadecimales.</string>
     <string name="reset_colors">Restablecer colores personalizados</string>
     <string name="day_overview">Resumen del día</string>
-    <string name="edit_record">Editar registro</string>
+    <string name="edit_period">Editar periodo</string>
+    <string name="add_information">Añadir información</string>
+    <string name="edit_information">Editar información</string>
+    <string name="delete_information">Eliminar información</string>
+    <string name="period_editor_body">Toca los días que pertenecen a este periodo. La otra información de esos días se conservará.</string>
+    <string name="period_editor_range">%1$s – %2$s</string>
+    <string name="period_day_selected">día del periodo seleccionado</string>
+    <string name="period_day_not_selected">no seleccionado</string>
+    <string name="clear_period">Borrar periodo</string>
+    <plurals name="period_editor_selected"><item quantity="one">%d día seleccionado</item><item quantity="many">%d días seleccionados</item><item quantity="other">%d días seleccionados</item></plurals>
+    <string name="period_editor_limit">Elige hasta 14 días dentro de un mismo intervalo de 14 días.</string>
     <string name="quick_period">Registro rápido del periodo</string>
-    <string name="remove_period">Eliminar periodo</string>
-    <string name="remove_period_body">¿Eliminar todo este periodo continuo? Las notas y los demás valores registrados se conservarán.</string>
     <string name="period_start_action">Iniciar periodo</string>
     <string name="period_end_action">Finalizar periodo</string>
     <string name="day_status">Estado del día</string>

@@ -13,11 +13,12 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 ## Features
 
 - Calendar-first Material 3 UI with one-tap Period started / Period ended actions that record only confirmed days.
+- Direct period-day editing can add, remove, shorten, extend, split, or clear exact bleeding days while preserving other daily information.
 - Compact linked Today dashboard for the next period, fertile window, ovulation, phase guidance, History, and relief care.
 - Swipeable month calendar with connected tracks, muted adjacent-month dates, and adjacent-day navigation into the correct full month.
 - Calendar color key stays fully hidden below one explanation control until requested.
 - Optional Calendar filters show the existing blue marker only on dates matching up to three locally used trackers.
-- Clear customizable color roles: prominent red menstruation and blue user-entry markers, with ovulation and fertility kept visually separate.
+- Clear customizable color roles: prominent red menstruation and a short blue underline only for optional user information, with ovulation and fertility kept visually separate.
 - Next period, fertile window, and ovulation stay together in one visible cycle timeline.
 - Optional phase guidance and local self-care timers with cautious medical wording.
 - Phase guidance covers physical signs, emotions, and energy for menstrual, follicular, estimated ovulation/fertile, and luteal phases.
@@ -43,7 +44,7 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - Optional local period reminders.
 - Android device-to-device transfer during new-device setup without ordinary cloud backup of reproductive data.
 - One-action deletion of all local app data.
-- Direct edit and confirmed connected-period removal from any recorded calendar day while preserving other notes.
+- Separate period and daily-information editors prevent optional tracking changes from altering menstruation dates.
 
 Existing local records remain in the SQLite database across normal app updates. Selia Cycles has no Selia cloud or partner account. A selected `.pc` backup is read and merged locally. An exported `.pc` file is created only after the user chooses a destination and is not encrypted, so it should be stored securely. If calendar mirroring is enabled, short cycle labels are copied through Android to the selected provider; notes and raw health details are never mirrored.
 

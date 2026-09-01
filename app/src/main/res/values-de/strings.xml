@@ -33,7 +33,7 @@
     <string name="fertile_legend_detail">Tage um den geschätzten Eisprung, an denen eine Schwangerschaft wahrscheinlicher ist.</string>
     <string name="ovulation_legend_detail">Wahrscheinlichster Eisprungtag; dies ist keine Bestätigung.</string>
     <string name="calendar_note_marker">Dein Eintrag</string>
-    <string name="calendar_note_marker_detail">Ein kleiner Punkt bedeutet eine Notiz, ein Symptom oder eine andere optionale Angabe.</string>
+    <string name="calendar_note_marker_detail">Eine blaue Unterstreichung bedeutet eine Notiz, ein Symptom oder eine andere optionale Angabe.</string>
     <string name="history_heading">Verlauf</string>
     <string name="personal_patterns_title">Persönliche Muster</string>
     <string name="personal_patterns_body">Wiederkehrende Zeitpunkte von Beschwerden in abgeschlossenen Zyklen.</string>
@@ -115,7 +115,6 @@
     <string name="source_nhs">NHS</string>
     <string name="source_acog">ACOG</string>
     <string name="close">Schließen</string>
-    <string name="edit_day">Tageseintrag</string>
     <string name="flow">Stärke</string>
     <string name="flow_unknown">Periode</string>
     <string name="flow_light">Leicht</string>
@@ -178,7 +177,6 @@
     <string name="invalid_measurement">Gib einen Wert im unterstützten Bereich ein.</string>
     <string name="cancel">Abbrechen</string>
     <string name="save">Speichern</string>
-    <string name="delete_record">Eintrag löschen</string>
     <string name="decrease_value">%1$s verringern</string>
     <string name="increase_value">%1$s erhöhen</string>
     <string name="permission_denied">Berechtigung verweigert. Nichts wurde geändert.</string>
@@ -357,10 +355,18 @@
     <string name="hex_color_hint">6 Hexadezimalzeichen eingeben.</string>
     <string name="reset_colors">Eigene Farben zurücksetzen</string>
     <string name="day_overview">Tagesübersicht</string>
-    <string name="edit_record">Eintrag bearbeiten</string>
+    <string name="edit_period">Periode bearbeiten</string>
+    <string name="add_information">Informationen hinzufügen</string>
+    <string name="edit_information">Informationen bearbeiten</string>
+    <string name="delete_information">Informationen löschen</string>
+    <string name="period_editor_body">Tippe auf die Tage, die zu dieser Periode gehören. Andere Informationen an diesen Tagen bleiben erhalten.</string>
+    <string name="period_editor_range">%1$s – %2$s</string>
+    <string name="period_day_selected">ausgewählter Periodentag</string>
+    <string name="period_day_not_selected">nicht ausgewählt</string>
+    <string name="clear_period">Periode löschen</string>
+    <plurals name="period_editor_selected"><item quantity="one">%d Tag ausgewählt</item><item quantity="other">%d Tage ausgewählt</item></plurals>
+    <string name="period_editor_limit">Wähle höchstens 14 Tage innerhalb eines Zeitraums von 14 Tagen.</string>
     <string name="quick_period">Schneller Periodeneintrag</string>
-    <string name="remove_period">Periode entfernen</string>
-    <string name="remove_period_body">Diese gesamte zusammenhängende Periode entfernen? Notizen und andere erfasste Werte bleiben erhalten.</string>
     <string name="period_start_action">Periode starten</string>
     <string name="period_end_action">Periode beenden</string>
     <string name="day_status">Tagesstatus</string>

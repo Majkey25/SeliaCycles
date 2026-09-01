@@ -2,10 +2,11 @@ package com.majkeylab.seliacycles
 
 import java.time.LocalDate
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.test.assertFailsWith
 
 class DayLogTrackersTest {
     private val day = LocalDate.of(2026, 8, 29)
@@ -40,5 +41,30 @@ class DayLogTrackersTest {
         )
 
         assertTrue(logs.none(DayLog::isEmpty))
+    }
+
+    @Test
+    fun `daily information preserves period membership and can change recorded flow`() {
+        val periodDay = DayLog(day, bleeding = true, flow = Flow.LIGHT)
+        val information = DayLog(day, mood = Mood.GOOD, note = "keep")
+
+        val result = information.preservePeriodFrom(periodDay, Flow.HEAVY)
+
+        assertTrue(result.bleeding)
+        assertEquals(Flow.HEAVY, result.flow)
+        assertEquals(Mood.GOOD, result.mood)
+        assertEquals("keep", result.note)
+    }
+
+    @Test
+    fun `daily information cannot create a period and clearing it keeps existing bleeding`() {
+        val information = DayLog(day, mood = Mood.LOW).preservePeriodFrom(null, Flow.HEAVY)
+        val cleared = DayLog(day).preservePeriodFrom(DayLog(day, bleeding = true, flow = Flow.MEDIUM))
+
+        assertFalse(information.bleeding)
+        assertEquals(Flow.NONE, information.flow)
+        assertTrue(cleared.bleeding)
+        assertEquals(Flow.MEDIUM, cleared.flow)
+        assertFalse(cleared.hasCalendarMarker)
     }
 }

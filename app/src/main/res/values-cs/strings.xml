@@ -33,7 +33,7 @@
     <string name="fertile_legend_detail">Dny kolem odhadované ovulace, kdy je početí pravděpodobnější.</string>
     <string name="ovulation_legend_detail">Nejpravděpodobnější den ovulace; nejde o potvrzení.</string>
     <string name="calendar_note_marker">Vlastní záznam</string>
-    <string name="calendar_note_marker_detail">Malá tečka znamená poznámku, příznak nebo jiný volitelný údaj.</string>
+    <string name="calendar_note_marker_detail">Modré podtržení znamená poznámku, příznak nebo jiný volitelný údaj.</string>
     <string name="history_heading">Historie</string>
     <string name="personal_patterns_title">Osobní vzorce</string>
     <string name="personal_patterns_body">Opakující se načasování příznaků v dokončených cyklech.</string>
@@ -115,7 +115,6 @@
     <string name="source_nhs">NHS</string>
     <string name="source_acog">ACOG</string>
     <string name="close">Zavřít</string>
-    <string name="edit_day">Denní záznam</string>
     <string name="flow">Intenzita</string>
     <string name="flow_unknown">Menstruace</string>
     <string name="flow_light">Slabá</string>
@@ -178,7 +177,6 @@
     <string name="invalid_measurement">Zadej hodnotu v podporovaném rozsahu.</string>
     <string name="cancel">Zrušit</string>
     <string name="save">Uložit</string>
-    <string name="delete_record">Smazat záznam</string>
     <string name="decrease_value">Snížit: %1$s</string>
     <string name="increase_value">Zvýšit: %1$s</string>
     <string name="permission_denied">Oprávnění bylo zamítnuto. Nic se nezměnilo.</string>
@@ -357,10 +355,18 @@
     <string name="hex_color_hint">Zadej 6 hexadecimálních znaků.</string>
     <string name="reset_colors">Obnovit vlastní barvy</string>
     <string name="day_overview">Přehled dne</string>
-    <string name="edit_record">Upravit záznam</string>
+    <string name="edit_period">Upravit menstruaci</string>
+    <string name="add_information">Přidat informace</string>
+    <string name="edit_information">Upravit informace</string>
+    <string name="delete_information">Odstranit informace</string>
+    <string name="period_editor_body">Klepnutím vyber dny, které patří k této menstruaci. Ostatní informace v těchto dnech zůstanou.</string>
+    <string name="period_editor_range">%1$s – %2$s</string>
+    <string name="period_day_selected">vybraný den menstruace</string>
+    <string name="period_day_not_selected">nevybraný den</string>
+    <string name="clear_period">Vymazat menstruaci</string>
+    <plurals name="period_editor_selected"><item quantity="one">Vybrán %d den</item><item quantity="few">Vybrány %d dny</item><item quantity="many">Vybráno %d dne</item><item quantity="other">Vybráno %d dní</item></plurals>
+    <string name="period_editor_limit">Vyber nejvýše 14 dní v jednom čtrnáctidenním úseku.</string>
     <string name="quick_period">Rychlý zápis menstruace</string>
-    <string name="remove_period">Odstranit menstruaci</string>
-    <string name="remove_period_body">Odstranit celou tuto souvislou menstruaci? Poznámky a ostatní zapsané hodnoty zůstanou.</string>
     <string name="period_start_action">Začátek menstruace</string>
     <string name="period_end_action">Konec menstruace</string>
     <string name="day_status">Stav dne</string>

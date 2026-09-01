@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.0-beta.9 - 2026-09-01
+
+### Added
+
+- A period-day editor can add, remove, shorten, extend, split, or clear exact bleeding days without deleting other daily information.
+
+### Fixed
+
+- Adding, editing, or deleting symptoms, mood, pain, notes, and measurements no longer starts or removes a period.
+
+### Changed
+
+- The day overview now separates `Edit period` from `Add/Edit information`.
+- Calendar information uses a short blue underline instead of a dot. Menstruation alone never creates the underline, and the old period-overlap underline is gone.
+
 ## 0.9.0-beta.8 - 2026-09-01
 
 ### Added

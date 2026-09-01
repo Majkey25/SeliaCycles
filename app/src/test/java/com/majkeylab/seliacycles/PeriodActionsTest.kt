@@ -3,6 +3,7 @@ package com.majkeylab.seliacycles
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class PeriodActionsTest {
@@ -46,18 +47,46 @@ class PeriodActionsTest {
     }
 
     @Test
-    fun `remove clears one connected period and preserves other details`() {
+    fun `replace changes exact period days and preserves optional details and other periods`() {
         val firstPeriod = PeriodActions.end(start.plusDays(4), PeriodActions.start(start, emptyList()), start).map { log ->
-            if (log.day == start.plusDays(1)) log.copy(note = "keep") else log
+            if (log.day == start.plusDays(1)) log.copy(note = "keep", mood = Mood.GOOD) else log
         }
         val otherStart = start.plusDays(30)
-        val logs = PeriodActions.end(otherStart.plusDays(3), PeriodActions.start(otherStart, firstPeriod), otherStart)
+        val logs = PeriodActions.end(otherStart.plusDays(2), PeriodActions.start(otherStart, firstPeriod), otherStart)
+        val selected = setOf(start.minusDays(1), start, start.plusDays(1), start.plusDays(2))
 
-        val result = PeriodActions.remove(start, logs)
+        val result = PeriodActions.replace(start, selected, logs, today = otherStart.plusDays(10))
 
-        assertTrue(result.none { it.day in start..start.plusDays(4) && it.bleeding })
+        assertEquals(
+            selected + (0L..2L).map(otherStart::plusDays),
+            result.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
+        )
         assertEquals("keep", result.single { it.day == start.plusDays(1) }.note)
-        assertEquals((0L..3L).map(otherStart::plusDays), result.filter(DayLog::bleeding).map(DayLog::day))
+        assertEquals(Mood.GOOD, result.single { it.day == start.plusDays(1) }.mood)
+    }
+
+    @Test
+    fun `replace with no selected days removes only bleeding and keeps the day information`() {
+        val logs = PeriodActions.end(start.plusDays(2), PeriodActions.start(start, emptyList()), start).map { log ->
+            if (log.day == start.plusDays(1)) log.copy(symptoms = setOf(Symptom.CRAMPS)) else log
+        }
+
+        val result = PeriodActions.replace(start, emptySet(), logs, today = start.plusDays(10))
+
+        assertTrue(result.none(DayLog::bleeding))
+        assertEquals(setOf(Symptom.CRAMPS), result.single().symptoms)
+    }
+
+    @Test
+    fun `replace rejects future or longer than fourteen day selections`() {
+        val today = start.plusDays(5)
+
+        assertFailsWith<IllegalArgumentException> {
+            PeriodActions.replace(start, setOf(today.plusDays(1)), emptyList(), today)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            PeriodActions.replace(start, setOf(start, start.plusDays(14)), emptyList(), today.plusDays(20))
+        }
     }
 
     @Test

@@ -43,12 +43,35 @@ object PeriodActions {
         return byDay.values.sortedBy(DayLog::day)
     }
 
-    fun remove(day: LocalDate, logs: List<DayLog>): List<DayLog> {
-        val period = periodContaining(day, logs) ?: return logs
-        return logs.mapNotNull { log ->
-            if (log.day !in period.first..period.second) return@mapNotNull log
-            log.copy(bleeding = false, flow = Flow.NONE).takeUnless(DayLog::isEmpty)
+    fun periodDays(day: LocalDate, logs: List<DayLog>): Set<LocalDate> {
+        val period = periodContaining(day, logs) ?: return emptySet()
+        return logs.asSequence().filter { it.bleeding && it.day in period.first..period.second }
+            .mapTo(mutableSetOf(), DayLog::day)
+    }
+
+    fun isValidSelection(days: Set<LocalDate>, today: LocalDate): Boolean =
+        days.size <= MAX_PERIOD_DAYS && days.all { it in DayLog.MIN_DATE..today } &&
+            (days.isEmpty() || ChronoUnit.DAYS.between(days.min(), days.max()) < MAX_PERIOD_DAYS)
+
+    fun replace(
+        day: LocalDate,
+        selectedDays: Set<LocalDate>,
+        logs: List<DayLog>,
+        today: LocalDate,
+    ): List<DayLog> {
+        require(day in DayLog.MIN_DATE..today)
+        require(isValidSelection(selectedDays, today))
+        val byDay = logs.associateByTo(mutableMapOf(), DayLog::day)
+        (periodDays(day, logs) + selectedDays).forEach { date ->
+            if (date in selectedDays) {
+                byDay[date] = (byDay[date] ?: DayLog(date)).withBleeding()
+            } else {
+                byDay[date]?.copy(bleeding = false, flow = Flow.NONE)?.let { updated ->
+                    if (updated.isEmpty) byDay.remove(date) else byDay[date] = updated
+                }
+            }
         }
+        return byDay.values.sortedBy(DayLog::day)
     }
 
     private fun DayLog.withBleeding(): DayLog = copy(
@@ -71,4 +94,5 @@ object PeriodActions {
     }
 
     private const val MAX_GAP_DAYS = 2L
+    private const val MAX_PERIOD_DAYS = 14
 }

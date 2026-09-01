@@ -12,7 +12,7 @@ Full description:
 
 Selia Cycles keeps period tracking clear and private.
 
-Mark Period started or Period ended with one tap. Start records only the confirmed first day; End completes the recorded span. A recorded period can be edited or removed directly from its day without deleting other notes. Optional symptoms, mood, cervical mucus, tests, wellbeing, notes, and measurements stay behind Edit record.
+Mark Period started or Period ended with one tap. Start records only the confirmed first day; End completes the recorded span. A recorded period can be shortened, extended, split, or removed by selecting its exact days without deleting other information. Optional symptoms, mood, cervical mucus, tests, wellbeing, notes, and measurements use a separate information editor and cannot change period dates.
 
 Personal estimates use recent history, handle missed tracking cycles, and reduce the effect of isolated unusual gaps. Saved monthly estimates remain visible across recorded history, with average prediction error and in-range results summarized in History. A real recorded period start immediately updates future months. Estimated ovulation, fertile windows, daily fertility status, recorded fertility signs, cycle phase, and evidence-gated personal mood trends add context without claiming medical certainty. Short guidance explains why the first few cycles can move while the estimate learns.
 
@@ -36,7 +36,7 @@ Full description:
 
 Selia Cycles nabízí přehledné a soukromé sledování menstruace.
 
-Jedním klepnutím označ začátek nebo konec menstruace. Začátek zapíše jen potvrzený první den a konec doplní skutečně proběhlé období. Zapsanou menstruaci lze přímo z jejího dne upravit nebo odstranit bez smazání ostatních poznámek. Volitelné příznaky, nálada, cervikální hlen, testy, kondice, poznámka a měření zůstávají pod volbou Upravit záznam.
+Jedním klepnutím označ začátek nebo konec menstruace. Začátek zapíše jen potvrzený první den a konec doplní skutečně proběhlé období. Zapsanou menstruaci lze zkrátit, prodloužit, rozdělit nebo odstranit výběrem přesných dnů bez smazání ostatních informací. Volitelné příznaky, nálada, cervikální hlen, testy, kondice, poznámka a měření používají samostatný editor informací a nemohou změnit dny menstruace.
 
 Osobní odhad vychází z poslední historie, umí zohlednit vynechané zápisy a omezuje vliv jednorázových neobvyklých mezer. Uložený měsíční odhad zůstává vedle reality v celé zaznamenané historii; Historie ukazuje průměrnou odchylku a počet výsledků v původním rozmezí. Nový skutečný začátek upraví budoucí měsíce. Aplikace přidává dnešní odhad plodnosti, odhad ovulace, plodné období, zaznamenané známky plodnosti, fázi cyklu a osobní trend nálady jen při dostatku vlastních dat. Krátké vysvětlení upozorní, že první cykly mohou být nepravidelné a odhad se teprve učí.
 
@@ -50,4 +50,4 @@ Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
 
 ## Closed test release notes
 
-`Fixes live prediction updates after a new period, adds private calendar filters and personal symptom patterns, and improves performance and backup security.`
+`Adds exact period-day editing, separates period dates from daily information, and replaces calendar dots with clear information underlines.`

@@ -75,10 +75,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun removePeriod(day: java.time.LocalDate) = runStoreAction {
+    fun savePeriodDays(day: java.time.LocalDate, selectedDays: Set<java.time.LocalDate>) = runStoreAction {
         val backup = store.load()
-        val logs = PeriodActions.remove(day, backup.logs)
-        val active = backup.settings.activePeriodStart?.takeIf { start -> logs.any { it.day == start && it.bleeding } }
+        val today = java.time.LocalDate.now()
+        val originalDays = PeriodActions.periodDays(day, backup.logs)
+        val logs = PeriodActions.replace(day, selectedDays, backup.logs, today)
+        val active = when (backup.settings.activePeriodStart) {
+            in originalDays -> selectedDays.minOrNull()
+            null -> selectedDays.minOrNull()?.takeIf { selectedDays.maxOrNull() == today }
+            else -> backup.settings.activePeriodStart
+        }
         store.savePeriodState(logs, backup.settings.copy(activePeriodStart = active))
     }
 

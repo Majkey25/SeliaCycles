@@ -33,7 +33,7 @@
     <string name="fertile_legend_detail">Dni wokół szacowanej owulacji, gdy ciąża jest bardziej prawdopodobna.</string>
     <string name="ovulation_legend_detail">Najbardziej prawdopodobny dzień owulacji; nie jest to potwierdzenie.</string>
     <string name="calendar_note_marker">Twój wpis</string>
-    <string name="calendar_note_marker_detail">Mała kropka oznacza notatkę, objaw lub inną opcjonalną informację.</string>
+    <string name="calendar_note_marker_detail">Niebieskie podkreślenie oznacza notatkę, objaw lub inną opcjonalną informację.</string>
     <string name="history_heading">Historia</string>
     <string name="personal_patterns_title">Osobiste wzorce</string>
     <string name="personal_patterns_body">Powtarzające się momenty występowania objawów w zakończonych cyklach.</string>
@@ -115,7 +115,6 @@
     <string name="source_nhs">NHS</string>
     <string name="source_acog">ACOG</string>
     <string name="close">Zamknij</string>
-    <string name="edit_day">Wpis dzienny</string>
     <string name="flow">Intensywność</string>
     <string name="flow_unknown">Miesiączka</string>
     <string name="flow_light">Lekka</string>
@@ -178,7 +177,6 @@
     <string name="invalid_measurement">Wpisz wartość z obsługiwanego zakresu.</string>
     <string name="cancel">Anuluj</string>
     <string name="save">Zapisz</string>
-    <string name="delete_record">Usuń wpis</string>
     <string name="decrease_value">Zmniejsz %1$s</string>
     <string name="increase_value">Zwiększ %1$s</string>
     <string name="permission_denied">Odmowa uprawnienia. Nic nie zmieniono.</string>
@@ -357,10 +355,18 @@
     <string name="hex_color_hint">Wpisz 6 znaków szesnastkowych.</string>
     <string name="reset_colors">Resetuj własne kolory</string>
     <string name="day_overview">Przegląd dnia</string>
-    <string name="edit_record">Edytuj wpis</string>
+    <string name="edit_period">Edytuj miesiączkę</string>
+    <string name="add_information">Dodaj informacje</string>
+    <string name="edit_information">Edytuj informacje</string>
+    <string name="delete_information">Usuń informacje</string>
+    <string name="period_editor_body">Dotknij dni należących do tej miesiączki. Pozostałe informacje z tych dni zostaną zachowane.</string>
+    <string name="period_editor_range">%1$s – %2$s</string>
+    <string name="period_day_selected">wybrany dzień miesiączki</string>
+    <string name="period_day_not_selected">niewybrany dzień</string>
+    <string name="clear_period">Wyczyść miesiączkę</string>
+    <plurals name="period_editor_selected"><item quantity="one">Wybrano %d dzień</item><item quantity="few">Wybrano %d dni</item><item quantity="many">Wybrano %d dni</item><item quantity="other">Wybrano %d dnia</item></plurals>
+    <string name="period_editor_limit">Wybierz maksymalnie 14 dni w jednym czternastodniowym okresie.</string>
     <string name="quick_period">Szybki wpis miesiączki</string>
-    <string name="remove_period">Usuń miesiączkę</string>
-    <string name="remove_period_body">Usunąć całą tę ciągłą miesiączkę? Notatki i pozostałe zapisane wartości zostaną zachowane.</string>
     <string name="period_start_action">Początek miesiączki</string>
     <string name="period_end_action">Koniec miesiączki</string>
     <string name="day_status">Status dnia</string>
