@@ -20,8 +20,8 @@ android {
         applicationId = "com.majkeylab.seliacycles"
         minSdk = 29
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.9.0-beta.3"
+        versionCode = 12
+        versionName = "0.9.0-beta.4"
     }
 
     signingConfigs {
@@ -37,7 +37,9 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            ndk.debugSymbolLevel = "FULL"
             signingConfig = signingConfigs.findByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

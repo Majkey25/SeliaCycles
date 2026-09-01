@@ -50,4 +50,4 @@ Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
 
 ## Closed test release notes
 
-`More accurate manual estimates, confirmed-day period entry, a linked Today dashboard, expanded relief care, local .pc export, and refreshed launcher artwork.`
+`Smaller optimized release with Play crash diagnostics, plus the code 11 prediction, period-entry, dashboard, relief-care, .pc export, and launcher improvements.`

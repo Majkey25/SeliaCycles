@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.4 - 2026-09-01
+
+### Changed
+
+- Release builds now use R8 code/resource optimization and include deobfuscation metadata.
+- Release bundles request all native debug metadata available from dependencies for Play crash diagnostics.
+
 ## 0.9.0-beta.3 - 2026-08-31
 
 ### Added

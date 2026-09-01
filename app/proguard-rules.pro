@@ -1,1 +1,1 @@
-# Release shrinking is intentionally disabled for version 0.1.0.
+# Add app-specific keep rules only when runtime reflection requires them.
