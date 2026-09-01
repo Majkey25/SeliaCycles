@@ -124,6 +124,40 @@ class CycleInsightsTest {
     }
 
     @Test
+    fun `saved current baseline cannot break the current prediction sequence`() {
+        val reference = LocalDate.of(2026, 9, 1)
+        val savedStart = LocalDate.of(2026, 9, 26)
+        val backup = CycleBackup(
+            logs = period(LocalDate.of(2026, 8, 13)),
+            settings = AppSettings(
+                cycleLength = 30,
+                periodLength = 5,
+                cycleLengthOverride = 30,
+                periodLengthOverride = 5,
+            ),
+        )
+        val snapshot = ForecastSnapshot(
+            month = java.time.YearMonth.of(2026, 9),
+            periodStart = savedStart,
+            earliestStart = savedStart.minusDays(1),
+            latestStart = savedStart.plusDays(1),
+            periodLength = 4,
+            reconstructed = false,
+        )
+
+        val insight = CycleInsights.forDate(backup, mapOf(snapshot.month to snapshot), reference)
+        val fertility = CycleInsights.fertilityEstimates(backup, mapOf(snapshot.month to snapshot), reference)
+            .filter { !it.periodStart.isBefore(reference) }
+
+        assertEquals(LocalDate.of(2026, 9, 12), insight.nextPeriodStart)
+        assertEquals(
+            listOf(LocalDate.of(2026, 9, 12), LocalDate.of(2026, 10, 12)),
+            fertility.take(2).map(FertilityEstimate::periodStart),
+        )
+        assertTrue(fertility[1].fertileStart.isAfter(fertility[0].periodStart.plusDays(4)))
+    }
+
+    @Test
     fun `reports unavailable fertility without cycle history`() {
         assertEquals(
             FertilityStatus.UNAVAILABLE,

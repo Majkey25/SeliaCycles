@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.0-beta.6 - 2026-09-01
+
+### Fixed
+
+- Current calendar, Today, fertility, and calendar sync now use one coherent live prediction instead of mixing it with a saved monthly baseline.
+- The month overview shows the full predicted period range and labels a differing saved start window separately.
+- Fertility windows no longer overlap a period because of a stale current-month snapshot.
+
+### Changed
+
+- Combined Cycle and tracking with Profile into one Cycle and profile settings page.
+
 ## 0.9.0-beta.5 - 2026-09-01
 
 ### Changed

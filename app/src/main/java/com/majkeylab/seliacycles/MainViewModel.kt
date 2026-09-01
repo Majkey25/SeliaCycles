@@ -36,7 +36,7 @@ data class AppState(
         activePeriodStart = backup.settings.activePeriodStart,
     )
 
-    val periodEstimates: List<PeriodEstimate> = CycleInsights.periodEstimates(backup, forecastSnapshots)
+    val periodEstimates: List<PeriodEstimate> = CycleInsights.calendarPeriodEstimates(backup, forecastSnapshots)
 
     val todayInsight: DailyCycleInsight = CycleInsights.forDate(backup, forecastSnapshots)
 }

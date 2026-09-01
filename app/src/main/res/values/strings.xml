@@ -63,8 +63,8 @@
     <string name="settings_heading">Settings</string>
     <string name="settings_intro">Only the essentials are shown here. Open a category when you need it.</string>
     <string name="settings_back">Settings</string>
-    <string name="settings_cycle">Cycle and tracking</string>
-    <string name="settings_cycle_summary">Predictions, cycle lengths, week and daily measurements</string>
+    <string name="settings_cycle">Cycle and profile</string>
+    <string name="settings_cycle_summary">Predictions, cycle lengths, goals, body context and measurements</string>
     <string name="settings_profile">Profile</string>
     <string name="settings_profile_summary">Goal, life situation, body context and luteal phase</string>
     <string name="settings_home">Home screen</string>

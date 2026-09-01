@@ -63,8 +63,8 @@
     <string name="settings_heading">Einstellungen</string>
     <string name="settings_intro">Hier siehst du nur das Wesentliche. Öffne Details bei Bedarf.</string>
     <string name="settings_back">Einstellungen</string>
-    <string name="settings_cycle">Zyklus und Erfassung</string>
-    <string name="settings_cycle_summary">Schätzungen, Zykluslängen, Woche und Messwerte</string>
+    <string name="settings_cycle">Zyklus und Profil</string>
+    <string name="settings_cycle_summary">Schätzungen, Zykluslängen, Ziel, Körperdaten und Messwerte</string>
     <string name="settings_appearance">Darstellung und Sprache</string>
     <string name="settings_appearance_summary">Designvorschau, Farbpaletten und App-Sprache</string>
     <string name="settings_reminders_summary">Optionale private Periodenerinnerung</string>

@@ -87,6 +87,19 @@ object CycleInsights {
         return (saved + dynamic).sortedBy(PeriodEstimate::start)
     }
 
+    fun calendarPeriodEstimates(
+        backup: CycleBackup,
+        snapshots: Map<YearMonth, ForecastSnapshot>,
+        referenceDate: LocalDate = LocalDate.now(),
+    ): List<PeriodEstimate> {
+        val currentMonth = YearMonth.from(referenceDate)
+        val recordedMonths = prediction(backup, referenceDate).periodStarts.mapTo(mutableSetOf(), YearMonth::from)
+        val history = periodEstimates(backup, snapshots, referenceDate)
+            .filter { YearMonth.from(it.start).let { month -> month < currentMonth || month in recordedMonths } }
+        val current = periodEstimates(backup, emptyMap(), referenceDate)
+        return (history + current).distinctBy(PeriodEstimate::start).sortedBy(PeriodEstimate::start)
+    }
+
     fun fertilityEstimates(
         backup: CycleBackup,
         snapshots: Map<YearMonth, ForecastSnapshot>,
@@ -95,7 +108,7 @@ object CycleInsights {
         if (!backup.settings.canEstimateFertility) return emptyList()
         val futureRecorded = prediction(backup, referenceDate).periodStarts.filter { it.isAfter(referenceDate) }
         val recordedMonths = futureRecorded.mapTo(mutableSetOf(), YearMonth::from)
-        val estimated = periodEstimates(backup, snapshots, referenceDate).map(PeriodEstimate::start)
+        val estimated = calendarPeriodEstimates(backup, snapshots, referenceDate).map(PeriodEstimate::start)
             .filterNot { YearMonth.from(it) in recordedMonths }
         return (estimated + futureRecorded)
             .distinct().sorted().map { fertilityForPeriod(it, backup.settings.lutealPhaseLength) }
@@ -107,7 +120,7 @@ object CycleInsights {
         date: LocalDate = LocalDate.now(),
     ): DailyCycleInsight {
         val prediction = prediction(backup, date)
-        val estimates = periodEstimates(backup, snapshots, date)
+        val estimates = calendarPeriodEstimates(backup, snapshots, date)
         val estimatedPeriod = estimates.firstOrNull { date >= it.start && date < it.endExclusive }
         val nextPeriod = if (!backup.settings.canPredictPeriods) null else {
             prediction.periodStarts.firstOrNull { it.isAfter(date) }

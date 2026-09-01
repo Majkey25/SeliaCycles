@@ -34,7 +34,7 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - Connected period and fertility spans in the month calendar.
 - Optional mirror to an existing Google Calendar, Outlook, Exchange, or local Android calendar.
 - English, Czech, Slovak, German, Polish, and Spanish.
-- Profile settings for tracking goal, life situation, body context, and luteal phase.
+- Combined cycle and profile settings for predictions, tracking goal, life situation, body context, and luteal phase.
 - Clear device, sun, and moon theme controls plus six palettes, a pencil-marked custom option, a color picker, and optional exact hex values.
 - Local `.pc` import and export with no upload; Selia exports preserve the complete local record for lossless re-import.
 - Optional local period reminders.

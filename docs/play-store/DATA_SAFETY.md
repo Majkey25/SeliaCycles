@@ -1,6 +1,6 @@
 # Google Play declarations
 
-These answers describe version 0.9.0-beta.5.
+These answers describe version 0.9.0-beta.6.
 
 ## Data safety
 

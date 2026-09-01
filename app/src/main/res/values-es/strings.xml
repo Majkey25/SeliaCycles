@@ -63,8 +63,8 @@
     <string name="settings_heading">Ajustes</string>
     <string name="settings_intro">Aquí solo aparecen las opciones esenciales. Abre una categoría cuando la necesites.</string>
     <string name="settings_back">Ajustes</string>
-    <string name="settings_cycle">Ciclo y seguimiento</string>
-    <string name="settings_cycle_summary">Estimaciones, duración del ciclo, semana y mediciones</string>
+    <string name="settings_cycle">Ciclo y perfil</string>
+    <string name="settings_cycle_summary">Estimaciones, duración del ciclo, objetivo, datos corporales y mediciones</string>
     <string name="settings_appearance">Aspecto e idioma</string>
     <string name="settings_appearance_summary">Vistas previas, paletas de colores e idioma</string>
     <string name="settings_reminders_summary">Recordatorio privado opcional del periodo</string>

@@ -263,7 +263,6 @@ private enum class SettingsPage(
     val icon: ImageVector,
 ) {
     CYCLE(R.string.settings_cycle, R.string.settings_cycle_summary, Icons.Outlined.Autorenew),
-    PROFILE(R.string.settings_profile, R.string.settings_profile_summary, Icons.Outlined.PersonOutline),
     HOME(R.string.settings_home, R.string.settings_home_summary, Icons.Outlined.Home),
     APPEARANCE(R.string.settings_appearance, R.string.settings_appearance_summary, Icons.Outlined.Palette),
     REMINDERS(R.string.section_reminders, R.string.settings_reminders_summary, Icons.Outlined.NotificationsNone),
@@ -586,6 +585,8 @@ private fun TodayScreen(
         }
         UpcomingCycleSection(
             insight = insight,
+            fertility = CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots, today)
+                .firstOrNull { !it.fertileEnd.isBefore(today) },
             predictionsEnabled = predictionsEnabled,
             dateFormat = shortDateFormat,
             distance = distance,
@@ -860,12 +861,13 @@ private fun SelfCareSheet(onDismiss: () -> Unit) {
 @Composable
 private fun UpcomingCycleSection(
     insight: DailyCycleInsight,
+    fertility: FertilityEstimate?,
     predictionsEnabled: Boolean,
     dateFormat: DateTimeFormatter,
     distance: Int?,
     onOpenDate: (LocalDate) -> Unit,
 ) {
-    val targets = TodayDashboard.targets(insight)
+    val targets = TodayDashboard.targets(insight, fertility)
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         SectionLabel(Icons.Outlined.EventAvailable, R.string.upcoming_cycle)
         Column(
@@ -887,26 +889,26 @@ private fun UpcomingCycleSection(
             UpcomingCycleRow(Icons.Outlined.WaterDrop, R.string.next_period, nextText) {
                 targets.period?.let(onOpenDate)
             }
-            insight.fertility?.let { fertility ->
+            fertility?.let { estimate ->
                 HorizontalDivider()
                 UpcomingCycleRow(
                     Icons.Outlined.Spa,
                     R.string.fertile_legend,
                     stringResource(
                         R.string.estimated_window,
-                        fertility.fertileStart.format(dateFormat),
-                        fertility.fertileEnd.format(dateFormat),
+                        estimate.fertileStart.format(dateFormat),
+                        estimate.fertileEnd.format(dateFormat),
                     ),
-                ) { onOpenDate(targets.fertile ?: fertility.fertileStart) }
+                ) { onOpenDate(targets.fertile ?: estimate.fertileStart) }
                 HorizontalDivider()
                 UpcomingCycleRow(
                     Icons.Outlined.WbSunny,
                     R.string.ovulation_legend,
-                    fertility.ovulation.format(dateFormat),
-                ) { onOpenDate(targets.ovulation ?: fertility.ovulation) }
+                    estimate.ovulation.format(dateFormat),
+                ) { onOpenDate(targets.ovulation ?: estimate.ovulation) }
             }
         }
-        if (insight.fertility != null) Text(
+        if (fertility != null) Text(
             stringResource(R.string.fertility_estimate_notice),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall,
@@ -1302,22 +1304,22 @@ private fun MonthComparison(state: AppState, month: YearMonth) {
     val actual = snapshot?.let { CycleAnalysis.closestRecordedStart(it, state.prediction.periodStarts) }
         ?: state.prediction.periodStarts.lastOrNull { YearMonth.from(it) == month }
     val estimate = state.periodEstimates.firstOrNull { YearMonth.from(it.start) == month }
-    val fertility = if (month == YearMonth.now()) {
-        state.todayInsight.fertility
-    } else {
-        CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots)
-            .firstOrNull { YearMonth.from(it.periodStart) == month }
-    }
+    val fertility = CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots)
+        .firstOrNull { it.fertileEnd >= month.atDay(1) && it.fertileStart <= month.atEndOfMonth() }
     if (actual == null && estimate == null && fertility == null) return
     val locale = currentLocale()
     val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
-    val estimateText = snapshot?.let {
-        stringResource(R.string.estimated_window, it.earliestStart.format(dateFormat), it.latestStart.format(dateFormat))
-    } ?: estimate?.let {
+    val estimateText = estimate?.let {
         stringResource(
             R.string.estimated_window,
-            (it.earliestStart ?: it.start).format(dateFormat),
-            (it.latestStart ?: it.start).format(dateFormat),
+            it.start.format(dateFormat),
+            it.endExclusive.minusDays(1).format(dateFormat),
+        )
+    } ?: snapshot?.let {
+        stringResource(
+            R.string.estimated_window,
+            it.periodStart.format(dateFormat),
+            it.periodStart.plusDays(it.periodLength.toLong() - 1).format(dateFormat),
         )
     } ?: "—"
     Column(
@@ -1339,6 +1341,17 @@ private fun MonthComparison(state: AppState, month: YearMonth) {
                 estimateText,
                 MaterialTheme.colorScheme.secondary,
                 Modifier.weight(1f),
+            )
+        }
+        snapshot?.takeIf { estimate != null && it.periodStart != estimate.start }?.let {
+            Text(
+                stringResource(
+                    if (it.reconstructed) R.string.forecast_reconstructed else R.string.forecast_saved,
+                    it.earliestStart.format(dateFormat),
+                    it.latestStart.format(dateFormat),
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
             )
         }
         HorizontalDivider()
@@ -1737,8 +1750,10 @@ private fun SettingsScreen(
                         icon = Icons.Outlined.CalendarMonth,
                     ) { onSave(settings.copy(firstDayOfWeek = it)) }
                     InfoBlock(R.string.daily_measurements, R.string.daily_measurements_body, Icons.Outlined.MonitorHeart)
+                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    SectionLabel(Icons.Outlined.PersonOutline, R.string.settings_profile)
+                    ProfileSettings(settings, onSave)
                 }
-                SettingsPage.PROFILE -> ProfileSettings(settings, onSave)
                 SettingsPage.HOME -> {
                     SwitchRow(
                         R.string.home_show_phase_guidance,

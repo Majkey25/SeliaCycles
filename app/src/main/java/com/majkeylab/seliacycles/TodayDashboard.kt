@@ -9,9 +9,12 @@ data class TodayDashboardTargets(
 )
 
 object TodayDashboard {
-    fun targets(insight: DailyCycleInsight): TodayDashboardTargets = TodayDashboardTargets(
+    fun targets(
+        insight: DailyCycleInsight,
+        fertility: FertilityEstimate? = insight.fertility,
+    ): TodayDashboardTargets = TodayDashboardTargets(
         period = insight.nextPeriodStart,
-        fertile = insight.fertility?.fertileStart,
-        ovulation = insight.fertility?.ovulation,
+        fertile = fertility?.fertileStart,
+        ovulation = fertility?.ovulation,
     )
 }

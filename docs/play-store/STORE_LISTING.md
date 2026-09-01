@@ -50,4 +50,4 @@ Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
 
 ## Closed test release notes
 
-`Clearer Import and export wording with verified compatible .pc processing, while keeping the optimized prediction, dashboard, relief-care, backup, and launcher improvements.`
+`Fixes conflicting September predictions and overlapping fertility windows, clarifies the month overview, and combines Cycle and Profile settings.`

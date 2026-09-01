@@ -65,7 +65,7 @@ object CalendarMirrorPlanner {
         val recorded = periods.filter { it.last() >= firstDay && it.first() <= lastDay }.map {
             MirrorEvent(MirrorEventKind.RECORDED, it.first(), it.last().plusDays(1))
         }
-        val estimates = CycleInsights.periodEstimates(backup, snapshots, referenceDate)
+        val estimates = CycleInsights.calendarPeriodEstimates(backup, snapshots, referenceDate)
             .filter { it.endExclusive >= firstDay && it.start <= lastDay }
         val estimated = estimates.map { MirrorEvent(MirrorEventKind.ESTIMATED, it.start, it.endExclusive) }
         val fertility = CycleInsights.fertilityEstimates(backup, snapshots, referenceDate).flatMap { value ->

@@ -63,8 +63,8 @@
     <string name="settings_heading">Nastavení</string>
     <string name="settings_intro">Tady jsou jen hlavní oblasti. Podrobnosti otevři až tehdy, když je potřebuješ.</string>
     <string name="settings_back">Nastavení</string>
-    <string name="settings_cycle">Cyklus a sledování</string>
-    <string name="settings_cycle_summary">Odhady, délky cyklu, týden a denní měření</string>
+    <string name="settings_cycle">Cyklus a profil</string>
+    <string name="settings_cycle_summary">Odhady, délky cyklu, cíl, tělesné údaje a měření</string>
     <string name="settings_appearance">Vzhled a jazyk</string>
     <string name="settings_appearance_summary">Náhledy motivů, barevné palety a jazyk aplikace</string>
     <string name="settings_reminders_summary">Volitelná soukromá připomínka menstruace</string>

@@ -63,8 +63,8 @@
     <string name="settings_heading">Ustawienia</string>
     <string name="settings_intro">Tutaj są tylko najważniejsze opcje. Otwórz kategorię, gdy jej potrzebujesz.</string>
     <string name="settings_back">Ustawienia</string>
-    <string name="settings_cycle">Cykl i śledzenie</string>
-    <string name="settings_cycle_summary">Prognozy, długości cyklu, tydzień i pomiary</string>
+    <string name="settings_cycle">Cykl i profil</string>
+    <string name="settings_cycle_summary">Prognozy, długości cyklu, cel, dane ciała i pomiary</string>
     <string name="settings_appearance">Wygląd i język</string>
     <string name="settings_appearance_summary">Podgląd motywów, palety kolorów i język aplikacji</string>
     <string name="settings_reminders_summary">Opcjonalne prywatne przypomnienie o miesiączce</string>
