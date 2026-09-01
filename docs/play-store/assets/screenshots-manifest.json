@@ -1,0 +1,82 @@
+[
+  {
+    "locale": "en-US",
+    "file": "docs/play-store/assets/en-US/phone/01-home.png",
+    "width": 1080,
+    "height": 1920,
+    "mode": "RGBA",
+    "bytes": 190319,
+    "sha256": "D579072F66B217BFBC04A93A93BAD282E770659FC3E692DB89C6E2E70632F146",
+    "altText": "Selia Cycles Today overview with cycle day, next period, and fertile-window estimates."
+  },
+  {
+    "locale": "en-US",
+    "file": "docs/play-store/assets/en-US/phone/02-calendar.png",
+    "width": 1080,
+    "height": 1920,
+    "mode": "RGBA",
+    "bytes": 132062,
+    "sha256": "92E921B89DD98652D50D018F701A8B40BD38524A848CE75A51170700255806C6",
+    "altText": "Swipeable cycle calendar with period, fertile-window, and ovulation estimates."
+  },
+  {
+    "locale": "en-US",
+    "file": "docs/play-store/assets/en-US/phone/03-period-editor.png",
+    "width": 1080,
+    "height": 1920,
+    "mode": "RGBA",
+    "bytes": 160551,
+    "sha256": "6883C0B5D97CE1E2DCF7CE2E110E3BB0AB6AA3DAA75A97EB00A4D7876A32A461",
+    "altText": "Exact period-day editor with selected dates and clear instructions."
+  },
+  {
+    "locale": "en-US",
+    "file": "docs/play-store/assets/en-US/phone/04-day-overview.png",
+    "width": 1080,
+    "height": 1920,
+    "mode": "RGBA",
+    "bytes": 129230,
+    "sha256": "B86D5ADF5A2D06DC420F8F29B74B338F7F02A450645D58F16AC3B1E0667C9ED9",
+    "altText": "Day overview with separate period editing and optional information actions."
+  },
+  {
+    "locale": "en-US",
+    "file": "docs/play-store/assets/en-US/phone/05-history.png",
+    "width": 1080,
+    "height": 1920,
+    "mode": "RGB",
+    "bytes": 129283,
+    "sha256": "CE2333C65B22C2059FBFF29B30F6AFDE0D0211AFDD42E5A6AD9882552F539635",
+    "altText": "Cycle history with averages, saved-prediction accuracy, and a cycle-length chart."
+  },
+  {
+    "locale": "en-US",
+    "file": "docs/play-store/assets/en-US/phone/06-information.png",
+    "width": 1080,
+    "height": 1920,
+    "mode": "RGBA",
+    "bytes": 145376,
+    "sha256": "8B2F7CFD9C3C05AA684ED35B65D5F5D14EB69E81004282B1E4277D4442A1381E",
+    "altText": "Optional daily information editor for mood, symptoms, pain, notes, and more."
+  },
+  {
+    "locale": "en-US",
+    "file": "docs/play-store/assets/en-US/phone/07-phase-guidance.png",
+    "width": 1080,
+    "height": 1920,
+    "mode": "RGB",
+    "bytes": 167937,
+    "sha256": "BC59B6C72097890DDCA07D18C7C98683F98A9E983B5F5953A30F68B376268263",
+    "altText": "Cycle phase guidance with possible physical signs, mood, and energy context."
+  },
+  {
+    "locale": "en-US",
+    "file": "docs/play-store/assets/en-US/phone/08-settings.png",
+    "width": 1080,
+    "height": 1920,
+    "mode": "RGB",
+    "bytes": 143378,
+    "sha256": "8D28342FB3B7A42B42DC4503E1EA5C120F2718A432E368814985DE96E5C94CAB",
+    "altText": "Selia Cycles settings for cycle profile, appearance, language, reminders, and local data."
+  }
+]
