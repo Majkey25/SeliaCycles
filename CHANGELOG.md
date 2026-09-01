@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.0-beta.7 - 2026-09-01
+
+### Added
+
+- Optional phase details now cover emotions, relationships, social energy, food, movement, rest, and personal patterns with medical disclaimers.
+- Relief care now recommends a smaller set of activities for the selected phase.
+
+### Changed
+
+- Predicted periods use a quiet red tint while recorded bleeding stays prominent.
+- Fertility and ovulation highlights are less dominant, and the calendar legend uses full-width rows.
+- System, light, and dark modes now fit in one compact row.
+- Phase cards use the full content width, settings categories are tighter, and the trying-to-conceive goal no longer uses a stroller icon.
+
 ## 0.9.0-beta.6 - 2026-09-01
 
 ### Fixed

@@ -1,5 +1,6 @@
 package com.majkeylab.seliacycles
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import kotlin.test.Test
@@ -31,6 +32,15 @@ class AppPaletteTest {
         val custom = CustomPalette(secondaryRgb = 0xAA1122, entryRgb = 0x1234AB)
         assertEquals(0xAA1122, calendarPeriodRgb(AppPalette.CUSTOM, custom))
         assertEquals(0x1234AB, calendarEntryRgb(AppPalette.CUSTOM, custom))
+    }
+
+    @Test
+    fun `predicted period keeps the period hue with low emphasis`() {
+        val recorded = Color(0xFFB71C1C)
+        val predicted = calendarPredictedPeriodColor(recorded)
+
+        assertEquals(recorded.toArgb() and 0xFFFFFF, predicted.toArgb() and 0xFFFFFF)
+        assertTrue(kotlin.math.abs(predicted.alpha - 0.28f) < 0.005f)
     }
 
     @Test

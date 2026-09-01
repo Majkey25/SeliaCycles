@@ -131,6 +131,8 @@ internal fun paletteGradientColors(
 internal fun calendarPeriodRgb(palette: AppPalette, custom: CustomPalette): Int =
     if (palette == AppPalette.CUSTOM) custom.secondaryRgb else 0xB71C1C
 
+internal fun calendarPredictedPeriodColor(periodColor: Color): Color = periodColor.copy(alpha = 0.28f)
+
 internal fun calendarEntryRgb(palette: AppPalette, custom: CustomPalette): Int =
     if (palette == AppPalette.CUSTOM) custom.entryRgb else 0x1565C0
 

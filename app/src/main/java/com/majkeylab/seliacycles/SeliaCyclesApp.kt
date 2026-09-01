@@ -62,7 +62,6 @@ import androidx.compose.material.icons.outlined.Cake
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChangeCircle
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.ChildFriendly
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.DeleteForever
@@ -217,7 +216,7 @@ private enum class CustomColorTarget(@param:StringRes val label: Int) {
     ENTRY(R.string.custom_entry_color),
 }
 
-private enum class SelfCareActivity(
+internal enum class SelfCareActivity(
     @param:StringRes val title: Int,
     @param:StringRes val instructions: Int,
     val minutes: Int,
@@ -257,6 +256,39 @@ private enum class SelfCareActivity(
     ),
 }
 
+internal fun recommendedSelfCareActivities(phase: CyclePhase?): List<SelfCareActivity> = when (phase) {
+    CyclePhase.MENSTRUAL -> listOf(
+        SelfCareActivity.HEAT,
+        SelfCareActivity.MOVEMENT,
+        SelfCareActivity.MASSAGE,
+        SelfCareActivity.HYDRATION,
+        SelfCareActivity.REST,
+        SelfCareActivity.BREATHING,
+    )
+    CyclePhase.FOLLICULAR -> listOf(
+        SelfCareActivity.WALK,
+        SelfCareActivity.MOVEMENT,
+        SelfCareActivity.HYDRATION,
+        SelfCareActivity.BREATHING,
+    )
+    CyclePhase.FERTILE -> listOf(
+        SelfCareActivity.MOVEMENT,
+        SelfCareActivity.WALK,
+        SelfCareActivity.HYDRATION,
+        SelfCareActivity.BREATHING,
+        SelfCareActivity.REST,
+    )
+    CyclePhase.LUTEAL -> listOf(
+        SelfCareActivity.REST,
+        SelfCareActivity.WALK,
+        SelfCareActivity.BREATHING,
+        SelfCareActivity.MUSCLE_RELAXATION,
+        SelfCareActivity.HYDRATION,
+        SelfCareActivity.MASSAGE,
+    )
+    null -> SelfCareActivity.entries.toList()
+}
+
 private enum class SettingsPage(
     @param:StringRes val title: Int,
     @param:StringRes val summary: Int,
@@ -281,7 +313,7 @@ fun SeliaCyclesApp(
     var daySheetMode by remember { mutableStateOf(DaySheetMode.OVERVIEW) }
     var infoDialog by remember { mutableStateOf<InfoDialog?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
-    var showSelfCare by remember { mutableStateOf(false) }
+    var selfCareInsight by remember { mutableStateOf<DailyCycleInsight?>(null) }
     var showPhaseDetails by remember { mutableStateOf(false) }
     var calendarTargetDay by remember { mutableStateOf<LocalDate?>(null) }
     val context = LocalContext.current
@@ -356,7 +388,7 @@ fun SeliaCyclesApp(
                             onEndPeriod = {
                                 viewModel.endPeriod(LocalDate.now(), suggestedPeriodStart(state, LocalDate.now()))
                             },
-                            onSelfCare = { showSelfCare = true },
+                            onSelfCare = { selfCareInsight = state.todayInsight },
                             onOpenCalendar = { day ->
                                 calendarTargetDay = day
                                 screen = Screen.CALENDAR
@@ -427,7 +459,9 @@ fun SeliaCyclesApp(
                     viewModel.removePeriod(day)
                     selectedDay = null
                 },
-                onSelfCare = { showSelfCare = true },
+                onSelfCare = {
+                    selfCareInsight = CycleInsights.forDate(state.backup, state.forecastSnapshots, day)
+                },
             )
         } else {
             DayLogSheet(
@@ -469,10 +503,15 @@ fun SeliaCyclesApp(
             },
         )
     }
-    if (showSelfCare) SelfCareSheet(onDismiss = { showSelfCare = false })
+    selfCareInsight?.let { insight ->
+        SelfCareSheet(insight = insight, onDismiss = { selfCareInsight = null })
+    }
     if (showPhaseDetails) PhaseDetailsSheet(
         insight = state.todayInsight,
-        onSelfCare = { showPhaseDetails = false; showSelfCare = true },
+        onSelfCare = {
+            showPhaseDetails = false
+            selfCareInsight = state.todayInsight
+        },
         onDismiss = { showPhaseDetails = false },
     )
 }
@@ -650,24 +689,29 @@ private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Uni
         phase == CyclePhase.FERTILE -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.primary
     }
-    Row(
+    var expanded by remember(phase, ovulation) { mutableStateOf(false) }
+    Column(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.Top,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Box(
-            Modifier.size(40.dp).clip(CircleShape).background(phaseColor.copy(alpha = 0.16f)),
-            contentAlignment = Alignment.Center,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(icon, contentDescription = null, tint = phaseColor)
-        }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(
+                Modifier.size(40.dp).clip(CircleShape).background(phaseColor.copy(alpha = 0.16f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = null, tint = phaseColor)
+            }
             Text(
                 stringResource(phaseName),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionLabel(Icons.Outlined.MonitorHeart, R.string.phase_guidance_title, phaseColor)
             Text(stringResource(body), color = MaterialTheme.colorScheme.onSurfaceVariant)
             SectionLabel(Icons.Outlined.SentimentSatisfied, R.string.phase_feelings_title, phaseColor)
@@ -679,15 +723,61 @@ private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Uni
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            if (phase == CyclePhase.MENSTRUAL && onSelfCare != null) {
-                TextButton(onClick = onSelfCare) {
-                    Icon(Icons.Outlined.Healing, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.self_care_title))
-                }
+        }
+        TextButton(onClick = { expanded = !expanded }, modifier = Modifier.align(Alignment.Start)) {
+            Text(stringResource(if (expanded) R.string.phase_read_less else R.string.phase_read_more))
+            Spacer(Modifier.width(4.dp))
+            Icon(if (expanded) Icons.Outlined.Remove else Icons.Default.Add, contentDescription = null)
+        }
+        if (expanded) {
+            HorizontalDivider()
+            SectionLabel(Icons.Outlined.FavoriteBorder, R.string.phase_social_title, phaseColor)
+            Text(
+                stringResource(phaseSocialDetailLabel(phase, ovulation)),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            SectionLabel(Icons.Outlined.Restaurant, R.string.phase_care_title, phaseColor)
+            Text(
+                stringResource(phaseCareDetailLabel(phase, ovulation)),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            SectionLabel(Icons.Outlined.Insights, R.string.phase_personal_pattern_title, phaseColor)
+            Text(
+                stringResource(R.string.phase_personal_pattern_body),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                stringResource(R.string.phase_education_disclaimer),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        if (onSelfCare != null) {
+            OutlinedButton(onClick = onSelfCare, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Outlined.Healing, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.self_care_title))
             }
         }
     }
+}
+
+@StringRes
+private fun phaseSocialDetailLabel(phase: CyclePhase, ovulation: Boolean): Int = when {
+    ovulation -> R.string.phase_social_ovulation
+    phase == CyclePhase.MENSTRUAL -> R.string.phase_social_menstrual
+    phase == CyclePhase.FOLLICULAR -> R.string.phase_social_follicular
+    phase == CyclePhase.FERTILE -> R.string.phase_social_fertile
+    else -> R.string.phase_social_luteal
+}
+
+@StringRes
+private fun phaseCareDetailLabel(phase: CyclePhase, ovulation: Boolean): Int = when {
+    ovulation -> R.string.phase_care_ovulation
+    phase == CyclePhase.MENSTRUAL -> R.string.phase_care_menstrual
+    phase == CyclePhase.FOLLICULAR -> R.string.phase_care_follicular
+    phase == CyclePhase.FERTILE -> R.string.phase_care_fertile
+    else -> R.string.phase_care_luteal
 }
 
 @Composable
@@ -754,7 +844,7 @@ private fun PhaseDetailsSheet(insight: DailyCycleInsight, onSelfCare: () -> Unit
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun SelfCareSheet(onDismiss: () -> Unit) {
+private fun SelfCareSheet(insight: DailyCycleInsight, onDismiss: () -> Unit) {
     var selected by remember { mutableStateOf<SelfCareActivity?>(null) }
     var remainingSeconds by remember { mutableIntStateOf(0) }
     var targetMillis by remember { mutableStateOf<Long?>(null) }
@@ -785,7 +875,20 @@ private fun SelfCareSheet(onDismiss: () -> Unit) {
             SheetHeader(R.string.self_care_title, onDismiss)
             if (selected == null) {
                 Text(stringResource(R.string.self_care_intro), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                SelfCareActivity.entries.forEach { activity ->
+                insight.phase?.let { phase ->
+                    SectionLabel(Icons.Outlined.Restaurant, R.string.self_care_for_phase)
+                    Text(
+                        stringResource(
+                            phaseCareDetailLabel(
+                                phase,
+                                insight.fertilityStatus == FertilityStatus.OVULATION,
+                            ),
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                SectionLabel(Icons.Outlined.FitnessCenter, R.string.self_care_activities)
+                recommendedSelfCareActivities(insight.phase).forEach { activity ->
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant).padding(14.dp),
@@ -1140,35 +1243,27 @@ private fun CalendarMonthPage(
         }
         if (legendExpanded) {
             Column(Modifier.padding(bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(Modifier.fillMaxWidth()) {
-                    LegendItem(
-                        periodColor,
-                        stringResource(R.string.recorded_legend),
-                        stringResource(R.string.recorded_legend_detail),
-                        Modifier.weight(1f),
-                    )
-                    LegendItem(
-                        MaterialTheme.colorScheme.secondaryContainer,
-                        stringResource(R.string.predicted_legend),
-                        stringResource(R.string.predicted_legend_detail),
-                        Modifier.weight(1f),
-                    )
-                }
+                LegendItem(
+                    periodColor,
+                    stringResource(R.string.recorded_legend),
+                    stringResource(R.string.recorded_legend_detail),
+                )
+                LegendItem(
+                    calendarPredictedPeriodColor(periodColor),
+                    stringResource(R.string.predicted_legend),
+                    stringResource(R.string.predicted_legend_detail),
+                )
                 if (state.backup.settings.canEstimateFertility) {
-                    Row(Modifier.fillMaxWidth()) {
-                        LegendItem(
-                            MaterialTheme.colorScheme.tertiaryContainer,
-                            stringResource(R.string.fertile_legend),
-                            stringResource(R.string.fertile_legend_detail),
-                            Modifier.weight(1f),
-                        )
-                        LegendItem(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            stringResource(R.string.ovulation_legend),
-                            stringResource(R.string.ovulation_legend_detail),
-                            Modifier.weight(1f),
-                        )
-                    }
+                    LegendItem(
+                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.20f),
+                        stringResource(R.string.fertile_legend),
+                        stringResource(R.string.fertile_legend_detail),
+                    )
+                    LegendItem(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
+                        stringResource(R.string.ovulation_legend),
+                        stringResource(R.string.ovulation_legend_detail),
+                    )
                 }
                 LegendItem(
                     entryColor,
@@ -1211,17 +1306,17 @@ private fun CalendarDay(
     enabled: Boolean,
     modifier: Modifier,
 ) {
+    val predictedPeriodColor = calendarPredictedPeriodColor(periodColor)
+    val fertileColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.20f)
+    val ovulationColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
     val periodBackground = when (tracks.period) {
         CalendarPeriodLayer.RECORDED -> periodColor
-        CalendarPeriodLayer.PREDICTED -> MaterialTheme.colorScheme.secondaryContainer
+        CalendarPeriodLayer.PREDICTED -> predictedPeriodColor
         CalendarPeriodLayer.NONE -> Color.Transparent
     }
     val foreground = when (tracks.period) {
         CalendarPeriodLayer.RECORDED -> onPeriodColor
-        CalendarPeriodLayer.PREDICTED -> MaterialTheme.colorScheme.onSecondaryContainer
-        CalendarPeriodLayer.NONE -> if (tracks.fertile) {
-            MaterialTheme.colorScheme.onTertiaryContainer
-        } else MaterialTheme.colorScheme.onSurface
+        CalendarPeriodLayer.PREDICTED, CalendarPeriodLayer.NONE -> MaterialTheme.colorScheme.onSurface
     }
     val periodShape = RoundedCornerShape(
         topStartPercent = if (periodConnectPrevious) 0 else 50,
@@ -1256,7 +1351,7 @@ private fun CalendarDay(
             Modifier.fillMaxWidth().height(42.dp).padding(
                 start = if (fertileConnectPrevious) 0.dp else 3.dp,
                 end = if (fertileConnectNext) 0.dp else 3.dp,
-            ).clip(fertileShape).background(MaterialTheme.colorScheme.tertiaryContainer),
+            ).clip(fertileShape).background(fertileColor),
         )
         if (tracks.period != CalendarPeriodLayer.NONE) Box(
             Modifier.fillMaxWidth().height(32.dp).padding(
@@ -1267,13 +1362,13 @@ private fun CalendarDay(
             if (tracks.predictedOverlap) {
                 Box(
                     Modifier.align(Alignment.BottomCenter).padding(bottom = 2.dp).width(20.dp).height(3.dp)
-                        .clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
+                        .clip(CircleShape).background(onPeriodColor.copy(alpha = 0.72f)),
                 )
             }
         }
         Box(
             Modifier.size(36.dp).clip(CircleShape)
-                .then(if (tracks.ovulation) Modifier.background(MaterialTheme.colorScheme.primaryContainer) else Modifier)
+                .then(if (tracks.ovulation) Modifier.background(ovulationColor) else Modifier)
                 .then(if (selected) {
                     Modifier.border(3.dp, MaterialTheme.colorScheme.primary, CircleShape)
                 } else if (day == LocalDate.now()) {
@@ -1283,7 +1378,7 @@ private fun CalendarDay(
         ) {
             Text(
                 day.dayOfMonth.toString(),
-                color = if (tracks.ovulation) MaterialTheme.colorScheme.onPrimaryContainer else foreground,
+                color = foreground,
                 fontWeight = FontWeight.SemiBold,
             )
         }
@@ -1773,13 +1868,7 @@ private fun SettingsScreen(
                 }
                 SettingsPage.APPEARANCE -> {
                     SectionLabel(Icons.Outlined.Palette, R.string.theme)
-                    AppTheme.entries.forEach { theme ->
-                        AppearancePreviewRow(
-                            label = themeLabel(theme),
-                            icon = themeIcon(theme),
-                            selected = settings.theme == theme,
-                        ) { onSave(settings.copy(theme = theme)) }
-                    }
+                    ThemeModeSelector(settings.theme) { onSave(settings.copy(theme = it)) }
                     SectionLabel(Icons.Outlined.Palette, R.string.color_palette)
                     AppPalette.entries.forEach { palette ->
                         AppearancePreviewRow(
@@ -1912,7 +2001,7 @@ private fun ProfileSettings(settings: AppSettings, onSave: (AppSettings) -> Unit
         label = R.string.profile_goal,
         choices = listOf(
             ChoiceOption(TrackingGoal.TRACK_CYCLE, R.string.goal_track_cycle, Icons.Outlined.Autorenew),
-            ChoiceOption(TrackingGoal.TRYING_TO_CONCEIVE, R.string.goal_trying_to_conceive, Icons.Outlined.ChildFriendly),
+            ChoiceOption(TrackingGoal.TRYING_TO_CONCEIVE, R.string.goal_trying_to_conceive, Icons.Outlined.FavoriteBorder),
             ChoiceOption(TrackingGoal.AVOID_PREGNANCY, R.string.goal_avoid_pregnancy, Icons.Outlined.Shield),
         ),
         selected = profile.goal,
@@ -2123,11 +2212,11 @@ private fun DeviceCalendarRow(
 private fun SettingsCategoryRow(icon: ImageVector, @StringRes title: Int, @StringRes summary: Int, onClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp))
+            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(13.dp))
                 .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center,
         ) {
@@ -2135,10 +2224,10 @@ private fun SettingsCategoryRow(icon: ImageVector, @StringRes title: Int, @Strin
                 icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(26.dp),
+                modifier = Modifier.size(24.dp),
             )
         }
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(stringResource(title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(stringResource(summary), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
@@ -2285,6 +2374,37 @@ private fun AppearancePreviewRow(
             }
         }
         if (selected) Icon(Icons.Outlined.CheckCircle, contentDescription = stringResource(R.string.calendar_selected))
+    }
+}
+
+@Composable
+private fun ThemeModeSelector(selected: AppTheme, onSelect: (AppTheme) -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        AppTheme.entries.forEach { theme ->
+            val isSelected = selected == theme
+            val shape = RoundedCornerShape(16.dp)
+            Column(
+                modifier = Modifier.weight(1f).heightIn(min = 76.dp).clip(shape)
+                    .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                    .border(
+                        1.dp,
+                        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                        shape,
+                    )
+                    .clickable { onSelect(theme) }.padding(horizontal = 6.dp, vertical = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Icon(themeIcon(theme), contentDescription = null, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(themeLabel(theme)),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
     }
 }
 
@@ -2644,19 +2764,14 @@ private fun DayOverviewSheet(
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.edit_record))
                 }
-                SectionLabel(Icons.Outlined.CalendarMonth, R.string.day_status)
-                Column(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    statusLabels.forEach { Text(stringResource(it), fontWeight = FontWeight.SemiBold) }
-                    insight.phase?.let { Text(stringResource(phaseHeadingLabel(it))) }
-                    insight.fertility?.let {
-                        if (day != it.ovulation) {
-                            Text(stringResource(R.string.estimated_ovulation, it.ovulation.format(shortDateFormat)))
-                        }
-                        Text(stringResource(R.string.fertile_window_value, it.fertileStart.format(shortDateFormat), it.fertileEnd.format(shortDateFormat)))
+                if (statusLabels.isNotEmpty()) {
+                    SectionLabel(Icons.Outlined.CalendarMonth, R.string.day_status)
+                    Column(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        statusLabels.forEach { Text(stringResource(it), fontWeight = FontWeight.SemiBold) }
                     }
                 }
                 PhaseGuidanceCard(insight, onSelfCare)
@@ -3063,6 +3178,7 @@ private fun InfoDialogContent(dialog: InfoDialog, onDismiss: () -> Unit) {
                         SourceLink(R.string.source_who, "https://www.who.int/news-room/fact-sheets/detail/menstrual-health")
                         SourceLink(R.string.source_owh, "https://womenshealth.gov/menstrual-cycle/your-menstrual-cycle")
                         SourceLink(R.string.source_nhs, "https://www.nhs.uk/conditions/periods/fertility-in-the-menstrual-cycle/")
+                        SourceLink(R.string.source_acog, "https://www.acog.org/womens-health/faqs/Premenstrual-Syndrome")
                     }
                 }
             }

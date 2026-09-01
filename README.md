@@ -20,6 +20,7 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - Next period, fertile window, and ovulation stay together in one visible cycle timeline.
 - Optional phase guidance and local self-care timers with cautious medical wording.
 - Phase guidance covers physical signs, emotions, and energy for menstrual, follicular, estimated ovulation/fertile, and luteal phases.
+- Optional details add relationships, social energy, personal patterns, food, movement, and rest without treating phase stereotypes as facts.
 - Cycle-length analysis plus recent period-duration, fertile-window, and estimated-ovulation timelines.
 - Clean line-only cycle-length graph with exact values per recorded cycle.
 - Saved-prediction accuracy summarizes average start-date error and results inside the original range.

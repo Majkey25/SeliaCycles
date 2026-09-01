@@ -50,4 +50,4 @@ Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
 
 ## Closed test release notes
 
-`Fixes conflicting September predictions and overlapping fertility windows, clarifies the month overview, and combines Cycle and Profile settings.`
+`Adds optional phase education and phase-aware relief care, clarifies calendar colors and legend, and compacts theme controls.`
