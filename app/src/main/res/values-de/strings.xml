@@ -309,21 +309,21 @@
     <string name="profile_notice_perimenopause">Periodenschätzungen nutzen deine Historie. Fruchtbarkeitsschätzungen sind ausgeblendet, weil ein Eisprung nicht jeden Monat stattfinden muss.</string>
     <string name="profile_notice_menopause">Nach der Menopause sind zukünftige Perioden-, Fruchtbarkeits- und Erinnerungsschätzungen pausiert.</string>
     <string name="profile_avoid_warning">Selia ist kein Verhütungsmittel. Nutze Kalenderschätzungen nicht, um sicheren ungeschützten Sex zu bestimmen.</string>
-    <string name="my_calendar_import">Aus My Calendar importieren</string>
-    <string name="my_calendar_import_body">Wähle eine .pc-Sicherung aus My Calendar. Selia liest sie lokal und lädt sie nicht hoch.</string>
+    <string name="my_calendar_import">Import und Export</string>
+    <string name="my_calendar_import_body">Importiere eine kompatible .pc-Sicherung oder erstelle eine lokale .pc-Datei. Selia verarbeitet nur die von dir ausgewählte Datei.</string>
     <string name="my_calendar_import_action">.pc-Sicherung auswählen</string>
     <string name="my_calendar_export_action">.pc-Sicherung exportieren</string>
-    <string name="my_calendar_export_body">Die .pc-Datei ist unverschlüsselt, damit My Calendar sie lesen kann. Bewahre sie geschützt auf.</string>
-    <string name="my_calendar_preview_title">My Calendar-Import</string>
+    <string name="my_calendar_export_body">Die .pc-Datei ist nicht verschlüsselt. Bewahre sie geschützt auf.</string>
+    <string name="my_calendar_preview_title">Importvorschau</string>
     <plurals name="my_calendar_preview_body"><item quantity="one">%1$d erfasster Tag vom %2$s bis %3$s gefunden.</item><item quantity="other">%1$d erfasste Tage vom %2$s bis %3$s gefunden.</item></plurals>
     <plurals name="my_calendar_unsupported_details"><item quantity="one">%1$d Quelldetail bleibt in der Notiz erhalten, weil Selia keinen passenden Tracker hat.</item><item quantity="other">%1$d Quelldetails bleiben in der Notiz erhalten, weil Selia keinen passenden Tracker hat.</item></plurals>
     <string name="my_calendar_merge_notice">Der Import ergänzt fehlende Historie. Vorhandene Selia-Werte haben am selben Tag Vorrang.</string>
     <string name="merge_import">Daten importieren</string>
-    <string name="my_calendar_import_complete">My Calendar-Daten wurden importiert.</string>
+    <string name="my_calendar_import_complete">Daten wurden importiert.</string>
     <string name="my_calendar_export_complete">.pc-Sicherung wurde exportiert.</string>
-    <string name="my_calendar_import_unsupported">Dies ist keine unterstützte My Calendar-.pc-Sicherung.</string>
-    <string name="my_calendar_import_empty">Die My Calendar-Sicherung enthält keine datierten Perioden- oder Notizdaten.</string>
-    <string name="my_calendar_import_damaged">Die My Calendar-Sicherung konnte nicht gelesen werden.</string>
+    <string name="my_calendar_import_unsupported">Dies ist keine unterstützte .pc-Sicherung.</string>
+    <string name="my_calendar_import_empty">Die Sicherung enthält keine datierten Perioden- oder Notizdaten.</string>
+    <string name="my_calendar_import_damaged">Die Sicherung konnte nicht gelesen werden.</string>
     <string name="palette_forest">Wald</string>
     <string name="palette_sunset">Sonnenuntergang</string>
     <string name="palette_lilac">Flieder</string>

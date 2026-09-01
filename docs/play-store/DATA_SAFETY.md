@@ -1,6 +1,6 @@
 # Google Play declarations
 
-These answers describe version 0.9.0-beta.4.
+These answers describe version 0.9.0-beta.5.
 
 ## Data safety
 
@@ -12,7 +12,7 @@ These answers describe version 0.9.0-beta.4.
 - Local deletion: **Settings > Data and transfer > Delete all data**.
 - Network permission: **No**.
 - Android device-to-device transfer may copy private app data during new-device setup. Normal cloud backup is blocked.
-- User-selected My Calendar `.pc` backups are read and merged locally. They are not uploaded.
+- User-selected compatible `.pc` backups are read and merged locally. They are not uploaded.
 - User-requested `.pc` exports are written only to the selected destination. They are not uploaded or encrypted.
 - Optional Android calendar read/write permission lists writable calendars and mirrors short cycle labels to the calendar the user selects.
 - Selia Cycles does not transmit calendar or cycle data. A selected calendar provider may synchronize the user-directed copies under its own terms.

@@ -36,13 +36,13 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - English, Czech, Slovak, German, Polish, and Spanish.
 - Profile settings for tracking goal, life situation, body context, and luteal phase.
 - Clear device, sun, and moon theme controls plus six palettes, a pencil-marked custom option, a color picker, and optional exact hex values.
-- Local My Calendar `.pc` import and export with no upload; Selia exports preserve the complete local record for lossless re-import.
+- Local `.pc` import and export with no upload; Selia exports preserve the complete local record for lossless re-import.
 - Optional local period reminders.
 - Android device-to-device transfer during new-device setup.
 - One-action deletion of all local app data.
 - Direct edit and confirmed connected-period removal from any recorded calendar day while preserving other notes.
 
-Existing local records remain in the SQLite database across normal app updates. Selia Cycles has no Selia cloud or partner account. A selected My Calendar `.pc` backup is read and merged locally. An exported `.pc` file is created only after the user chooses a destination and is not encrypted, so it should be stored securely. If calendar mirroring is enabled, short cycle labels are copied through Android to the selected provider; notes and raw health details are never mirrored.
+Existing local records remain in the SQLite database across normal app updates. Selia Cycles has no Selia cloud or partner account. A selected `.pc` backup is read and merged locally. An exported `.pc` file is created only after the user chooses a destination and is not encrypted, so it should be stored securely. If calendar mirroring is enabled, short cycle labels are copied through Android to the selected provider; notes and raw health details are never mirrored.
 
 ## Build
 

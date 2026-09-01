@@ -309,21 +309,21 @@
     <string name="profile_notice_perimenopause">Prognoza miesiączki korzysta z historii, ale prognoza płodności jest ukryta, ponieważ owulacja może nie występować co miesiąc.</string>
     <string name="profile_notice_menopause">Po menopauzie przyszłe prognozy miesiączki, płodności i przypomnienia są wstrzymane.</string>
     <string name="profile_avoid_warning">Selia nie jest antykoncepcją. Nie używaj prognoz kalendarza do określania, kiedy seks bez zabezpieczenia jest bezpieczny.</string>
-    <string name="my_calendar_import">Import z My Calendar</string>
-    <string name="my_calendar_import_body">Wybierz kopię .pc z My Calendar. Selia odczyta ją lokalnie i nie prześle jej nigdzie.</string>
+    <string name="my_calendar_import">Import i eksport</string>
+    <string name="my_calendar_import_body">Zaimportuj zgodną kopię .pc albo utwórz lokalny plik .pc. Selia przetwarza wyłącznie wybrany plik.</string>
     <string name="my_calendar_import_action">Wybierz kopię .pc</string>
     <string name="my_calendar_export_action">Eksportuj kopię .pc</string>
-    <string name="my_calendar_export_body">Plik .pc nie jest szyfrowany, aby My Calendar mógł go odczytać. Przechowuj go prywatnie.</string>
-    <string name="my_calendar_preview_title">Import z My Calendar</string>
+    <string name="my_calendar_export_body">Plik .pc nie jest szyfrowany. Przechowuj go prywatnie.</string>
+    <string name="my_calendar_preview_title">Podgląd importu</string>
     <plurals name="my_calendar_preview_body"><item quantity="one">Znaleziono %1$d zapisany dzień od %2$s do %3$s.</item><item quantity="few">Znaleziono %1$d zapisane dni od %2$s do %3$s.</item><item quantity="many">Znaleziono %1$d zapisanego dnia od %2$s do %3$s.</item><item quantity="other">Znaleziono %1$d zapisanych dni od %2$s do %3$s.</item></plurals>
     <plurals name="my_calendar_unsupported_details"><item quantity="one">%1$d szczegół źródłowy zachowano w notatce, ponieważ Selia nie ma odpowiedniego modułu śledzenia.</item><item quantity="few">%1$d szczegóły źródłowe zachowano w notatce, ponieważ Selia nie ma odpowiedniego modułu śledzenia.</item><item quantity="many">%1$d szczegółu źródłowego zachowano w notatce, ponieważ Selia nie ma odpowiedniego modułu śledzenia.</item><item quantity="other">%1$d szczegółów źródłowych zachowano w notatce, ponieważ Selia nie ma odpowiedniego modułu śledzenia.</item></plurals>
     <string name="my_calendar_merge_notice">Import dodaje brakującą historię. Istniejące wartości Selia z tego samego dnia mają pierwszeństwo.</string>
     <string name="merge_import">Importuj dane</string>
-    <string name="my_calendar_import_complete">Dane z My Calendar zostały zaimportowane.</string>
+    <string name="my_calendar_import_complete">Dane zostały zaimportowane.</string>
     <string name="my_calendar_export_complete">Kopia .pc została wyeksportowana.</string>
-    <string name="my_calendar_import_unsupported">To nie jest obsługiwana kopia .pc z My Calendar.</string>
-    <string name="my_calendar_import_empty">Kopia My Calendar nie zawiera danych miesiączki ani notatek z datą.</string>
-    <string name="my_calendar_import_damaged">Nie udało się odczytać kopii My Calendar.</string>
+    <string name="my_calendar_import_unsupported">To nie jest obsługiwana kopia .pc.</string>
+    <string name="my_calendar_import_empty">Kopia nie zawiera danych miesiączki ani notatek z datą.</string>
+    <string name="my_calendar_import_damaged">Nie udało się odczytać kopii.</string>
     <string name="palette_forest">Las</string>
     <string name="palette_sunset">Zachód słońca</string>
     <string name="palette_lilac">Liliowy</string>

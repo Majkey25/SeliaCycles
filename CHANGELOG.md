@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.5 - 2026-09-01
+
+### Changed
+
+- Renamed the local backup section to Import and export and removed third-party brand wording from user-facing copy.
+- Reverified a real 154,036-byte `.pc` backup through the device import preview without merging it.
+
 ## 0.9.0-beta.4 - 2026-09-01
 
 ### Changed
@@ -11,7 +18,7 @@
 
 ### Added
 
-- Local My Calendar-compatible `.pc` export with full-fidelity Selia data for lossless re-import.
+- Local compatible `.pc` export with full-fidelity Selia data for lossless re-import.
 - Compact linked Today dashboard and expanded guided relief care.
 
 ### Fixed
@@ -92,7 +99,7 @@
 ### Added
 
 - One-tap period start and end; start fills the learned or configured usual length.
-- Local My Calendar `.pc` import with preview and non-destructive merge.
+- Local `.pc` import with preview and non-destructive merge.
 - Profile goal, life situation, body context, and configurable luteal phase.
 - Forest, Sunset, Lilac, and custom color palettes.
 
@@ -127,7 +134,7 @@
 ### Removed
 
 - Google/Firebase account sync and partner calendars.
-- Manual backup/restore, My Calendar import, and Health Connect import.
+- Manual backup/restore, `.pc` import, and Health Connect import.
 
 ## 0.1.0-beta.1 - 2026-08-28
 

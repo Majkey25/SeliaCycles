@@ -10,9 +10,9 @@ Selia Cycles stores menstrual dates, spotting, flow, symptoms, mood, notes, cerv
 
 The app has no account, ads, analytics, telemetry, Selia cloud, or network permission. MajkeyLab does not receive cycle data.
 
-## Optional My Calendar import
+## Optional `.pc` import and export
 
-When the user selects a My Calendar `.pc` backup, Selia Cycles reads the file locally, previews the dated records, and merges confirmed records into private app storage. The file and imported health data are not uploaded. Existing Selia values take priority for the same day.
+When the user selects a compatible `.pc` backup, Selia Cycles reads the file locally, previews the dated records, and merges confirmed records into private app storage. The file and imported health data are not uploaded. Existing Selia values take priority for the same day.
 
 ## Optional `.pc` export
 

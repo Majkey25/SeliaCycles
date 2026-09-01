@@ -16,7 +16,7 @@ Mark Period started or Period ended with one tap. Start records only the confirm
 
 Personal estimates use recent history, handle missed tracking cycles, and reduce the effect of isolated unusual gaps. Saved monthly estimates remain visible across recorded history, with average prediction error and in-range results summarized in History. A real recorded period start immediately updates future months. Estimated ovulation, fertile windows, daily fertility status, recorded fertility signs, cycle phase, and evidence-gated personal mood trends add context without claiming medical certainty. Short guidance explains why the first few cycles can move while the estimate learns.
 
-Private details stay in app storage. Selia Cycles has no account, app cloud, ads, analytics, or network permission. Android can transfer the database directly while setting up a new device. My Calendar `.pc` backups can be imported locally, and Selia can export a local `.pc` backup for transfer or re-import. An optional calendar mirror can copy short cycle labels to an existing Google Calendar, Outlook, Exchange, or local calendar chosen by the user; the calendar provider controls its own account sync.
+Private details stay in app storage. Selia Cycles has no account, app cloud, ads, analytics, or network permission. Android can transfer the database directly while setting up a new device. Compatible `.pc` backups can be imported locally, and Selia can export a local `.pc` backup for transfer or re-import. An optional calendar mirror can copy short cycle labels to an existing Google Calendar, Outlook, Exchange, or local calendar chosen by the user; the calendar provider controls its own account sync.
 
 Phase guidance names the current phase and separates possible physical signs from emotions and energy. The calendar shows muted dates from adjacent months and switches to the correct full month when one is opened. Its color key stays fully hidden until requested. Menstruation remains prominent red and optional user entries use a blue marker; custom palettes can change both.
 
@@ -40,7 +40,7 @@ Jedním klepnutím označ začátek nebo konec menstruace. Začátek zapíše je
 
 Osobní odhad vychází z poslední historie, umí zohlednit vynechané zápisy a omezuje vliv jednorázových neobvyklých mezer. Uložený měsíční odhad zůstává vedle reality v celé zaznamenané historii; Historie ukazuje průměrnou odchylku a počet výsledků v původním rozmezí. Nový skutečný začátek upraví budoucí měsíce. Aplikace přidává dnešní odhad plodnosti, odhad ovulace, plodné období, zaznamenané známky plodnosti, fázi cyklu a osobní trend nálady jen při dostatku vlastních dat. Krátké vysvětlení upozorní, že první cykly mohou být nepravidelné a odhad se teprve učí.
 
-Soukromé podrobnosti zůstávají v úložišti aplikace. Selia Cycles nemá účet, vlastní cloud, reklamy, analytiku ani oprávnění k síti. Zálohu `.pc` z My Calendar lze importovat místně a Selia umí vytvořit místní `.pc` zálohu pro přenos nebo opětovný import. Volitelně může aplikace přes Android zrcadlit krátké štítky cyklu do vybraného Google Kalendáře, Outlooku, Exchange nebo místního kalendáře; synchronizaci účtu řídí poskytovatel kalendáře.
+Soukromé podrobnosti zůstávají v úložišti aplikace. Selia Cycles nemá účet, vlastní cloud, reklamy, analytiku ani oprávnění k síti. Kompatibilní zálohu `.pc` lze importovat místně a Selia umí vytvořit místní `.pc` zálohu pro přenos nebo opětovný import. Volitelně může aplikace přes Android zrcadlit krátké štítky cyklu do vybraného Google Kalendáře, Outlooku, Exchange nebo místního kalendáře; synchronizaci účtu řídí poskytovatel kalendáře.
 
 Vysvětlení pojmenuje aktuální fázi a odděluje možné fyzické projevy od emocí a energie. Kalendář ukazuje tlumené dny sousedních měsíců a po jejich otevření přepne na správný celý měsíc. Barevná legenda zůstává úplně skrytá, dokud ji uživatel nerozbalí. Menstruace je výrazně červená a vlastní záznam má modrou značku; ve vlastní paletě lze obě barvy změnit.
 
@@ -50,4 +50,4 @@ Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
 
 ## Closed test release notes
 
-`Smaller optimized release with Play crash diagnostics, plus the code 11 prediction, period-entry, dashboard, relief-care, .pc export, and launcher improvements.`
+`Clearer Import and export wording with verified compatible .pc processing, while keeping the optimized prediction, dashboard, relief-care, backup, and launcher improvements.`

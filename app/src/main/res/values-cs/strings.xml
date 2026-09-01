@@ -309,21 +309,21 @@
     <string name="profile_notice_perimenopause">Odhad menstruace vychází z historie, ale odhad plodnosti je skrytý, protože ovulace nemusí proběhnout každý měsíc.</string>
     <string name="profile_notice_menopause">Po menopauze jsou budoucí odhady menstruace, plodnosti a připomínky pozastavené.</string>
     <string name="profile_avoid_warning">Selia není antikoncepce. Podle kalendářních odhadů neurčuj, kdy je nechráněný sex bezpečný.</string>
-    <string name="my_calendar_import">Import z My Calendar</string>
-    <string name="my_calendar_import_body">Vyber zálohu .pc z aplikace My Calendar. Selia ji přečte místně a nikam ji nenahraje.</string>
+    <string name="my_calendar_import">Import a export</string>
+    <string name="my_calendar_import_body">Importuj kompatibilní zálohu .pc nebo vytvoř místní soubor .pc. Selia pracuje jen se souborem, který vybereš.</string>
     <string name="my_calendar_import_action">Vybrat zálohu .pc</string>
     <string name="my_calendar_export_action">Exportovat zálohu .pc</string>
-    <string name="my_calendar_export_body">Soubor .pc není šifrovaný, aby ho My Calendar mohl přečíst. Uchovávej ho v soukromí.</string>
-    <string name="my_calendar_preview_title">Import z My Calendar</string>
+    <string name="my_calendar_export_body">Soubor .pc není šifrovaný. Uchovávej ho v soukromí.</string>
+    <string name="my_calendar_preview_title">Náhled importu</string>
     <plurals name="my_calendar_preview_body"><item quantity="one">Nalezen %1$d zapsaný den od %2$s do %3$s.</item><item quantity="few">Nalezeny %1$d zapsané dny od %2$s do %3$s.</item><item quantity="many">Nalezeno %1$d zapsaného dne od %2$s do %3$s.</item><item quantity="other">Nalezeno %1$d zapsaných dnů od %2$s do %3$s.</item></plurals>
     <plurals name="my_calendar_unsupported_details"><item quantity="one">%1$d zdrojový údaj je zachován v poznámce, protože Selia nemá odpovídající sledování.</item><item quantity="few">%1$d zdrojové údaje jsou zachovány v poznámce, protože Selia nemá odpovídající sledování.</item><item quantity="many">%1$d zdrojového údaje je zachováno v poznámce, protože Selia nemá odpovídající sledování.</item><item quantity="other">%1$d zdrojových údajů je zachováno v poznámce, protože Selia nemá odpovídající sledování.</item></plurals>
     <string name="my_calendar_merge_notice">Import přidá chybějící historii. Existující hodnoty Selia mají ve stejný den přednost.</string>
     <string name="merge_import">Importovat data</string>
-    <string name="my_calendar_import_complete">Data z My Calendar byla importována.</string>
+    <string name="my_calendar_import_complete">Data byla importována.</string>
     <string name="my_calendar_export_complete">Záloha .pc byla exportována.</string>
-    <string name="my_calendar_import_unsupported">Toto není podporovaná záloha .pc z My Calendar.</string>
-    <string name="my_calendar_import_empty">Záloha My Calendar neobsahuje žádné záznamy menstruace ani poznámky s datem.</string>
-    <string name="my_calendar_import_damaged">Zálohu My Calendar se nepodařilo přečíst.</string>
+    <string name="my_calendar_import_unsupported">Toto není podporovaná záloha .pc.</string>
+    <string name="my_calendar_import_empty">Záloha neobsahuje žádné záznamy menstruace ani poznámky s datem.</string>
+    <string name="my_calendar_import_damaged">Zálohu se nepodařilo přečíst.</string>
     <string name="palette_forest">Les</string>
     <string name="palette_sunset">Západ slunce</string>
     <string name="palette_lilac">Šeřík</string>
