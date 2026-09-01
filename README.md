@@ -16,6 +16,7 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - Compact linked Today dashboard for the next period, fertile window, ovulation, phase guidance, History, and relief care.
 - Swipeable month calendar with connected tracks, muted adjacent-month dates, and adjacent-day navigation into the correct full month.
 - Calendar color key stays fully hidden below one explanation control until requested.
+- Optional Calendar filters show the existing blue marker only on dates matching up to three locally used trackers.
 - Clear customizable color roles: prominent red menstruation and blue user-entry markers, with ovulation and fertility kept visually separate.
 - Next period, fertile window, and ovulation stay together in one visible cycle timeline.
 - Optional phase guidance and local self-care timers with cautious medical wording.
@@ -24,6 +25,7 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - Cycle-length analysis plus recent period-duration, fertile-window, and estimated-ovulation timelines.
 - Clean line-only cycle-length graph with exact values per recorded cycle.
 - Saved-prediction accuracy summarizes average start-date error and results inside the original range.
+- Personal symptom patterns appear only after repeated observations across completed cycles.
 - Robust personal estimates that normalize missed tracking cycles and reject isolated outliers.
 - Recorded or estimated windows for this month and next month.
 - Real bleeding starts immediately re-anchor future estimates.
@@ -39,7 +41,7 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - Clear device, sun, and moon theme controls plus six palettes, a pencil-marked custom option, a color picker, and optional exact hex values.
 - Local `.pc` import and export with no upload; Selia exports preserve the complete local record for lossless re-import.
 - Optional local period reminders.
-- Android device-to-device transfer during new-device setup.
+- Android device-to-device transfer during new-device setup without ordinary cloud backup of reproductive data.
 - One-action deletion of all local app data.
 - Direct edit and confirmed connected-period removal from any recorded calendar day while preserving other notes.
 

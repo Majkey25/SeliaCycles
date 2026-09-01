@@ -11,10 +11,8 @@
     <string name="cycle_day_value">Day %1$d</string>
     <string name="no_cycle_yet">Not logged yet</string>
     <string name="estimated_window">%1$s – %2$s</string>
-    <plurals name="based_on_periods"><item quantity="one">Based on %d recorded period</item><item quantity="other">Based on %d recorded periods</item></plurals>
     <string name="first_cycles_title">Predictions are still learning</string>
     <string name="first_cycles_body">The first cycles can be irregular. Keep logging period starts and the estimate will adapt to your pattern.</string>
-    <string name="week_heading">Your week</string>
     <string name="flow_none">No bleeding</string>
     <string name="flow_summary">Flow: %1$s</string>
     <string name="mood_summary">Mood: %1$s</string>
@@ -25,13 +23,6 @@
     <string name="no_period_data">Log your first period to start predictions.</string>
     <string name="predictions_disabled">Predictions are turned off in Settings.</string>
     <string name="estimate_notice">Estimate from your history. Not medical advice or contraception.</string>
-    <string name="forecast_heading">This month and next</string>
-    <string name="this_month">This month</string>
-    <string name="following_month">Next month</string>
-    <string name="forecast_recorded">Recorded start: %1$s</string>
-    <string name="forecast_estimated">Estimated start: %1$s – %2$s</string>
-    <string name="forecast_not_expected">No period expected</string>
-    <string name="forecast_unavailable">No estimate yet</string>
     <string name="calendar_heading">Calendar</string>
     <string name="previous_month">Previous month</string>
     <string name="next_month">Next month</string>
@@ -44,6 +35,12 @@
     <string name="calendar_note_marker">Your entry</string>
     <string name="calendar_note_marker_detail">A small dot means you added a note, symptom, or other optional detail.</string>
     <string name="history_heading">History</string>
+    <string name="personal_patterns_title">Personal patterns</string>
+    <string name="personal_patterns_body">Recurring symptom timing from your completed cycles.</string>
+    <string name="personal_pattern_value">%1$s · %2$s · %3$s</string>
+    <plurals name="personal_pattern_samples"><item quantity="one">%d entry</item><item quantity="other">%d entries</item></plurals>
+    <plurals name="personal_pattern_cycles"><item quantity="one">%d cycle</item><item quantity="other">%d cycles</item></plurals>
+    <string name="personal_patterns_notice">This is a pattern in your records, not a diagnosis or guarantee.</string>
     <string name="cycle_analysis">Cycle analysis</string>
     <string name="recent_cycle_details">Recent cycle details</string>
     <string name="prediction_accuracy_summary">Saved prediction accuracy</string>
@@ -66,7 +63,6 @@
     <string name="settings_cycle">Cycle and profile</string>
     <string name="settings_cycle_summary">Predictions, cycle lengths, goals, body context and measurements</string>
     <string name="settings_profile">Profile</string>
-    <string name="settings_profile_summary">Goal, life situation, body context and luteal phase</string>
     <string name="settings_home">Home screen</string>
     <string name="settings_home_summary">Choose the optional sections shown on Today</string>
     <string name="home_show_phase_guidance">Show phase guidance</string>
@@ -299,10 +295,8 @@
     <string name="partner_view_body">Create a separate calendar in Google Calendar or Outlook, share it there with view-only access, then select it here. Selia mirrors labels but cannot change provider permissions.</string>
     <string name="forecast_saved">Saved estimate: %1$s – %2$s</string>
     <string name="forecast_reconstructed">Reconstructed estimate: %1$s – %2$s</string>
-    <string name="forecast_difference">Reality versus estimate: %1$s days</string>
     <string name="month_overview">Month overview</string>
     <string name="upcoming_cycle">Upcoming</string>
-    <string name="more_about_cycle">More about this cycle</string>
     <string name="phase_guidance_title">Possible physical signs</string>
     <string name="phase_feelings_title">Mood and energy</string>
     <string name="phase_feelings_menstrual">You may have lower energy, need more rest, or feel more sensitive or inward-focused. Some people notice no emotional change.</string>
@@ -376,7 +370,6 @@
     <string name="estimated_ovulation">Estimated ovulation: %1$s</string>
     <string name="fertile_window_value">Estimated fertile window: %1$s – %2$s</string>
     <string name="spotting_summary">Spotting recorded</string>
-    <plurals name="mood_trend_value"><item quantity="one">Personal mood trend: %1$s (1 past entry)</item><item quantity="other">Personal mood trend: %1$s (%2$d past entries)</item></plurals>
     <string name="fertility_estimate_notice">Calendar estimates cannot confirm ovulation and must not be used as contraception.</string>
     <string name="phase_ovulation">Ovulation phase (estimate)</string>
     <string name="phase_heading_menstrual">Menstrual phase</string>
@@ -385,6 +378,11 @@
     <string name="phase_heading_luteal">Luteal phase</string>
     <string name="legend_more">Explain colors</string>
     <string name="legend_less">Hide explanations</string>
+    <string name="calendar_filter">Filter entries</string>
+    <string name="calendar_filter_intro">Choose up to three trackers. While the filter is active, the blue marker appears only on matching dates.</string>
+    <string name="calendar_filter_count">Selected %1$d of %2$d</string>
+    <string name="calendar_filter_tests">Tests</string>
+    <string name="calendar_filter_clear">Clear filters</string>
     <string name="fertile_legend">Estimated fertile window</string>
     <string name="ovulation_legend">Ovulation estimate</string>
     <string name="reminder_channel">Period reminders</string>

@@ -159,4 +159,20 @@ class CalendarMirrorPlannerTest {
             ),
         )
     }
+
+    @Test
+    fun leavesAnUnchangedCalendarEventAlone() {
+        val event = MirrorEvent(
+            MirrorEventKind.ESTIMATED,
+            LocalDate.of(2026, 9, 12),
+            LocalDate.of(2026, 9, 17),
+        )
+
+        assertTrue(
+            CalendarMirrorDiff.plan(
+                desired = listOf(event),
+                existing = listOf(StoredMirrorEvent(10, event.key, event)),
+            ).isEmpty(),
+        )
+    }
 }

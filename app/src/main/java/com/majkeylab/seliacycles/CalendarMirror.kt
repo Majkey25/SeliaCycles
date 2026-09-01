@@ -7,6 +7,7 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.provider.BaseColumns
 import android.provider.CalendarContract
 import androidx.core.content.ContextCompat
@@ -99,7 +100,10 @@ class CalendarMirror(private val context: Context) {
     ) {
         val desired = calendarId?.let { CalendarMirrorPlanner.plan(backup, snapshots) }.orEmpty()
         val operations = ArrayList<ContentProviderOperation>()
-        CalendarMirrorDiff.plan(desired, existingEvents()).forEach { mutation ->
+        CalendarMirrorDiff.plan(
+            desired,
+            existingEvents(desired, calendarId, backup.settings.partnerViewEnabled),
+        ).forEach { mutation ->
             operations += when (mutation) {
                 is MirrorMutation.Insert -> ContentProviderOperation.newInsert(CalendarContract.Events.CONTENT_URI)
                     .withValues(eventValues(requireNotNull(calendarId), mutation.event, backup.settings.partnerViewEnabled))
@@ -116,20 +120,48 @@ class CalendarMirror(private val context: Context) {
         check(resolver.applyBatch(CalendarContract.AUTHORITY, operations).size == operations.size)
     }
 
-    private fun existingEvents(): List<StoredMirrorEvent> = resolver.query(
-        CalendarContract.Events.CONTENT_URI,
-        EVENT_ID_COLUMNS,
-        "${CalendarContract.Events.CUSTOM_APP_PACKAGE} = ? AND ${CalendarContract.Events.CUSTOM_APP_URI} LIKE ?",
-        arrayOf(context.packageName, "$CUSTOM_URI_PREFIX%"),
-        null,
-    )?.use { cursor ->
-        buildList {
-            while (cursor.moveToNext()) {
-                val uri = cursor.getString(1).orEmpty()
-                add(StoredMirrorEvent(cursor.getLong(0), uri.removePrefix(CUSTOM_URI_PREFIX)))
+    private fun existingEvents(
+        desired: List<MirrorEvent>,
+        calendarId: Long?,
+        partnerViewEnabled: Boolean,
+    ): List<StoredMirrorEvent> {
+        val desiredByKey = desired.associateBy(MirrorEvent::key)
+        return resolver.query(
+            CalendarContract.Events.CONTENT_URI,
+            EVENT_COLUMNS,
+            "${CalendarContract.Events.CUSTOM_APP_PACKAGE} = ? AND ${CalendarContract.Events.CUSTOM_APP_URI} LIKE ?",
+            arrayOf(context.packageName, "$CUSTOM_URI_PREFIX%"),
+            null,
+        )?.use { cursor ->
+            buildList {
+                while (cursor.moveToNext()) {
+                    val uri = cursor.getString(1).orEmpty()
+                    val key = uri.removePrefix(CUSTOM_URI_PREFIX)
+                    val desiredEvent = desiredByKey[key]
+                    val values = desiredEvent?.let {
+                        eventValues(requireNotNull(calendarId), it, partnerViewEnabled)
+                    }
+                    add(StoredMirrorEvent(
+                        id = cursor.getLong(0),
+                        key = key,
+                        current = desiredEvent?.takeIf { values != null && cursor.matches(values) },
+                    ))
+                }
             }
-        }
-    }.orEmpty()
+        }.orEmpty()
+    }
+
+    private fun Cursor.matches(values: ContentValues): Boolean =
+        getLong(2) == values.getAsLong(CalendarContract.Events.CALENDAR_ID) &&
+            getString(3).orEmpty() == values.getAsString(CalendarContract.Events.TITLE).orEmpty() &&
+            getString(4).orEmpty() == values.getAsString(CalendarContract.Events.DESCRIPTION).orEmpty() &&
+            getLong(5) == values.getAsLong(CalendarContract.Events.DTSTART) &&
+            getLong(6) == values.getAsLong(CalendarContract.Events.DTEND) &&
+            getString(7).orEmpty() == values.getAsString(CalendarContract.Events.EVENT_TIMEZONE).orEmpty() &&
+            getInt(8) == values.getAsInteger(CalendarContract.Events.ALL_DAY) &&
+            getInt(9) == values.getAsInteger(CalendarContract.Events.AVAILABILITY) &&
+            getInt(10) == values.getAsInteger(CalendarContract.Events.ACCESS_LEVEL) &&
+            getInt(11) == values.getAsInteger(CalendarContract.Events.STATUS)
 
     private fun eventValues(
         calendarId: Long,
@@ -183,9 +215,19 @@ class CalendarMirror(private val context: Context) {
             CalendarContract.Calendars.ACCOUNT_NAME,
             CalendarContract.Calendars.CALENDAR_COLOR,
         )
-        private val EVENT_ID_COLUMNS = arrayOf(
+        private val EVENT_COLUMNS = arrayOf(
             BaseColumns._ID,
             CalendarContract.Events.CUSTOM_APP_URI,
+            CalendarContract.Events.CALENDAR_ID,
+            CalendarContract.Events.TITLE,
+            CalendarContract.Events.DESCRIPTION,
+            CalendarContract.Events.DTSTART,
+            CalendarContract.Events.DTEND,
+            CalendarContract.Events.EVENT_TIMEZONE,
+            CalendarContract.Events.ALL_DAY,
+            CalendarContract.Events.AVAILABILITY,
+            CalendarContract.Events.ACCESS_LEVEL,
+            CalendarContract.Events.STATUS,
         )
     }
 }

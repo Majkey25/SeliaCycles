@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.9.0-beta.8 - 2026-09-01
+
+### Added
+
+- Calendar filters for up to three locally used symptoms or experiences without adding icons to day cells.
+- Personal symptom-by-phase patterns after at least three observations across two completed cycles.
+
+### Fixed
+
+- A newly recorded period no longer revives a stale saved estimate as the next live period, fertility window, ovulation date, or mirrored event.
+- Calendar mirroring no longer rewrites provider events whose dates, labels, visibility, and status are already current.
+
+### Changed
+
+- Calendar collections and localized day descriptions avoid repeated work during recomposition.
+- Legacy Android backups allow reproductive data only for device-to-device transfer, and the Gradle wrapper now verifies its distribution checksum.
+
 ## 0.9.0-beta.7 - 2026-09-01
 
 ### Added

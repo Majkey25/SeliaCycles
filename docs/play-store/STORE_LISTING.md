@@ -50,4 +50,4 @@ Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
 
 ## Closed test release notes
 
-`Adds optional phase education and phase-aware relief care, clarifies calendar colors and legend, and compacts theme controls.`
+`Fixes live prediction updates after a new period, adds private calendar filters and personal symptom patterns, and improves performance and backup security.`

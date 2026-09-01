@@ -74,6 +74,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FaceRetouchingNatural
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Height
@@ -1061,6 +1062,26 @@ private fun moodLabel(mood: Mood): Int = when (mood) {
     Mood.BAD -> R.string.mood_bad
 }
 
+@StringRes
+private fun trackerFilterLabel(filter: TrackerFilter): Int = when (filter) {
+    TrackerFilter.CRAMPS -> R.string.symptom_cramps
+    TrackerFilter.HEADACHE -> R.string.symptom_headache
+    TrackerFilter.BLOATING -> R.string.symptom_bloating
+    TrackerFilter.TENDER_BREASTS -> R.string.symptom_tender_breasts
+    TrackerFilter.FATIGUE -> R.string.symptom_fatigue
+    TrackerFilter.ACNE -> R.string.symptom_acne
+    TrackerFilter.CRAVINGS -> R.string.symptom_cravings
+    TrackerFilter.BACKACHE -> R.string.symptom_backache
+    TrackerFilter.SPOTTING -> R.string.spotting
+    TrackerFilter.MOOD -> R.string.mood
+    TrackerFilter.PAIN -> R.string.pain_level
+    TrackerFilter.ENERGY -> R.string.energy
+    TrackerFilter.STRESS -> R.string.stress
+    TrackerFilter.INTIMACY -> R.string.intimacy
+    TrackerFilter.TESTS -> R.string.calendar_filter_tests
+    TrackerFilter.NOTES -> R.string.note
+}
+
 @Composable
 private fun CalendarScreen(
     state: AppState,
@@ -1075,21 +1096,44 @@ private fun CalendarScreen(
     val scope = rememberCoroutineScope()
     var overviewExpanded by remember { mutableStateOf(false) }
     var focusedDay by remember { mutableStateOf<LocalDate?>(null) }
-    val recorded = state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day)
-    val predicted = state.periodEstimates.flatMap { estimate ->
-        generateSequence(estimate.start) { it.plusDays(1) }.takeWhile { it < estimate.endExclusive }.toList()
-    }.toSet()
-    val fertility = CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots)
-    val fertile = fertility.flatMap { estimate ->
-        generateSequence(estimate.fertileStart) { it.plusDays(1) }.takeWhile { !it.isAfter(estimate.fertileEnd) }.toList()
-    }.toSet()
-    val ovulation = fertility.mapTo(mutableSetOf(), FertilityEstimate::ovulation)
-    val tracksFor: (LocalDate) -> CalendarDayTracks = { day ->
-        calendarDayTracks(day, recorded, predicted, fertile, ovulation)
+    var showFilters by remember { mutableStateOf(false) }
+    var selectedFilters by remember { mutableStateOf(emptySet<TrackerFilter>()) }
+    val availableFilters = remember(state.backup.logs) { TrackerFilter.availableFilters(state.backup.logs) }
+    val recorded = remember(state.backup.logs) {
+        state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day)
+    }
+    val recordedMonths = remember(state.prediction.periodStarts) {
+        state.prediction.periodStarts.mapTo(mutableSetOf(), YearMonth::from)
+    }
+    val savedComparisons = remember(state.forecastSnapshots, recordedMonths) {
+        state.forecastSnapshots.values.filter { it.month in recordedMonths }
+    }
+    val predicted = remember(state.periodEstimates, savedComparisons) {
+        (state.periodEstimates.flatMap { estimate ->
+            generateSequence(estimate.start) { it.plusDays(1) }.takeWhile { it < estimate.endExclusive }.toList()
+        } + savedComparisons.flatMap { snapshot ->
+            (0L until snapshot.periodLength.toLong()).map(snapshot.periodStart::plusDays)
+        }).toSet()
+    }
+    val fertility = remember(state.backup, state.forecastSnapshots) {
+        CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots)
+    }
+    val fertile = remember(fertility) {
+        fertility.flatMap { estimate ->
+            generateSequence(estimate.fertileStart) { it.plusDays(1) }
+                .takeWhile { !it.isAfter(estimate.fertileEnd) }.toList()
+        }.toSet()
+    }
+    val ovulation = remember(fertility) { fertility.mapTo(mutableSetOf(), FertilityEstimate::ovulation) }
+    val tracksFor: (LocalDate) -> CalendarDayTracks = remember(recorded, predicted, fertile, ovulation) {
+        { day -> calendarDayTracks(day, recorded, predicted, fertile, ovulation) }
     }
     val periodColor = calendarPeriodRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
     val onPeriodColor = periodColor.contrastColor()
     val entryColor = calendarEntryRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
+    LaunchedEffect(availableFilters) {
+        selectedFilters = selectedFilters.intersect(availableFilters.toSet())
+    }
     LaunchedEffect(targetDay) {
         targetDay?.takeIf { it in DayLog.MIN_DATE..DayLog.MAX_DATE }?.let { day ->
             pagerState.scrollToPage(CalendarPaging.pageFor(YearMonth.from(day)))
@@ -1110,6 +1154,24 @@ private fun CalendarScreen(
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.SemiBold,
             )
+            Box {
+                IconButton(onClick = { showFilters = true }, enabled = availableFilters.isNotEmpty()) {
+                    Icon(Icons.Outlined.FilterAlt, contentDescription = stringResource(R.string.calendar_filter))
+                }
+                if (selectedFilters.isNotEmpty()) {
+                    Box(
+                        Modifier.align(Alignment.TopEnd).size(18.dp).clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            selectedFilters.size.toString(),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    }
+                }
+            }
             IconButton(onClick = { onEdit(LocalDate.now()) }) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_entry))
             }
@@ -1130,6 +1192,7 @@ private fun CalendarScreen(
                 previousEnabled = page > 0,
                 nextEnabled = page < CalendarPaging.pageCount - 1,
                 tracksFor = tracksFor,
+                selectedFilters = selectedFilters,
                 periodColor = periodColor,
                 onPeriodColor = onPeriodColor,
                 entryColor = entryColor,
@@ -1148,6 +1211,60 @@ private fun CalendarScreen(
             )
         }
     }
+    if (showFilters) TrackerFilterSheet(
+        available = availableFilters,
+        selected = selectedFilters,
+        onSelectedChange = { selectedFilters = it },
+        onDismiss = { showFilters = false },
+    )
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun TrackerFilterSheet(
+    available: List<TrackerFilter>,
+    selected: Set<TrackerFilter>,
+    onSelectedChange: (Set<TrackerFilter>) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        dragHandle = null,
+        sheetGesturesEnabled = false,
+    ) {
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            SheetHeader(R.string.calendar_filter, onDismiss)
+            Text(stringResource(R.string.calendar_filter_intro), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                stringResource(R.string.calendar_filter_count, selected.size, TrackerFilter.MAX_SELECTED),
+                style = MaterialTheme.typography.labelLarge,
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                available.forEach { filter ->
+                    FilterChip(
+                        selected = filter in selected,
+                        enabled = filter in selected || selected.size < TrackerFilter.MAX_SELECTED,
+                        onClick = { onSelectedChange(TrackerFilter.toggleSelection(selected, filter)) },
+                        label = { Text(stringResource(trackerFilterLabel(filter))) },
+                    )
+                }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                TextButton(onClick = { onSelectedChange(emptySet()) }, enabled = selected.isNotEmpty()) {
+                    Text(stringResource(R.string.calendar_filter_clear))
+                }
+                Button(onClick = onDismiss) { Text(stringResource(R.string.close)) }
+            }
+            Spacer(Modifier.height(20.dp))
+        }
+    }
 }
 
 @Composable
@@ -1162,12 +1279,17 @@ private fun CalendarMonthPage(
     previousEnabled: Boolean,
     nextEnabled: Boolean,
     tracksFor: (LocalDate) -> CalendarDayTracks,
+    selectedFilters: Set<TrackerFilter>,
     periodColor: Color,
     onPeriodColor: Color,
     entryColor: Color,
     onDayClick: (LocalDate) -> Unit,
 ) {
     val locale = currentLocale()
+    val longDateFormat = remember(locale) {
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)
+    }
+    val today = LocalDate.now()
     val firstDay = state.backup.settings.firstDayOfWeek
     val weekdays = if (firstDay == DayOfWeek.MONDAY) {
         DayOfWeek.entries
@@ -1213,9 +1335,15 @@ private fun CalendarMonthPage(
                     val tracks = tracksFor(day)
                     CalendarDay(
                         day = day,
+                        dateDescription = day.format(longDateFormat),
+                        isToday = day == today,
                         tracks = tracks,
                         selected = focusedDay == day,
-                        hasDetails = state.logsByDay[day]?.hasCalendarMarker == true,
+                        hasDetails = state.logsByDay[day]?.let { log ->
+                            if (selectedFilters.isEmpty()) log.hasCalendarMarker else {
+                                TrackerFilter.matchesAny(selectedFilters, log)
+                            }
+                        } == true,
                         inShownMonth = YearMonth.from(day) == shownMonth,
                         periodConnectPrevious = column > 0 && tracks.period != CalendarPeriodLayer.NONE &&
                             tracks.period == tracksFor(day.minusDays(1)).period,
@@ -1291,6 +1419,8 @@ private fun CalendarMonthPage(
 @Composable
 private fun CalendarDay(
     day: LocalDate,
+    dateDescription: String,
+    isToday: Boolean,
     tracks: CalendarDayTracks,
     selected: Boolean,
     hasDetails: Boolean,
@@ -1330,7 +1460,6 @@ private fun CalendarDay(
         topEndPercent = if (fertileConnectNext) 0 else 50,
         bottomEndPercent = if (fertileConnectNext) 0 else 50,
     )
-    val date = day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(currentLocale()))
     val labels = buildList {
         when (tracks.period) {
             CalendarPeriodLayer.RECORDED -> add(stringResource(R.string.recorded_legend))
@@ -1342,7 +1471,7 @@ private fun CalendarDay(
         if (tracks.ovulation) add(stringResource(R.string.ovulation_legend))
         if (hasDetails) add(stringResource(R.string.recorded_values))
     }
-    val description = (listOf(date) + labels).joinToString(", ")
+    val description = (listOf(dateDescription) + labels).joinToString(", ")
     Box(
         modifier = modifier.alpha(if (inShownMonth) 1f else 0.42f),
         contentAlignment = Alignment.Center,
@@ -1371,7 +1500,7 @@ private fun CalendarDay(
                 .then(if (tracks.ovulation) Modifier.background(ovulationColor) else Modifier)
                 .then(if (selected) {
                     Modifier.border(3.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                } else if (day == LocalDate.now()) {
+                } else if (isToday) {
                     Modifier.border(2.dp, MaterialTheme.colorScheme.outline, CircleShape)
                 } else Modifier),
             contentAlignment = Alignment.Center,
@@ -1532,6 +1661,7 @@ private fun HistoryScreen(state: AppState) {
         lutealPhaseDays = state.backup.settings.lutealPhaseLength,
     )
     val predictionAccuracy = CycleAnalysis.predictionAccuracy(pastStarts, state.forecastSnapshots)
+    val symptomPatterns = remember(state.backup) { PersonalPatterns.symptomPatterns(state.backup) }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -1543,6 +1673,7 @@ private fun HistoryScreen(state: AppState) {
             Metric(Icons.Outlined.History, R.string.recorded_cycles, pastStarts.size.toString(), Modifier.weight(1f))
         }
         predictionAccuracy?.let { PredictionAccuracyCard(it) }
+        if (symptomPatterns.isNotEmpty()) PersonalPatternsCard(symptomPatterns)
         CycleLengthChart(pastStarts, locale)
         if (state.backup.settings.canEstimateFertility) CycleHistoryDetails(cycleHistory, locale)
         if (futureStarts.isNotEmpty()) {
@@ -1573,6 +1704,57 @@ private fun HistoryScreen(state: AppState) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PersonalPatternsCard(patterns: List<SymptomPattern>) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SectionLabel(Icons.Outlined.Insights, R.string.personal_patterns_title)
+        Text(stringResource(R.string.personal_patterns_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            patterns.forEachIndexed { index, pattern ->
+                val option = symptomLabels.first { it.value == pattern.symptom }
+                if (index > 0) HorizontalDivider()
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(
+                        option.icon ?: Icons.Outlined.MonitorHeart,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(stringResource(option.label), fontWeight = FontWeight.SemiBold)
+                        Text(
+                            stringResource(
+                                R.string.personal_pattern_value,
+                                stringResource(phaseHeadingLabel(pattern.phase)),
+                                pluralStringResource(
+                                    R.plurals.personal_pattern_samples,
+                                    pattern.sampleCount,
+                                    pattern.sampleCount,
+                                ),
+                                pluralStringResource(
+                                    R.plurals.personal_pattern_cycles,
+                                    pattern.cycleCount,
+                                    pattern.cycleCount,
+                                ),
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
+        }
+        Text(
+            stringResource(R.string.personal_patterns_notice),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }
 

@@ -11,10 +11,8 @@
     <string name="cycle_day_value">Día %1$d</string>
     <string name="no_cycle_yet">Aún no registrado</string>
     <string name="estimated_window">%1$s – %2$s</string>
-    <plurals name="based_on_periods"><item quantity="one">Basado en %d periodo registrado</item><item quantity="many">Basado en %d periodos registrados</item><item quantity="other">Basado en %d periodos registrados</item></plurals>
     <string name="first_cycles_title">La estimación sigue aprendiendo</string>
     <string name="first_cycles_body">Los primeros ciclos pueden ser irregulares. Registra los inicios del periodo para que la estimación se adapte a tu patrón.</string>
-    <string name="week_heading">Tu semana</string>
     <string name="flow_none">Sin sangrado</string>
     <string name="flow_summary">Flujo: %1$s</string>
     <string name="mood_summary">Estado de ánimo: %1$s</string>
@@ -25,13 +23,6 @@
     <string name="no_period_data">Registra tu primer periodo para iniciar las estimaciones.</string>
     <string name="predictions_disabled">Las estimaciones están desactivadas en Ajustes.</string>
     <string name="estimate_notice">Estimación basada en tu historial. No es asesoramiento médico ni anticoncepción.</string>
-    <string name="forecast_heading">Este mes y el siguiente</string>
-    <string name="this_month">Este mes</string>
-    <string name="following_month">Próximo mes</string>
-    <string name="forecast_recorded">Inicio registrado: %1$s</string>
-    <string name="forecast_estimated">Inicio estimado: %1$s – %2$s</string>
-    <string name="forecast_not_expected">No se espera el periodo</string>
-    <string name="forecast_unavailable">Aún no hay estimación</string>
     <string name="calendar_heading">Calendario</string>
     <string name="previous_month">Mes anterior</string>
     <string name="next_month">Mes siguiente</string>
@@ -44,6 +35,12 @@
     <string name="calendar_note_marker">Tu registro</string>
     <string name="calendar_note_marker_detail">Un punto pequeño indica una nota, síntoma u otro dato opcional.</string>
     <string name="history_heading">Historial</string>
+    <string name="personal_patterns_title">Patrones personales</string>
+    <string name="personal_patterns_body">Momentos repetidos de los síntomas en ciclos completados.</string>
+    <string name="personal_pattern_value">%1$s · %2$s · %3$s</string>
+    <plurals name="personal_pattern_samples"><item quantity="one">%d registro</item><item quantity="many">%d registros</item><item quantity="other">%d registros</item></plurals>
+    <plurals name="personal_pattern_cycles"><item quantity="one">%d ciclo</item><item quantity="many">%d ciclos</item><item quantity="other">%d ciclos</item></plurals>
+    <string name="personal_patterns_notice">Es un patrón de tus registros, no un diagnóstico ni una predicción segura.</string>
     <string name="cycle_analysis">Análisis del ciclo</string>
     <string name="recent_cycle_details">Detalles de los últimos ciclos</string>
     <string name="prediction_accuracy_summary">Precisión de las estimaciones guardadas</string>
@@ -207,10 +204,8 @@
     <string name="partner_view_body">Crea un calendario separado en Google Calendar u Outlook, compártelo allí como solo lectura y selecciónalo aquí. Selia refleja etiquetas, pero no puede cambiar los permisos del proveedor.</string>
     <string name="forecast_saved">Estimación guardada: %1$s – %2$s</string>
     <string name="forecast_reconstructed">Estimación reconstruida: %1$s – %2$s</string>
-    <string name="forecast_difference">Realidad frente a estimación: %1$s días</string>
     <string name="month_overview">Resumen del mes</string>
     <string name="upcoming_cycle">Próximamente</string>
-    <string name="more_about_cycle">Más sobre este ciclo</string>
     <string name="phase_guidance_title">Posibles señales físicas</string>
     <string name="phase_feelings_title">Estado de ánimo y energía</string>
     <string name="phase_feelings_menstrual">Puedes tener menos energía, necesitar más descanso o sentirte más sensible e introspectiva. Algunas personas no notan cambios emocionales.</string>
@@ -284,7 +279,6 @@
     <string name="estimated_ovulation">Ovulación estimada: %1$s</string>
     <string name="fertile_window_value">Ventana fértil estimada: %1$s – %2$s</string>
     <string name="spotting_summary">Manchado registrado</string>
-    <plurals name="mood_trend_value"><item quantity="one">Tendencia personal del ánimo: %1$s (1 registro anterior)</item><item quantity="many">Tendencia personal del ánimo: %1$s (%2$d registros anteriores)</item><item quantity="other">Tendencia personal del ánimo: %1$s (%2$d registros anteriores)</item></plurals>
     <string name="fertility_estimate_notice">Las estimaciones del calendario no confirman la ovulación y no deben usarse como anticoncepción.</string>
     <string name="phase_ovulation">Fase de ovulación (estimada)</string>
     <string name="phase_heading_menstrual">Fase menstrual</string>
@@ -293,13 +287,17 @@
     <string name="phase_heading_luteal">Fase lútea</string>
     <string name="legend_more">Explicar colores</string>
     <string name="legend_less">Ocultar explicaciones</string>
+    <string name="calendar_filter">Filtrar registros</string>
+    <string name="calendar_filter_intro">Elige hasta tres datos. Con el filtro activo, el punto azul solo aparece en los días que coinciden.</string>
+    <string name="calendar_filter_count">Seleccionados %1$d de %2$d</string>
+    <string name="calendar_filter_tests">Pruebas</string>
+    <string name="calendar_filter_clear">Borrar filtros</string>
     <string name="fertile_legend">Ventana fértil estimada</string>
     <string name="ovulation_legend">Estimación de ovulación</string>
     <string name="reminder_channel">Recordatorios del periodo</string>
     <string name="reminder_title">Estimación del periodo</string>
     <plurals name="reminder_text"><item quantity="one">Tu próximo periodo se estima en 1 día.</item><item quantity="many">Tu próximo periodo se estima en %d días.</item><item quantity="other">Tu próximo periodo se estima en %d días.</item></plurals>
     <string name="settings_profile">Perfil</string>
-    <string name="settings_profile_summary">Objetivo, situación vital, datos corporales y fase lútea</string>
     <string name="settings_home">Pantalla de inicio</string>
     <string name="settings_home_summary">Elige las secciones opcionales de la página Hoy</string>
     <string name="home_show_phase_guidance">Mostrar orientación de la fase</string>

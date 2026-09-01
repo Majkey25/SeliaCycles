@@ -93,9 +93,8 @@ object CycleInsights {
         referenceDate: LocalDate = LocalDate.now(),
     ): List<PeriodEstimate> {
         val currentMonth = YearMonth.from(referenceDate)
-        val recordedMonths = prediction(backup, referenceDate).periodStarts.mapTo(mutableSetOf(), YearMonth::from)
         val history = periodEstimates(backup, snapshots, referenceDate)
-            .filter { YearMonth.from(it.start).let { month -> month < currentMonth || month in recordedMonths } }
+            .filter { YearMonth.from(it.start) < currentMonth }
         val current = periodEstimates(backup, emptyMap(), referenceDate)
         return (history + current).distinctBy(PeriodEstimate::start).sortedBy(PeriodEstimate::start)
     }

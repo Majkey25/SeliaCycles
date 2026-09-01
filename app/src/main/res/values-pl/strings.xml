@@ -11,10 +11,8 @@
     <string name="cycle_day_value">Dzień %1$d</string>
     <string name="no_cycle_yet">Jeszcze nie zapisano</string>
     <string name="estimated_window">%1$s – %2$s</string>
-    <plurals name="based_on_periods"><item quantity="one">Na podstawie %d zapisanej miesiączki</item><item quantity="few">Na podstawie %d zapisanych miesiączek</item><item quantity="many">Na podstawie %d zapisanych miesiączek</item><item quantity="other">Na podstawie %d zapisanych miesiączek</item></plurals>
     <string name="first_cycles_title">Prognoza nadal się uczy</string>
     <string name="first_cycles_body">Pierwsze cykle mogą być nieregularne. Zapisuj początki miesiączki, a prognoza dostosuje się do twojego rytmu.</string>
-    <string name="week_heading">Twój tydzień</string>
     <string name="flow_none">Brak krwawienia</string>
     <string name="flow_summary">Intensywność: %1$s</string>
     <string name="mood_summary">Nastrój: %1$s</string>
@@ -25,13 +23,6 @@
     <string name="no_period_data">Zapisz pierwszą miesiączkę, aby rozpocząć prognozy.</string>
     <string name="predictions_disabled">Prognozy są wyłączone w Ustawieniach.</string>
     <string name="estimate_notice">Oszacowanie na podstawie historii. To nie jest porada medyczna ani antykoncepcja.</string>
-    <string name="forecast_heading">Ten i następny miesiąc</string>
-    <string name="this_month">Ten miesiąc</string>
-    <string name="following_month">Następny miesiąc</string>
-    <string name="forecast_recorded">Zapisany początek: %1$s</string>
-    <string name="forecast_estimated">Szacowany początek: %1$s – %2$s</string>
-    <string name="forecast_not_expected">Miesiączka nie jest oczekiwana</string>
-    <string name="forecast_unavailable">Brak oszacowania</string>
     <string name="calendar_heading">Kalendarz</string>
     <string name="previous_month">Poprzedni miesiąc</string>
     <string name="next_month">Następny miesiąc</string>
@@ -44,6 +35,12 @@
     <string name="calendar_note_marker">Twój wpis</string>
     <string name="calendar_note_marker_detail">Mała kropka oznacza notatkę, objaw lub inną opcjonalną informację.</string>
     <string name="history_heading">Historia</string>
+    <string name="personal_patterns_title">Osobiste wzorce</string>
+    <string name="personal_patterns_body">Powtarzające się momenty występowania objawów w zakończonych cyklach.</string>
+    <string name="personal_pattern_value">%1$s · %2$s · %3$s</string>
+    <plurals name="personal_pattern_samples"><item quantity="one">%d wpis</item><item quantity="few">%d wpisy</item><item quantity="many">%d wpisów</item><item quantity="other">%d wpisu</item></plurals>
+    <plurals name="personal_pattern_cycles"><item quantity="one">%d cykl</item><item quantity="few">%d cykle</item><item quantity="many">%d cykli</item><item quantity="other">%d cyklu</item></plurals>
+    <string name="personal_patterns_notice">To wzorzec w twoich zapisach, a nie diagnoza ani pewna prognoza.</string>
     <string name="cycle_analysis">Analiza cyklu</string>
     <string name="recent_cycle_details">Szczegóły ostatnich cykli</string>
     <string name="prediction_accuracy_summary">Dokładność zapisanych prognoz</string>
@@ -207,10 +204,8 @@
     <string name="partner_view_body">Utwórz osobny kalendarz w Google Calendar lub Outlooku, udostępnij go partnerowi tylko do odczytu, a potem wybierz go tutaj. Selia kopiuje etykiety, ale nie może zmieniać uprawnień dostawcy.</string>
     <string name="forecast_saved">Zapisana prognoza: %1$s – %2$s</string>
     <string name="forecast_reconstructed">Odtworzona prognoza: %1$s – %2$s</string>
-    <string name="forecast_difference">Rzeczywistość względem prognozy: %1$s dni</string>
     <string name="month_overview">Przegląd miesiąca</string>
     <string name="upcoming_cycle">Nadchodzące</string>
-    <string name="more_about_cycle">Więcej o tym cyklu</string>
     <string name="phase_guidance_title">Możliwe objawy fizyczne</string>
     <string name="phase_feelings_title">Nastrój i energia</string>
     <string name="phase_feelings_menstrual">Możesz mieć mniej energii, potrzebować więcej odpoczynku albo czuć się bardziej wrażliwa i wycofana. Niektóre osoby nie zauważają zmian emocjonalnych.</string>
@@ -284,7 +279,6 @@
     <string name="estimated_ovulation">Szacowana owulacja: %1$s</string>
     <string name="fertile_window_value">Szacowane dni płodne: %1$s – %2$s</string>
     <string name="spotting_summary">Zapisano plamienie</string>
-    <plurals name="mood_trend_value"><item quantity="one">Osobisty trend nastroju: %1$s (1 wcześniejszy wpis)</item><item quantity="few">Osobisty trend nastroju: %1$s (%2$d wcześniejsze wpisy)</item><item quantity="many">Osobisty trend nastroju: %1$s (%2$d wcześniejszych wpisów)</item><item quantity="other">Osobisty trend nastroju: %1$s (%2$d wcześniejszych wpisów)</item></plurals>
     <string name="fertility_estimate_notice">Szacunki kalendarza nie potwierdzają owulacji i nie mogą służyć jako antykoncepcja.</string>
     <string name="phase_ovulation">Faza owulacyjna (szacowana)</string>
     <string name="phase_heading_menstrual">Faza menstruacyjna</string>
@@ -293,13 +287,17 @@
     <string name="phase_heading_luteal">Faza lutealna</string>
     <string name="legend_more">Wyjaśnij kolory</string>
     <string name="legend_less">Ukryj wyjaśnienia</string>
+    <string name="calendar_filter">Filtruj wpisy</string>
+    <string name="calendar_filter_intro">Wybierz maksymalnie trzy dane. Przy aktywnym filtrze niebieska kropka pojawia się tylko przy pasujących dniach.</string>
+    <string name="calendar_filter_count">Wybrano %1$d z %2$d</string>
+    <string name="calendar_filter_tests">Testy</string>
+    <string name="calendar_filter_clear">Wyczyść filtry</string>
     <string name="fertile_legend">Szacowane dni płodne</string>
     <string name="ovulation_legend">Szacunek owulacji</string>
     <string name="reminder_channel">Przypomnienia o miesiączce</string>
     <string name="reminder_title">Oszacowanie miesiączki</string>
     <plurals name="reminder_text"><item quantity="one">Następna miesiączka jest przewidywana za 1 dzień.</item><item quantity="few">Następna miesiączka jest przewidywana za %d dni.</item><item quantity="many">Następna miesiączka jest przewidywana za %d dni.</item><item quantity="other">Następna miesiączka jest przewidywana za %d dnia.</item></plurals>
     <string name="settings_profile">Profil</string>
-    <string name="settings_profile_summary">Cel, sytuacja życiowa, dane ciała i faza lutealna</string>
     <string name="settings_home">Ekran główny</string>
     <string name="settings_home_summary">Wybierz opcjonalne sekcje na stronie Dzisiaj</string>
     <string name="home_show_phase_guidance">Pokaż wskazówki o fazie</string>

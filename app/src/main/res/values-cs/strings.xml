@@ -11,10 +11,8 @@
     <string name="cycle_day_value">%1$d. den</string>
     <string name="no_cycle_yet">Zatím nezapsáno</string>
     <string name="estimated_window">%1$s – %2$s</string>
-    <plurals name="based_on_periods"><item quantity="one">Podle %d zaznamenané menstruace</item><item quantity="few">Podle %d zaznamenaných menstruací</item><item quantity="many">Podle %d zaznamenané menstruace</item><item quantity="other">Podle %d zaznamenaných menstruací</item></plurals>
     <string name="first_cycles_title">Odhady se ještě učí</string>
     <string name="first_cycles_body">První cykly mohou být nepravidelné. Zapisuj začátky menstruace a odhad se postupně přizpůsobí tvému rytmu.</string>
-    <string name="week_heading">Tvůj týden</string>
     <string name="flow_none">Bez krvácení</string>
     <string name="flow_summary">Intenzita: %1$s</string>
     <string name="mood_summary">Nálada: %1$s</string>
@@ -25,13 +23,6 @@
     <string name="no_period_data">Zapiš první menstruaci a aplikace začne počítat odhady.</string>
     <string name="predictions_disabled">Odhady jsou vypnuté v Nastavení.</string>
     <string name="estimate_notice">Odhad vychází z tvé historie. Nejde o lékařskou radu ani antikoncepci.</string>
-    <string name="forecast_heading">Tento a příští měsíc</string>
-    <string name="this_month">Tento měsíc</string>
-    <string name="following_month">Příští měsíc</string>
-    <string name="forecast_recorded">Zapsaný začátek: %1$s</string>
-    <string name="forecast_estimated">Odhad začátku: %1$s – %2$s</string>
-    <string name="forecast_not_expected">Menstruace se neočekává</string>
-    <string name="forecast_unavailable">Zatím bez odhadu</string>
     <string name="calendar_heading">Kalendář</string>
     <string name="previous_month">Předchozí měsíc</string>
     <string name="next_month">Další měsíc</string>
@@ -44,6 +35,12 @@
     <string name="calendar_note_marker">Vlastní záznam</string>
     <string name="calendar_note_marker_detail">Malá tečka znamená poznámku, příznak nebo jiný volitelný údaj.</string>
     <string name="history_heading">Historie</string>
+    <string name="personal_patterns_title">Osobní vzorce</string>
+    <string name="personal_patterns_body">Opakující se načasování příznaků v dokončených cyklech.</string>
+    <string name="personal_pattern_value">%1$s · %2$s · %3$s</string>
+    <plurals name="personal_pattern_samples"><item quantity="one">%d záznam</item><item quantity="few">%d záznamy</item><item quantity="many">%d záznamu</item><item quantity="other">%d záznamů</item></plurals>
+    <plurals name="personal_pattern_cycles"><item quantity="one">%d cyklus</item><item quantity="few">%d cykly</item><item quantity="many">%d cyklu</item><item quantity="other">%d cyklů</item></plurals>
+    <string name="personal_patterns_notice">Jde o vzorec v tvých záznamech, ne o diagnózu ani jistou předpověď.</string>
     <string name="cycle_analysis">Analýza cyklu</string>
     <string name="recent_cycle_details">Podrobnosti posledních cyklů</string>
     <string name="prediction_accuracy_summary">Přesnost uložených odhadů</string>
@@ -207,10 +204,8 @@
     <string name="partner_view_body">V Google Kalendáři nebo Outlooku vytvoř samostatný kalendář a partnerovi nastav právo jen pro čtení. Potom ho vyber tady. Selia zrcadlí štítky, ale nemůže měnit přístup nastavený poskytovatelem.</string>
     <string name="forecast_saved">Uložený odhad: %1$s – %2$s</string>
     <string name="forecast_reconstructed">Zpětně dopočítaný odhad: %1$s – %2$s</string>
-    <string name="forecast_difference">Realita oproti odhadu: %1$s dní</string>
     <string name="month_overview">Přehled měsíce</string>
     <string name="upcoming_cycle">Co tě čeká</string>
-    <string name="more_about_cycle">Více o tomto cyklu</string>
     <string name="phase_guidance_title">Možné tělesné projevy</string>
     <string name="phase_feelings_title">Nálada a energie</string>
     <string name="phase_feelings_menstrual">Můžeš mít méně energie, potřebovat více klidu nebo být citlivější a zaměřená do sebe. Některé ženy žádnou emoční změnu nepozorují.</string>
@@ -284,7 +279,6 @@
     <string name="estimated_ovulation">Odhad ovulace: %1$s</string>
     <string name="fertile_window_value">Odhad plodného období: %1$s – %2$s</string>
     <string name="spotting_summary">Zaznamenáno špinění</string>
-    <plurals name="mood_trend_value"><item quantity="one">Osobní trend nálady: %1$s (1 minulý záznam)</item><item quantity="few">Osobní trend nálady: %1$s (%2$d minulé záznamy)</item><item quantity="many">Osobní trend nálady: %1$s (%2$d minulých záznamů)</item><item quantity="other">Osobní trend nálady: %1$s (%2$d minulých záznamů)</item></plurals>
     <string name="fertility_estimate_notice">Kalendářní odhad nepotvrzuje ovulaci a nesmí se používat jako antikoncepce.</string>
     <string name="phase_ovulation">Ovulační fáze (odhad)</string>
     <string name="phase_heading_menstrual">Menstruační fáze</string>
@@ -293,13 +287,17 @@
     <string name="phase_heading_luteal">Luteální fáze</string>
     <string name="legend_more">Vysvětlit barvy</string>
     <string name="legend_less">Skrýt vysvětlení</string>
+    <string name="calendar_filter">Filtrovat záznamy</string>
+    <string name="calendar_filter_intro">Vyber až tři sledované údaje. Při aktivním filtru se modrá tečka zobrazí jen u odpovídajících dnů.</string>
+    <string name="calendar_filter_count">Vybráno %1$d z %2$d</string>
+    <string name="calendar_filter_tests">Testy</string>
+    <string name="calendar_filter_clear">Zrušit filtry</string>
     <string name="fertile_legend">Odhad plodného období</string>
     <string name="ovulation_legend">Odhad ovulace</string>
     <string name="reminder_channel">Připomínky menstruace</string>
     <string name="reminder_title">Odhad menstruace</string>
     <plurals name="reminder_text"><item quantity="one">Další menstruace se odhaduje za 1 den.</item><item quantity="few">Další menstruace se odhaduje za %d dny.</item><item quantity="many">Další menstruace se odhaduje za %d dne.</item><item quantity="other">Další menstruace se odhaduje za %d dní.</item></plurals>
     <string name="settings_profile">Profil</string>
-    <string name="settings_profile_summary">Cíl, životní situace, tělesné údaje a luteální fáze</string>
     <string name="settings_home">Domovská stránka</string>
     <string name="settings_home_summary">Vyber volitelné části zobrazené na stránce Dnes</string>
     <string name="home_show_phase_guidance">Zobrazit vysvětlení fáze</string>

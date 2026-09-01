@@ -11,10 +11,8 @@
     <string name="cycle_day_value">Tag %1$d</string>
     <string name="no_cycle_yet">Noch nicht erfasst</string>
     <string name="estimated_window">%1$s – %2$s</string>
-    <plurals name="based_on_periods"><item quantity="one">Basierend auf %d erfassten Periode</item><item quantity="other">Basierend auf %d erfassten Perioden</item></plurals>
     <string name="first_cycles_title">Die Schätzung lernt noch</string>
     <string name="first_cycles_body">Die ersten Zyklen können unregelmäßig sein. Erfasse weitere Periodenbeginne, damit sich die Schätzung deinem Muster anpasst.</string>
-    <string name="week_heading">Deine Woche</string>
     <string name="flow_none">Keine Blutung</string>
     <string name="flow_summary">Stärke: %1$s</string>
     <string name="mood_summary">Stimmung: %1$s</string>
@@ -25,13 +23,6 @@
     <string name="no_period_data">Erfasse deine erste Periode, um Schätzungen zu starten.</string>
     <string name="predictions_disabled">Schätzungen sind in den Einstellungen deaktiviert.</string>
     <string name="estimate_notice">Schätzung aus deinem Verlauf. Keine medizinische Beratung oder Verhütung.</string>
-    <string name="forecast_heading">Dieser und nächster Monat</string>
-    <string name="this_month">Dieser Monat</string>
-    <string name="following_month">Nächster Monat</string>
-    <string name="forecast_recorded">Erfasster Beginn: %1$s</string>
-    <string name="forecast_estimated">Geschätzter Beginn: %1$s – %2$s</string>
-    <string name="forecast_not_expected">Keine Periode erwartet</string>
-    <string name="forecast_unavailable">Noch keine Schätzung</string>
     <string name="calendar_heading">Kalender</string>
     <string name="previous_month">Vorheriger Monat</string>
     <string name="next_month">Nächster Monat</string>
@@ -44,6 +35,12 @@
     <string name="calendar_note_marker">Dein Eintrag</string>
     <string name="calendar_note_marker_detail">Ein kleiner Punkt bedeutet eine Notiz, ein Symptom oder eine andere optionale Angabe.</string>
     <string name="history_heading">Verlauf</string>
+    <string name="personal_patterns_title">Persönliche Muster</string>
+    <string name="personal_patterns_body">Wiederkehrende Zeitpunkte von Beschwerden in abgeschlossenen Zyklen.</string>
+    <string name="personal_pattern_value">%1$s · %2$s · %3$s</string>
+    <plurals name="personal_pattern_samples"><item quantity="one">%d Eintrag</item><item quantity="other">%d Einträge</item></plurals>
+    <plurals name="personal_pattern_cycles"><item quantity="one">%d Zyklus</item><item quantity="other">%d Zyklen</item></plurals>
+    <string name="personal_patterns_notice">Dies ist ein Muster in deinen Einträgen, keine Diagnose oder sichere Vorhersage.</string>
     <string name="cycle_analysis">Zyklusanalyse</string>
     <string name="recent_cycle_details">Details der letzten Zyklen</string>
     <string name="prediction_accuracy_summary">Genauigkeit gespeicherter Schätzungen</string>
@@ -207,10 +204,8 @@
     <string name="partner_view_body">Erstelle in Google Kalender oder Outlook einen separaten Kalender, teile ihn dort schreibgeschützt und wähle ihn dann hier aus. Selia spiegelt Bezeichnungen, kann aber die Freigaben des Anbieters nicht ändern.</string>
     <string name="forecast_saved">Gespeicherte Schätzung: %1$s – %2$s</string>
     <string name="forecast_reconstructed">Rekonstruierte Schätzung: %1$s – %2$s</string>
-    <string name="forecast_difference">Realität gegenüber Schätzung: %1$s Tage</string>
     <string name="month_overview">Monatsübersicht</string>
     <string name="upcoming_cycle">Als Nächstes</string>
-    <string name="more_about_cycle">Mehr über diesen Zyklus</string>
     <string name="phase_guidance_title">Mögliche körperliche Anzeichen</string>
     <string name="phase_feelings_title">Stimmung und Energie</string>
     <string name="phase_feelings_menstrual">Du hast vielleicht weniger Energie, brauchst mehr Ruhe oder fühlst dich empfindsamer und zurückgezogener. Manche bemerken keine emotionale Veränderung.</string>
@@ -284,7 +279,6 @@
     <string name="estimated_ovulation">Geschätzter Eisprung: %1$s</string>
     <string name="fertile_window_value">Geschätztes fruchtbares Fenster: %1$s – %2$s</string>
     <string name="spotting_summary">Schmierblutung erfasst</string>
-    <plurals name="mood_trend_value"><item quantity="one">Persönlicher Stimmungstrend: %1$s (1 früherer Eintrag)</item><item quantity="other">Persönlicher Stimmungstrend: %1$s (%2$d frühere Einträge)</item></plurals>
     <string name="fertility_estimate_notice">Kalenderschätzungen bestätigen keinen Eisprung und dürfen nicht zur Verhütung verwendet werden.</string>
     <string name="phase_ovulation">Eisprungphase (geschätzt)</string>
     <string name="phase_heading_menstrual">Menstruationsphase</string>
@@ -293,13 +287,17 @@
     <string name="phase_heading_luteal">Lutealphase</string>
     <string name="legend_more">Farben erklären</string>
     <string name="legend_less">Erklärungen ausblenden</string>
+    <string name="calendar_filter">Einträge filtern</string>
+    <string name="calendar_filter_intro">Wähle bis zu drei Einträge. Bei aktivem Filter erscheint der blaue Punkt nur an passenden Tagen.</string>
+    <string name="calendar_filter_count">%1$d von %2$d ausgewählt</string>
+    <string name="calendar_filter_tests">Tests</string>
+    <string name="calendar_filter_clear">Filter löschen</string>
     <string name="fertile_legend">Geschätztes fruchtbares Zeitfenster</string>
     <string name="ovulation_legend">Eisprungschätzung</string>
     <string name="reminder_channel">Periodenerinnerungen</string>
     <string name="reminder_title">Periodenschätzung</string>
     <plurals name="reminder_text"><item quantity="one">Deine nächste Periode wird in 1 Tag erwartet.</item><item quantity="other">Deine nächste Periode wird in %d Tagen erwartet.</item></plurals>
     <string name="settings_profile">Profil</string>
-    <string name="settings_profile_summary">Ziel, Lebenssituation, Körperdaten und Lutealphase</string>
     <string name="settings_home">Startseite</string>
     <string name="settings_home_summary">Wähle optionale Bereiche für die Seite Heute</string>
     <string name="home_show_phase_guidance">Phasenhinweise anzeigen</string>

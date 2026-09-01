@@ -19,7 +19,11 @@ data class MirrorEvent(
         get() = "${kind.name.lowercase()}/$start"
 }
 
-data class StoredMirrorEvent(val id: Long, val key: String)
+data class StoredMirrorEvent(
+    val id: Long,
+    val key: String,
+    val current: MirrorEvent? = null,
+)
 
 sealed interface MirrorMutation {
     data class Insert(val event: MirrorEvent) : MirrorMutation
@@ -35,7 +39,7 @@ object CalendarMirrorDiff {
             desired.forEach { event ->
                 val matches = remaining.remove(event.key).orEmpty()
                 if (matches.isEmpty()) add(MirrorMutation.Insert(event)) else {
-                    add(MirrorMutation.Update(matches.first().id, event))
+                    if (matches.first().current != event) add(MirrorMutation.Update(matches.first().id, event))
                     matches.drop(1).forEach { add(MirrorMutation.Delete(it.id)) }
                 }
             }
@@ -65,7 +69,11 @@ object CalendarMirrorPlanner {
         val recorded = periods.filter { it.last() >= firstDay && it.first() <= lastDay }.map {
             MirrorEvent(MirrorEventKind.RECORDED, it.first(), it.last().plusDays(1))
         }
-        val estimates = CycleInsights.calendarPeriodEstimates(backup, snapshots, referenceDate)
+        val estimates = if (backup.settings.canPredictPeriods) {
+            CycleInsights.calendarPeriodEstimates(backup, snapshots, referenceDate)
+        } else {
+            CycleInsights.periodEstimates(backup, snapshots, referenceDate)
+        }
             .filter { it.endExclusive >= firstDay && it.start <= lastDay }
         val estimated = estimates.map { MirrorEvent(MirrorEventKind.ESTIMATED, it.start, it.endExclusive) }
         val fertility = CycleInsights.fertilityEstimates(backup, snapshots, referenceDate).flatMap { value ->

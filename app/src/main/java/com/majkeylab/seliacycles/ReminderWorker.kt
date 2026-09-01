@@ -1,6 +1,7 @@
 package com.majkeylab.seliacycles
 
 import android.Manifest
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -55,6 +56,8 @@ class ReminderWorker(context: Context, parameters: WorkerParameters) : Coroutine
             ))
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .build()
         NotificationManagerCompat.from(applicationContext).notify(NOTIFICATION_ID, notification)
         return Result.success()
@@ -66,7 +69,7 @@ class ReminderWorker(context: Context, parameters: WorkerParameters) : Coroutine
             CHANNEL_ID,
             applicationContext.getString(R.string.reminder_channel),
             NotificationManager.IMPORTANCE_DEFAULT,
-        ))
+        ).apply { lockscreenVisibility = Notification.VISIBILITY_PRIVATE })
     }
 
     companion object {
