@@ -28,7 +28,7 @@ data class CyclePrediction(
     val uncertaintyDays: Int,
     val earliestPeriodStart: LocalDate?,
     val latestPeriodStart: LocalDate?,
-    val futurePeriodStarts: List<LocalDate>,
+    val estimatedPeriodStarts: List<LocalDate>,
     val monthlyForecasts: List<MonthlyForecast>,
 )
 
@@ -74,9 +74,16 @@ object CyclePredictor {
             anchor = starts.lastOrNull(),
             cycleLength = cycleLength,
             referenceMonth = YearMonth.from(referenceDate),
+            periodLength = periodLength,
+            uncertainty = uncertainty,
         )
-        val futurePredictions = predictions.filterNot { it.day.isBefore(referenceDate) }
-        val next = futurePredictions.firstOrNull()
+        val relevantPredictions = predictions.filterNot { prediction ->
+            maxOf(
+                prediction.day.plusDays(periodLength.toLong() - 1),
+                prediction.uncertainty(uncertainty).second,
+            ).isBefore(referenceDate)
+        }
+        val next = relevantPredictions.firstOrNull()
         val nextWindow = next?.uncertainty(uncertainty)
         val months = (0L..1L).map { YearMonth.from(referenceDate).plusMonths(it) }
 
@@ -88,7 +95,7 @@ object CyclePredictor {
             uncertaintyDays = uncertainty,
             earliestPeriodStart = nextWindow?.first,
             latestPeriodStart = nextWindow?.second,
-            futurePeriodStarts = futurePredictions.map(PredictedStart::day),
+            estimatedPeriodStarts = relevantPredictions.map(PredictedStart::day),
             monthlyForecasts = months.map { month ->
                 monthlyForecast(month, periods, predictions, periodLength, uncertainty)
             },
@@ -127,6 +134,8 @@ object CyclePredictor {
         anchor: LocalDate?,
         cycleLength: Int,
         referenceMonth: YearMonth,
+        periodLength: Int,
+        uncertainty: Int,
     ): List<PredictedStart> {
         if (anchor == null) return emptyList()
         val firstVisibleDay = referenceMonth.atDay(1)
@@ -135,7 +144,12 @@ object CyclePredictor {
         var cyclesAhead = 1
         var day = anchor.plusDays(cycleLength.toLong())
         while (!day.isAfter(lastVisibleDay)) {
-            if (!day.isBefore(firstVisibleDay)) result += PredictedStart(day, cyclesAhead)
+            val prediction = PredictedStart(day, cyclesAhead)
+            val visibleEnd = maxOf(
+                day.plusDays(periodLength.toLong() - 1),
+                prediction.uncertainty(uncertainty).second,
+            )
+            if (!visibleEnd.isBefore(firstVisibleDay)) result += prediction
             day = day.plusDays(cycleLength.toLong())
             cyclesAhead++
         }

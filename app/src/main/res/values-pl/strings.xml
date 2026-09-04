@@ -20,6 +20,8 @@
     <string name="next_period">Następna miesiączka</string>
     <string name="predicted_today">Spodziewana dzisiaj</string>
     <plurals name="days_until_period"><item quantity="one">Za %d dzień</item><item quantity="few">Za %d dni</item><item quantity="many">Za %d dni</item><item quantity="other">Za %d dnia</item></plurals>
+    <string name="expected_period">Spodziewana miesiączka</string>
+    <plurals name="days_period_late"><item quantity="one">Opóźnienie o %d dzień</item><item quantity="few">Opóźnienie o %d dni</item><item quantity="many">Opóźnienie o %d dni</item><item quantity="other">Opóźnienie o %d dnia</item></plurals>
     <string name="no_period_data">Zapisz pierwszą miesiączkę, aby rozpocząć prognozy.</string>
     <string name="predictions_disabled">Prognozy są wyłączone w Ustawieniach.</string>
     <string name="estimate_notice">Oszacowanie na podstawie historii. To nie jest porada medyczna ani antykoncepcja.</string>

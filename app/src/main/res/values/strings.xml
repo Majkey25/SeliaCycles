@@ -20,6 +20,8 @@
     <string name="next_period">Next period</string>
     <string name="predicted_today">Expected today</string>
     <plurals name="days_until_period"><item quantity="one">In %d day</item><item quantity="other">In %d days</item></plurals>
+    <string name="expected_period">Expected period</string>
+    <plurals name="days_period_late"><item quantity="one">Late by %d day</item><item quantity="other">Late by %d days</item></plurals>
     <string name="no_period_data">Log your first period to start predictions.</string>
     <string name="predictions_disabled">Predictions are turned off in Settings.</string>
     <string name="estimate_notice">Estimate from your history. Not medical advice or contraception.</string>

@@ -69,7 +69,7 @@ object CycleInsights {
             return saved.filter { !it.start.isAfter(referenceDate) }.sortedBy(PeriodEstimate::start)
         }
         val prediction = prediction(backup, referenceDate)
-        val dynamic = prediction.futurePeriodStarts.mapIndexedNotNull { index, start ->
+        val dynamic = prediction.estimatedPeriodStarts.mapIndexedNotNull { index, start ->
             val month = YearMonth.from(start)
             val snapshot = snapshots[month]
             val include = snapshot == null || prediction.periodStarts.any { actual ->
@@ -121,16 +121,21 @@ object CycleInsights {
         val prediction = prediction(backup, date)
         val estimates = calendarPeriodEstimates(backup, snapshots, date)
         val estimatedPeriod = estimates.firstOrNull { date >= it.start && date < it.endExclusive }
-        val nextPeriod = if (!backup.settings.canPredictPeriods) null else {
+        val matchedSnapshot = estimatedPeriod?.takeIf { it.origin != EstimateOrigin.CURRENT }?.let { estimate ->
+            snapshots.values.firstOrNull { it.periodStart == estimate.start }
+        }?.takeIf { CycleAnalysis.closestRecordedStart(it, prediction.periodStarts) != null }
+        val unresolvedEstimate = estimatedPeriod.takeIf { matchedSnapshot == null }
+        val futurePeriod = if (!backup.settings.canPredictPeriods) null else {
             prediction.periodStarts.firstOrNull { it.isAfter(date) }
                 ?: estimates.firstOrNull { it.start.isAfter(estimatedPeriod?.start ?: date) }?.start
         }
+        val displayedPeriod = unresolvedEstimate?.start ?: futurePeriod
         val activeStart = prediction.periodStarts.lastOrNull { !it.isAfter(date) }
-        val fertility = nextPeriod?.takeIf { backup.settings.canEstimateFertility }?.let {
+        val fertility = futurePeriod?.takeIf { backup.settings.canEstimateFertility }?.let {
             fertilityForPeriod(it, backup.settings.lutealPhaseLength)
         }
         val phase = when {
-            estimatedPeriod != null || backup.logs.any { it.day == date && it.bleeding } -> CyclePhase.MENSTRUAL
+            unresolvedEstimate != null || backup.logs.any { it.day == date && it.bleeding } -> CyclePhase.MENSTRUAL
             activeStart == null || fertility == null -> null
             else -> phaseFor(
                 day = date,
@@ -141,7 +146,7 @@ object CycleInsights {
             )
         }
         return DailyCycleInsight(
-            nextPeriodStart = nextPeriod,
+            nextPeriodStart = displayedPeriod,
             phase = phase,
             fertility = fertility,
             fertilityStatus = when {

@@ -20,6 +20,8 @@
     <string name="next_period">Próximo periodo</string>
     <string name="predicted_today">Previsto para hoy</string>
     <plurals name="days_until_period"><item quantity="one">En %d día</item><item quantity="many">En %d días</item><item quantity="other">En %d días</item></plurals>
+    <string name="expected_period">Periodo previsto</string>
+    <plurals name="days_period_late"><item quantity="one">Retraso de %d día</item><item quantity="many">Retraso de %d días</item><item quantity="other">Retraso de %d días</item></plurals>
     <string name="no_period_data">Registra tu primer periodo para iniciar las estimaciones.</string>
     <string name="predictions_disabled">Las estimaciones están desactivadas en Ajustes.</string>
     <string name="estimate_notice">Estimación basada en tu historial. No es asesoramiento médico ni anticoncepción.</string>

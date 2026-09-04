@@ -29,6 +29,32 @@ class CyclePredictorTest {
     }
 
     @Test
+    fun `keeps expected period current through its estimated span`() {
+        val days = periodDays(
+            LocalDate.of(2026, 6, 26),
+            LocalDate.of(2026, 7, 24),
+        )
+
+        val duringSpan = CyclePredictor.predict(days, 28, 5, LocalDate.of(2026, 8, 25))
+        val afterSpan = CyclePredictor.predict(days, 28, 5, LocalDate.of(2026, 8, 26))
+
+        assertEquals(LocalDate.of(2026, 8, 21), duringSpan.nextPeriodStart)
+        assertEquals(LocalDate.of(2026, 9, 18), afterSpan.nextPeriodStart)
+    }
+
+    @Test
+    fun `keeps a late expected period across a month boundary`() {
+        val days = periodDays(
+            LocalDate.of(2026, 7, 5),
+            LocalDate.of(2026, 8, 2),
+        )
+
+        val result = CyclePredictor.predict(days, 28, 5, LocalDate.of(2026, 9, 1))
+
+        assertEquals(LocalDate.of(2026, 8, 30), result.nextPeriodStart)
+    }
+
+    @Test
     fun ignoresSingleDayGapInsideOnePeriod() {
         val days = periodDays(LocalDate.of(2026, 7, 1)).toMutableSet()
         days.remove(LocalDate.of(2026, 7, 3))

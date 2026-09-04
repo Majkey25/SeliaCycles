@@ -8,7 +8,15 @@ data class TodayDashboardTargets(
     val ovulation: LocalDate?,
 )
 
+enum class PeriodTiming { UPCOMING, TODAY, LATE }
+
 object TodayDashboard {
+    fun periodTiming(distanceDays: Int): PeriodTiming = when {
+        distanceDays > 0 -> PeriodTiming.UPCOMING
+        distanceDays == 0 -> PeriodTiming.TODAY
+        else -> PeriodTiming.LATE
+    }
+
     fun targets(
         insight: DailyCycleInsight,
         fertility: FertilityEstimate? = insight.fertility,

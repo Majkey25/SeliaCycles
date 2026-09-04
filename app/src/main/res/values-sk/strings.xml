@@ -20,6 +20,8 @@
     <string name="next_period">Ďalšia menštruácia</string>
     <string name="predicted_today">Očakáva sa dnes</string>
     <plurals name="days_until_period"><item quantity="one">O %d deň</item><item quantity="few">O %d dni</item><item quantity="many">O %d dňa</item><item quantity="other">O %d dní</item></plurals>
+    <string name="expected_period">Očakávaná menštruácia</string>
+    <plurals name="days_period_late"><item quantity="one">Meškanie o %d deň</item><item quantity="few">Meškanie o %d dni</item><item quantity="many">Meškanie o %d dňa</item><item quantity="other">Meškanie o %d dní</item></plurals>
     <string name="no_period_data">Zapíš prvú menštruáciu a aplikácia začne počítať odhady.</string>
     <string name="predictions_disabled">Odhady sú vypnuté v Nastaveniach.</string>
     <string name="estimate_notice">Odhad vychádza z tvojej histórie. Nejde o lekársku radu ani antikoncepciu.</string>

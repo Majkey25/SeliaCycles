@@ -588,15 +588,19 @@ private fun TodayScreen(
                             fontWeight = FontWeight.Bold,
                         )
                     }
-                    distance?.takeIf { predictionsEnabled && it >= 0 }?.let { days ->
+                    distance?.takeIf { predictionsEnabled }?.let { days ->
                         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
-                                stringResource(R.string.next_period),
+                                stringResource(if (TodayDashboard.periodTiming(days) == PeriodTiming.UPCOMING) {
+                                    R.string.next_period
+                                } else {
+                                    R.string.expected_period
+                                }),
                                 color = Color.White.copy(alpha = 0.8f),
                                 style = MaterialTheme.typography.labelLarge,
                             )
                             Text(
-                                pluralStringResource(R.plurals.days_until_period, days, days),
+                                periodTimingText(days),
                                 color = Color.White,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
@@ -992,15 +996,19 @@ private fun UpcomingCycleSection(
                 !predictionsEnabled -> stringResource(R.string.predictions_disabled)
                 insight.nextPeriodStart == null -> stringResource(R.string.no_period_data)
                 distance == null -> insight.nextPeriodStart.format(dateFormat)
-                distance > 0 -> stringResource(
+                TodayDashboard.periodTiming(distance) == PeriodTiming.TODAY -> periodTimingText(distance)
+                else -> stringResource(
                     R.string.date_with_relative,
                     insight.nextPeriodStart.format(dateFormat),
-                    pluralStringResource(R.plurals.days_until_period, distance, distance),
+                    periodTimingText(distance),
                 )
-                distance == 0 -> stringResource(R.string.predicted_today)
-                else -> insight.nextPeriodStart.format(dateFormat)
             }
-            UpcomingCycleRow(Icons.Outlined.WaterDrop, R.string.next_period, nextText) {
+            val periodLabel = if (distance != null && TodayDashboard.periodTiming(distance) != PeriodTiming.UPCOMING) {
+                R.string.expected_period
+            } else {
+                R.string.next_period
+            }
+            UpcomingCycleRow(Icons.Outlined.WaterDrop, periodLabel, nextText) {
                 targets.period?.let(onOpenDate)
             }
             fertility?.let { estimate ->
@@ -1028,6 +1036,13 @@ private fun UpcomingCycleSection(
             style = MaterialTheme.typography.bodySmall,
         )
     }
+}
+
+@Composable
+private fun periodTimingText(distanceDays: Int): String = when (TodayDashboard.periodTiming(distanceDays)) {
+    PeriodTiming.UPCOMING -> pluralStringResource(R.plurals.days_until_period, distanceDays, distanceDays)
+    PeriodTiming.TODAY -> stringResource(R.string.predicted_today)
+    PeriodTiming.LATE -> pluralStringResource(R.plurals.days_period_late, -distanceDays, -distanceDays)
 }
 
 @Composable

@@ -72,4 +72,11 @@ class CalendarUiModelTest {
         assertEquals(fertility.fertileStart, targets.fertile)
         assertEquals(fertility.ovulation, targets.ovulation)
     }
+
+    @Test
+    fun `Today dashboard distinguishes upcoming expected and late periods`() {
+        assertEquals(PeriodTiming.UPCOMING, TodayDashboard.periodTiming(1))
+        assertEquals(PeriodTiming.TODAY, TodayDashboard.periodTiming(0))
+        assertEquals(PeriodTiming.LATE, TodayDashboard.periodTiming(-1))
+    }
 }

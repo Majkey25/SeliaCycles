@@ -6,6 +6,10 @@
 
 - The launcher and Play Store icon now use one clear calendar mark with a red tracked-day drop, transparent outer space, and safer adaptive-icon scaling.
 
+### Fixed
+
+- An expected period no longer disappears or jumps forward by a full cycle immediately after its predicted start. The dashboard now shows how many days late it is while future fertility stays on the next cycle.
+
 ## 0.9.0-beta.10 - 2026-09-04
 
 ### Fixed

@@ -20,6 +20,8 @@
     <string name="next_period">Nächste Periode</string>
     <string name="predicted_today">Heute erwartet</string>
     <plurals name="days_until_period"><item quantity="one">In %d Tag</item><item quantity="other">In %d Tagen</item></plurals>
+    <string name="expected_period">Erwartete Periode</string>
+    <plurals name="days_period_late"><item quantity="one">Seit %d Tag überfällig</item><item quantity="other">Seit %d Tagen überfällig</item></plurals>
     <string name="no_period_data">Erfasse deine erste Periode, um Schätzungen zu starten.</string>
     <string name="predictions_disabled">Schätzungen sind in den Einstellungen deaktiviert.</string>
     <string name="estimate_notice">Schätzung aus deinem Verlauf. Keine medizinische Beratung oder Verhütung.</string>
