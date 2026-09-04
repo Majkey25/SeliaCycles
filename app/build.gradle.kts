@@ -20,8 +20,8 @@ android {
         applicationId = "com.majkeylab.seliacycles"
         minSdk = 29
         targetSdk = 36
-        versionCode = 18
-        versionName = "0.9.0-beta.10"
+        versionCode = 19
+        versionName = "0.9.0-beta.11"
     }
 
     signingConfigs {

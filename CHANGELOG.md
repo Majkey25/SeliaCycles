@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0-beta.11 - 2026-09-04
+
+### Changed
+
+- The launcher and Play Store icon now use one clear calendar mark with a red tracked-day drop, transparent outer space, and safer adaptive-icon scaling.
+
 ## 0.9.0-beta.10 - 2026-09-04
 
 ### Fixed
