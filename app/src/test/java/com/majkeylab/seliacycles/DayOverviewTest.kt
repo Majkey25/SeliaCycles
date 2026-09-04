@@ -4,7 +4,9 @@ import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class DayOverviewTest {
     private val month = YearMonth.of(2026, 8)
@@ -16,6 +18,15 @@ class DayOverviewTest {
         periodLength = 5,
         reconstructed = false,
     )
+
+    @Test
+    fun `quick period action is available only for today`() {
+        val today = LocalDate.of(2026, 9, 4)
+
+        assertTrue(DayOverview.showQuickPeriodEntry(today, today))
+        assertFalse(DayOverview.showQuickPeriodEntry(today.minusDays(1), today))
+        assertFalse(DayOverview.showQuickPeriodEntry(today.plusDays(1), today))
+    }
 
     @Test
     fun `comparison reports exact early and late reality`() {

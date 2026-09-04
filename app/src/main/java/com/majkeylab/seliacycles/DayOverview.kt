@@ -14,6 +14,8 @@ data class DayEstimateComparison(
 )
 
 object DayOverview {
+    fun showQuickPeriodEntry(day: LocalDate, today: LocalDate): Boolean = day == today
+
     fun compare(
         day: LocalDate,
         backup: CycleBackup,

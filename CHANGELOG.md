@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.10 - 2026-09-04
+
+### Fixed
+
+- Historical days no longer offer the quick period end action, which could unintentionally shorten an earlier period. Exact past dates remain editable through the period-day editor.
+- The daily information action now uses a clear plus icon when adding information and a pencil when editing it.
+
 ## 0.9.0-beta.9 - 2026-09-01
 
 ### Added

@@ -2869,8 +2869,9 @@ private fun DayOverviewSheet(
     val log = state.logsByDay[day]
     val insight = CycleInsights.forDate(state.backup, state.forecastSnapshots, day)
     val comparison = DayOverview.compare(day, state.backup, state.forecastSnapshots)
-    val canChangePeriod = !day.isAfter(LocalDate.now())
-    val canEndPeriod = canChangePeriod && (log?.bleeding == true || suggestedPeriodStart(state, day) != null)
+    val today = LocalDate.now()
+    val canChangePeriod = !day.isAfter(today)
+    val showQuickPeriodEntry = DayOverview.showQuickPeriodEntry(day, today)
     val periodEstimate = state.periodEstimates.firstOrNull { day >= it.start && day < it.endExclusive }
     val statusLabels = buildList {
         if (log?.bleeding == true) add(R.string.selected_day_recorded)
@@ -2897,7 +2898,7 @@ private fun DayOverviewSheet(
             ) {
                 SheetHeader(R.string.day_overview, onDismiss)
                 Text(day.format(dateFormat), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (canChangePeriod) {
+                if (showQuickPeriodEntry) {
                     SectionLabel(Icons.Outlined.WaterDrop, R.string.quick_period)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         if (log?.bleeding == true) {
@@ -2913,7 +2914,7 @@ private fun DayOverviewSheet(
                                 Text(stringResource(R.string.period_start_action))
                             }
                         }
-                        if (log?.bleeding != true && canEndPeriod) {
+                        if (log?.bleeding != true && suggestedPeriodStart(state, day) != null) {
                             OutlinedButton(onClick = onEndPeriod, modifier = Modifier.weight(1f)) {
                                 Icon(Icons.Outlined.CheckCircle, contentDescription = null)
                                 Spacer(Modifier.width(6.dp))
@@ -2921,6 +2922,8 @@ private fun DayOverviewSheet(
                             }
                         }
                     }
+                }
+                if (canChangePeriod) {
                     OutlinedButton(
                         onClick = onEditPeriod,
                         modifier = Modifier.fillMaxWidth(),
@@ -2931,7 +2934,10 @@ private fun DayOverviewSheet(
                     }
                 }
                 OutlinedButton(onClick = onEditDetails, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.AutoMirrored.Outlined.Notes, contentDescription = null)
+                    Icon(
+                        if (log?.hasCalendarMarker == true) Icons.Outlined.Edit else Icons.Default.Add,
+                        contentDescription = null,
+                    )
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(if (log?.hasCalendarMarker == true) {
                         R.string.edit_information
