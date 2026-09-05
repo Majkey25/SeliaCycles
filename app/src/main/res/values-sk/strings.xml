@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Selia Cycles</string>
     <string name="nav_today">Dnes</string>
     <string name="nav_calendar">Kalendár</string>
     <string name="nav_history">História</string>
@@ -397,4 +396,31 @@
     <string name="temperature_summary">Bazálna teplota: %1$.2f °C</string>
     <string name="sleep_summary">Spánok: %1$.1f h</string>
     <string name="intimacy_summary">Intimita: %1$s</string>
+    <string name="month_bleeding_days">Zapísané dni menštruácie</string>
+    <string name="month_detail_days">Dni s vlastnými záznamami</string>
+    <string name="month_timeline">Tvoj mesiac v skratke</string>
+    <string name="month_timeline_hint">Každý úsek predstavuje jeden deň v kalendári. Zapísané dni a odhady sa zobrazujú osobitne.</string>
+    <string name="month_saved_prediction">Pôvodný uložený odhad</string>
+    <string name="month_reconstructed_prediction">Spätne vypočítaný odhad</string>
+    <string name="month_start_window">Očakávaný začiatok: %1$s</string>
+    <string name="month_reconstruction_notice">Vypočítané spätne zo skorších záznamov. Tento odhad nebol uložený vopred a nezapočítava sa do hodnotenia presnosti.</string>
+    <string name="month_prediction_matched">Menštruácia začala v pôvodne odhadovaný deň.</string>
+    <string name="month_prediction_earlier">Menštruácia začala o %1$s skôr než podľa uloženého odhadu.</string>
+    <string name="month_prediction_later">Menštruácia začala o %1$s neskôr než podľa uloženého odhadu.</string>
+    <string name="month_wellbeing">Ako si sa tento mesiac cítila</string>
+    <string name="month_observations_only">Vychádza iba zo zapísaných dní. Dni bez záznamu sa nepovažujú za dni bez príznakov.</string>
+    <string name="month_pain_days">Dni so zapísanou bolesťou: %1$d</string>
+    <string name="month_sleep_average">Priemerný zapísaný spánok: %1$s h</string>
+    <string name="month_observations_empty">Pridaj k ľubovoľnému dňu náladu, energiu alebo poznámku. Tu potom uvidíš, čo sa u teba počas mesiaca opakuje. Ďalšie sledovanie je dobrovoľné.</string>
+    <string name="prediction_auto_cycle">Odhadovať dĺžku cyklu z histórie</string>
+    <string name="prediction_auto_period">Odhadovať dĺžku menštruácie z histórie</string>
+    <string name="prediction_auto_hint">Automatické odhady vychádzajú z dokončených záznamov. Vypnutím tejto voľby použiješ vlastnú dĺžku.</string>
+    <string name="prediction_settings_preview">Tvoj aktuálny odhad</string>
+    <string name="prediction_settings_basis">Zapísané intervaly medzi menštruáciami: %1$d. Nezvyčajné rozostupy sa do obvyklej dĺžky cyklu nemusia započítať.</string>
+    <string name="prediction_settings_manual">Budúce odhady vychádzajú zo zvolených dĺžok. Skôr uložené odhady zostanú dostupné na porovnanie.</string>
+    <string name="prediction_settings_unavailable">Zapíš začiatok menštruácie a zobrazí sa tu odhad.</string>
+    <string name="prediction_settings_disabled">Odhady sú pozastavené podľa nastavenia cyklu alebo profilu.</string>
+    <string name="prediction_settings_lengths">Cyklus (dni): %1$d · Menštruácia (dni): %2$d</string>
+    <string name="prediction_settings_live">Zmeny sa prejavia pri budúcich dňoch v kalendári aj v zapnutom zrkadlení do iného kalendára.</string>
+    <string name="prediction_fertility_unavailable">Ovuláciu nemožno odhadnúť, keď je luteálna fáza rovnako dlhá alebo dlhšia než celý cyklus. Skontroluj nižšie obe dĺžky.</string>
 </resources>

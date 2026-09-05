@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Selia Cycles</string>
+    <string name="app_name" translatable="false">Selia Cycles</string>
     <string name="nav_today">Today</string>
     <string name="nav_calendar">Calendar</string>
     <string name="nav_history">History</string>
@@ -397,4 +397,31 @@
     <string name="reminder_channel">Period reminders</string>
     <string name="reminder_title">Period estimate</string>
     <plurals name="reminder_text"><item quantity="one">Your next period is estimated in 1 day.</item><item quantity="other">Your next period is estimated in %d days.</item></plurals>
+    <string name="month_bleeding_days">Recorded period days</string>
+    <string name="month_detail_days">Days with personal details</string>
+    <string name="month_timeline">Your month at a glance</string>
+    <string name="month_timeline_hint">Each segment is one calendar day. Recorded days and estimates are shown separately.</string>
+    <string name="month_saved_prediction">Original saved prediction</string>
+    <string name="month_reconstructed_prediction">Reconstructed prediction</string>
+    <string name="month_start_window">Expected start: %1$s</string>
+    <string name="month_reconstruction_notice">Recreated from earlier records. This was not a prediction saved in advance and is not included in accuracy results.</string>
+    <string name="month_prediction_matched">The period started on the originally predicted day.</string>
+    <string name="month_prediction_earlier">The period started %1$s earlier than the saved prediction.</string>
+    <string name="month_prediction_later">The period started %1$s later than the saved prediction.</string>
+    <string name="month_wellbeing">How you felt this month</string>
+    <string name="month_observations_only">From the days you recorded. Missing entries are not treated as symptom-free days.</string>
+    <string name="month_pain_days">Days with recorded pain: %1$d</string>
+    <string name="month_sleep_average">Average recorded sleep: %1$s h</string>
+    <string name="month_observations_empty">Add mood, energy or a note to any day to see your own monthly patterns here. Extra tracking is optional.</string>
+    <string name="prediction_auto_cycle">Learn cycle length from history</string>
+    <string name="prediction_auto_period">Learn period length from history</string>
+    <string name="prediction_auto_hint">Automatic estimates learn from completed records. Turn this off to use your own length.</string>
+    <string name="prediction_settings_preview">Your current estimate</string>
+    <string name="prediction_settings_basis">Available recorded intervals: %1$d. Unusual gaps may be excluded from the typical cycle length.</string>
+    <string name="prediction_settings_manual">Your chosen lengths control future estimates. Saved earlier predictions stay available for comparison.</string>
+    <string name="prediction_settings_unavailable">Add a period start to see an estimate here.</string>
+    <string name="prediction_settings_disabled">Estimates are paused by your cycle or profile settings.</string>
+    <string name="prediction_settings_lengths">Cycle (days): %1$d · Period (days): %2$d</string>
+    <string name="prediction_settings_live">Changes apply to future dates in the calendar and to an enabled calendar mirror.</string>
+    <string name="prediction_fertility_unavailable">Ovulation cannot be estimated when the luteal phase is as long as or longer than the cycle. Check these two lengths below.</string>
 </resources>

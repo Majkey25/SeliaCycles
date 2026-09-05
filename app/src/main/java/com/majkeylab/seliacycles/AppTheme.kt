@@ -10,13 +10,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 
 private val seliaLightColors = lightColorScheme(
-    primary = Color(0xFFF4B400),
-    onPrimary = Color(0xFF251A00),
+    primary = Color(0xFF775900),
+    onPrimary = Color.White,
     primaryContainer = Color(0xFFFFE08A),
     onPrimaryContainer = Color(0xFF3D2B00),
     secondary = Color(0xFFC62828),
     secondaryContainer = Color(0xFFFFDAD6),
-    tertiary = Color(0xFF00897B),
+    tertiary = Color(0xFF00695C),
     tertiaryContainer = Color(0xFFA7F3E8),
     background = Color(0xFFFFF9F7),
     surface = Color(0xFFFFF9F7),
@@ -154,23 +154,22 @@ fun SeliaCyclesTheme(
         AppTheme.LIGHT -> false
         AppTheme.DARK -> true
     }
-    val colors = when (palette) {
-        AppPalette.SELIA -> seliaLightColors to seliaDarkColors
-        AppPalette.ROSE -> roseLightColors to roseDarkColors
-        AppPalette.OCEAN -> oceanLightColors to oceanDarkColors
-        else -> paletteRgb(palette, customPalette).let { rgb ->
-            derivedScheme(seliaLightColors, rgb, dark = false) to derivedScheme(seliaDarkColors, rgb, dark = true)
-        }
-    }
-    MaterialTheme(colorScheme = if (dark) colors.second else colors.first, content = content)
+    MaterialTheme(colorScheme = paletteColorScheme(palette, customPalette, dark), content = content)
+}
+
+internal fun paletteColorScheme(palette: AppPalette, custom: CustomPalette, dark: Boolean): ColorScheme = when (palette) {
+    AppPalette.SELIA -> if (dark) seliaDarkColors else seliaLightColors
+    AppPalette.ROSE -> if (dark) roseDarkColors else roseLightColors
+    AppPalette.OCEAN -> if (dark) oceanDarkColors else oceanLightColors
+    else -> derivedScheme(if (dark) seliaDarkColors else seliaLightColors, paletteRgb(palette, custom), dark)
 }
 
 private fun derivedScheme(base: ColorScheme, rgb: PaletteRgb, dark: Boolean): ColorScheme {
     val background = if (dark) Color.Black else Color.White
     val containerAmount = if (dark) 0.58f else 0.78f
-    val primary = rgb.primary.color()
-    val secondary = rgb.secondary.color()
-    val tertiary = rgb.tertiary.color()
+    val primary = rgb.primary.color().readableOn(base.surface).readableOn(base.surfaceVariant)
+    val secondary = rgb.secondary.color().readableOn(base.surface).readableOn(base.surfaceVariant)
+    val tertiary = rgb.tertiary.color().readableOn(base.surface).readableOn(base.surfaceVariant)
     val primaryContainer = primary.mix(background, containerAmount)
     val secondaryContainer = secondary.mix(background, containerAmount)
     val tertiaryContainer = tertiary.mix(background, containerAmount)
@@ -206,6 +205,18 @@ private fun Color.withReadableWhite(): Color {
         result = result.mix(Color.Black, 0.14f)
     }
     return result
+}
+
+private fun Color.readableOn(background: Color): Color {
+    val target = background.contrastColor()
+    var result = this
+    repeat(20) {
+        val lighter = maxOf(result.luminance(), background.luminance())
+        val darker = minOf(result.luminance(), background.luminance())
+        if ((lighter + 0.05f) / (darker + 0.05f) >= 4.5f) return result
+        result = result.mix(target, 0.14f)
+    }
+    return target
 }
 
 private fun Color.mix(other: Color, amount: Float): Color = Color(

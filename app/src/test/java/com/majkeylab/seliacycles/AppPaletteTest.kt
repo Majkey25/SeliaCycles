@@ -9,6 +9,24 @@ import kotlin.test.assertTrue
 
 class AppPaletteTest {
     @Test
+    fun `accent text stays readable for presets and extreme custom colors`() {
+        for (dark in listOf(false, true)) {
+            for (palette in AppPalette.entries) {
+                for (custom in listOf(CustomPalette(), CustomPalette(0xFFFFFF, 0x000000, 0xFFFF00))) {
+                    val scheme = paletteColorScheme(palette, custom, dark)
+                    for (accent in listOf(scheme.primary, scheme.secondary, scheme.tertiary)) {
+                        for (background in listOf(scheme.surface, scheme.surfaceVariant)) {
+                            val contrast = (maxOf(accent.luminance(), background.luminance()) + 0.05f) /
+                                (minOf(accent.luminance(), background.luminance()) + 0.05f)
+                            assertTrue(contrast >= 4.5f, "$palette dark=$dark contrast=$contrast")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     fun `new users start with the current light Ocean appearance`() {
         assertEquals(AppTheme.LIGHT, AppSettings().theme)
         assertEquals(AppPalette.OCEAN, AppSettings().palette)

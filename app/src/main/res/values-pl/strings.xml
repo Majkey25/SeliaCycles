@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Selia Cycles</string>
     <string name="nav_today">Dzisiaj</string>
     <string name="nav_calendar">Kalendarz</string>
     <string name="nav_history">Historia</string>
@@ -397,4 +396,31 @@
     <string name="temperature_summary">Temperatura podstawowa: %1$.2f °C</string>
     <string name="sleep_summary">Sen: %1$.1f h</string>
     <string name="intimacy_summary">Intymność: %1$s</string>
+    <string name="month_bleeding_days">Zapisane dni miesiączki</string>
+    <string name="month_detail_days">Dni z własnymi wpisami</string>
+    <string name="month_timeline">Twój miesiąc w skrócie</string>
+    <string name="month_timeline_hint">Każdy segment to jeden dzień w kalendarzu. Zapisane dni i szacowane terminy są pokazane osobno.</string>
+    <string name="month_saved_prediction">Pierwotna zapisana prognoza</string>
+    <string name="month_reconstructed_prediction">Prognoza odtworzona wstecz</string>
+    <string name="month_start_window">Przewidywany początek: %1$s</string>
+    <string name="month_reconstruction_notice">Obliczono wstecz na podstawie wcześniejszych wpisów. Ta prognoza nie została zapisana z wyprzedzeniem i nie jest uwzględniana w ocenie trafności.</string>
+    <string name="month_prediction_matched">Miesiączka zaczęła się w pierwotnie przewidywanym dniu.</string>
+    <string name="month_prediction_earlier">Miesiączka zaczęła się o %1$s wcześniej niż według zapisanej prognozy.</string>
+    <string name="month_prediction_later">Miesiączka zaczęła się o %1$s później niż według zapisanej prognozy.</string>
+    <string name="month_wellbeing">Jak się czułaś w tym miesiącu</string>
+    <string name="month_observations_only">Tylko na podstawie dni z wpisami. Dni bez wpisu nie są uznawane za dni bez objawów.</string>
+    <string name="month_pain_days">Dni z zapisanym bólem: %1$d</string>
+    <string name="month_sleep_average">Średnia zapisana długość snu: %1$s h</string>
+    <string name="month_observations_empty">Dodaj nastrój, energię lub notatkę do dowolnego dnia, aby zobaczyć tu swoje miesięczne wzorce. Dodatkowe śledzenie jest opcjonalne.</string>
+    <string name="prediction_auto_cycle">Obliczaj długość cyklu na podstawie historii</string>
+    <string name="prediction_auto_period">Obliczaj długość miesiączki na podstawie historii</string>
+    <string name="prediction_auto_hint">Automatyczne szacunki opierają się na zakończonych zapisach. Wyłącz tę opcję, aby używać własnej długości.</string>
+    <string name="prediction_settings_preview">Twój aktualny szacunek</string>
+    <string name="prediction_settings_basis">Dostępne zapisane odstępy między miesiączkami: %1$d. Nietypowe odstępy mogą być pomijane przy obliczaniu typowej długości cyklu.</string>
+    <string name="prediction_settings_manual">Wybrane długości określają przyszłe szacunki. Wcześniej zapisane prognozy pozostają dostępne do porównania.</string>
+    <string name="prediction_settings_unavailable">Zapisz początek miesiączki, aby zobaczyć tu szacunek.</string>
+    <string name="prediction_settings_disabled">Szacunki są wstrzymane przez ustawienia cyklu lub profilu.</string>
+    <string name="prediction_settings_lengths">Cykl (dni): %1$d · Miesiączka (dni): %2$d</string>
+    <string name="prediction_settings_live">Zmiany dotyczą przyszłych dni w kalendarzu oraz jego kopii w innym kalendarzu, jeśli synchronizacja jest włączona.</string>
+    <string name="prediction_fertility_unavailable">Nie można oszacować owulacji, gdy faza lutealna trwa tyle samo co cały cykl lub dłużej. Sprawdź poniżej obie długości.</string>
 </resources>

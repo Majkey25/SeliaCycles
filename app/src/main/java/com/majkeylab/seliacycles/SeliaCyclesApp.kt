@@ -318,8 +318,8 @@ fun SeliaCyclesApp(
     var daySheetMode by rememberSaveable { mutableStateOf(DaySheetMode.OVERVIEW) }
     var infoDialog by remember { mutableStateOf<InfoDialog?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
-    var selfCareInsight by remember { mutableStateOf<DailyCycleInsight?>(null) }
-    var showPhaseDetails by remember { mutableStateOf(false) }
+    var selfCareDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
+    var showPhaseDetails by rememberSaveable { mutableStateOf(false) }
     var calendarTargetDay by remember { mutableStateOf<LocalDate?>(null) }
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
@@ -393,7 +393,7 @@ fun SeliaCyclesApp(
                             onEndPeriod = {
                                 viewModel.endPeriod(LocalDate.now(), suggestedPeriodStart(state, LocalDate.now()))
                             },
-                            onSelfCare = { selfCareInsight = state.todayInsight },
+                            onSelfCare = { selfCareDay = state.referenceDate },
                             onOpenCalendar = { day ->
                                 calendarTargetDay = day
                                 screen = Screen.CALENDAR
@@ -462,7 +462,7 @@ fun SeliaCyclesApp(
                     selectedDay = null
                 },
                 onSelfCare = {
-                    selfCareInsight = CycleInsights.forDate(state.backup, state.forecastSnapshots, day)
+                    selfCareDay = day
                 },
             )
             DaySheetMode.PERIOD -> PeriodEditorSheet(
@@ -519,14 +519,17 @@ fun SeliaCyclesApp(
             },
         )
     }
-    selfCareInsight?.let { insight ->
-        SelfCareSheet(insight = insight, onDismiss = { selfCareInsight = null })
+    selfCareDay?.let { day ->
+        val insight = remember(state.backup, state.forecastSnapshots, day, state.referenceDate) {
+            CycleInsights.forDate(state.backup, state.forecastSnapshots, day, referenceDate = state.referenceDate)
+        }
+        SelfCareSheet(insight = insight, onDismiss = { selfCareDay = null })
     }
     if (showPhaseDetails) PhaseDetailsSheet(
         insight = state.todayInsight,
         onSelfCare = {
             showPhaseDetails = false
-            selfCareInsight = state.todayInsight
+            selfCareDay = state.referenceDate
         },
         onDismiss = { showPhaseDetails = false },
     )
@@ -680,7 +683,7 @@ private fun TodayScreen(
 @Composable
 private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Unit)? = null) {
     val phase = insight.phase ?: return
-    val ovulation = insight.fertilityStatus == FertilityStatus.OVULATION
+    val ovulation = insight.fertilityStatus == FertilityStatus.OVULATION && phase != CyclePhase.MENSTRUAL
     val icon = when {
         ovulation -> Icons.Outlined.WbSunny
         phase == CyclePhase.MENSTRUAL -> Icons.Outlined.WaterDrop
@@ -1084,7 +1087,7 @@ private fun flowLabel(flow: Flow): Int = when (flow) {
 }
 
 @StringRes
-private fun moodLabel(mood: Mood): Int = when (mood) {
+internal fun moodLabel(mood: Mood): Int = when (mood) {
     Mood.GREAT -> R.string.mood_great
     Mood.GOOD -> R.string.mood_good
     Mood.OKAY -> R.string.mood_okay
@@ -1124,8 +1127,8 @@ private fun CalendarScreen(
         pageCount = { CalendarPaging.pageCount },
     )
     val scope = rememberCoroutineScope()
-    var overviewExpanded by remember { mutableStateOf(false) }
-    var focusedDay by remember { mutableStateOf<LocalDate?>(null) }
+    var overviewExpanded by rememberSaveable { mutableStateOf(false) }
+    var focusedDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     var showFilters by remember { mutableStateOf(false) }
     var selectedFilters by remember { mutableStateOf(emptySet<TrackerFilter>()) }
     val availableFilters = remember(state.backup.logs) { TrackerFilter.availableFilters(state.backup.logs) }
@@ -1145,8 +1148,8 @@ private fun CalendarScreen(
             (0L until snapshot.periodLength.toLong()).map(snapshot.periodStart::plusDays)
         }).toSet()
     }
-    val fertility = remember(state.backup, state.forecastSnapshots) {
-        CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots)
+    val fertility = remember(state.backup, state.forecastSnapshots, state.referenceDate) {
+        CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots, state.referenceDate)
     }
     val fertile = remember(fertility) {
         fertility.flatMap { estimate ->
@@ -1441,7 +1444,7 @@ private fun CalendarMonthPage(
                 contentDescription = null,
             )
         }
-        if (overviewExpanded) MonthComparison(state, shownMonth)
+        if (overviewExpanded) MonthOverview(state, shownMonth, locale, onDayClick)
         Spacer(Modifier.height(16.dp))
     }
 }
@@ -1547,104 +1550,6 @@ private fun CalendarDay(
     }
 }
 
-@Composable
-private fun MonthComparison(state: AppState, month: YearMonth) {
-    val snapshot = state.forecastSnapshots[month]
-    val actual = snapshot?.let { CycleAnalysis.closestRecordedStart(it, state.prediction.periodStarts) }
-        ?: state.prediction.periodStarts.lastOrNull { YearMonth.from(it) == month }
-    val estimate = state.periodEstimates.firstOrNull { YearMonth.from(it.start) == month }
-    val fertility = CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots)
-        .firstOrNull { it.fertileEnd >= month.atDay(1) && it.fertileStart <= month.atEndOfMonth() }
-    if (actual == null && estimate == null && fertility == null) return
-    val locale = currentLocale()
-    val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
-    val estimateText = estimate?.let {
-        stringResource(
-            R.string.estimated_window,
-            it.start.format(dateFormat),
-            it.endExclusive.minusDays(1).format(dateFormat),
-        )
-    } ?: snapshot?.let {
-        stringResource(
-            R.string.estimated_window,
-            it.periodStart.format(dateFormat),
-            it.periodStart.plusDays(it.periodLength.toLong() - 1).format(dateFormat),
-        )
-    } ?: "—"
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 4.dp).clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MonthMetric(
-                Icons.Outlined.WaterDrop,
-                R.string.recorded_legend,
-                actual?.format(dateFormat) ?: "—",
-                MaterialTheme.colorScheme.secondary,
-                Modifier.weight(1f),
-            )
-            MonthMetric(
-                Icons.Outlined.EventRepeat,
-                R.string.predicted_legend,
-                estimateText,
-                MaterialTheme.colorScheme.secondary,
-                Modifier.weight(1f),
-            )
-        }
-        snapshot?.takeIf { estimate != null && it.periodStart != estimate.start }?.let {
-            Text(
-                stringResource(
-                    if (it.reconstructed) R.string.forecast_reconstructed else R.string.forecast_saved,
-                    it.earliestStart.format(dateFormat),
-                    it.latestStart.format(dateFormat),
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-        HorizontalDivider()
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MonthMetric(
-                Icons.Outlined.Spa,
-                R.string.fertile_legend,
-                fertility?.let {
-                    stringResource(
-                        R.string.estimated_window,
-                        it.fertileStart.format(dateFormat),
-                        it.fertileEnd.format(dateFormat),
-                    )
-                } ?: "—",
-                MaterialTheme.colorScheme.tertiary,
-                Modifier.weight(1f),
-            )
-            MonthMetric(
-                Icons.Outlined.WbSunny,
-                R.string.ovulation_legend,
-                fertility?.ovulation?.format(dateFormat) ?: "—",
-                MaterialTheme.colorScheme.primary,
-                Modifier.weight(1f),
-            )
-        }
-    }
-}
-
-@Composable
-private fun MonthMetric(
-    icon: ImageVector,
-    @StringRes label: Int,
-    value: String,
-    tint: Color,
-    modifier: Modifier,
-) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(stringResource(label), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            Text(value, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-        }
-    }
-}
 
 @Composable
 private fun LegendItem(
@@ -1684,6 +1589,15 @@ private fun HistoryScreen(state: AppState) {
     val today = LocalDate.now()
     val pastStarts = prediction.periodStarts.filter { !it.isAfter(today) }
     val futureStarts = prediction.periodStarts.filter { it.isAfter(today) }
+    val averageCycle = remember(pastStarts) {
+        CycleAnalysis.recentLengths(pastStarts).takeIf { it.isNotEmpty() }
+            ?.map(CycleLengthSample::days)?.average()?.let { kotlin.math.round(it).toInt() }
+    }
+    val averagePeriod = remember(state.backup.logs, state.backup.settings.activePeriodStart) {
+        CycleAnalysis.averageRecordedPeriodDays(pastStarts,
+            state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
+            state.backup.settings.activePeriodStart)
+    }
     val cycleHistory = CycleAnalysis.recentHistory(
         periodStarts = pastStarts,
         bleedingDays = state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
@@ -1697,8 +1611,8 @@ private fun HistoryScreen(state: AppState) {
     ) {
         Text(stringResource(R.string.history_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Metric(Icons.Outlined.Autorenew, R.string.average_cycle, pluralStringResource(R.plurals.days_value, prediction.averageCycleLength, prediction.averageCycleLength), Modifier.weight(1f))
-            Metric(Icons.Outlined.WaterDrop, R.string.average_period, pluralStringResource(R.plurals.days_value, prediction.averagePeriodLength, prediction.averagePeriodLength), Modifier.weight(1f))
+            Metric(Icons.Outlined.Autorenew, R.string.average_cycle, averageCycle?.let { pluralStringResource(R.plurals.days_value, it, it) } ?: "—", Modifier.weight(1f))
+            Metric(Icons.Outlined.WaterDrop, R.string.average_period, averagePeriod?.let { pluralStringResource(R.plurals.days_value, it, it) } ?: "—", Modifier.weight(1f))
             Metric(Icons.Outlined.History, R.string.recorded_cycles, pastStarts.size.toString(), Modifier.weight(1f))
         }
         predictionAccuracy?.let { PredictionAccuracyCard(it) }
@@ -2021,6 +1935,10 @@ private fun SettingsScreen(
                     SwitchRow(R.string.predictions, settings.predictionsEnabled, Icons.Outlined.Insights) {
                         onSave(settings.copy(predictionsEnabled = it))
                     }
+                    PredictionSettingsPreview(state)
+                    SwitchRow(R.string.prediction_auto_cycle, settings.cycleLengthOverride == null, Icons.Outlined.Autorenew) { automatic ->
+                        onSave(settings.copy(cycleLengthOverride = if (automatic) null else state.prediction.averageCycleLength))
+                    }
                     Stepper(
                         R.string.default_cycle_length,
                         settings.cycleLengthOverride ?: state.prediction.averageCycleLength,
@@ -2028,6 +1946,9 @@ private fun SettingsScreen(
                         Icons.Outlined.Autorenew,
                     ) {
                         onSave(settings.copy(cycleLength = it, cycleLengthOverride = it))
+                    }
+                    SwitchRow(R.string.prediction_auto_period, settings.periodLengthOverride == null, Icons.Outlined.WaterDrop) { automatic ->
+                        onSave(settings.copy(periodLengthOverride = if (automatic) null else state.prediction.averagePeriodLength))
                     }
                     Stepper(
                         R.string.default_period_length,
@@ -2037,6 +1958,8 @@ private fun SettingsScreen(
                     ) {
                         onSave(settings.copy(periodLength = it, periodLengthOverride = it))
                     }
+                    Text(stringResource(R.string.prediction_auto_hint), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (settings.cycleLengthOverride != null || settings.periodLengthOverride != null) {
                         TextButton(onClick = {
                             onSave(settings.copy(cycleLengthOverride = null, periodLengthOverride = null))
@@ -2157,6 +2080,46 @@ private fun SettingsScreen(
             }
         }
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun PredictionSettingsPreview(state: AppState) {
+    val locale = currentLocale()
+    val format = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
+    val prediction = state.prediction
+    val settings = state.backup.settings
+    val next = state.todayInsight.nextPeriodStart
+    val samples = prediction.periodStarts.zipWithNext().filter { (start, end) ->
+        ChronoUnit.DAYS.between(start, end) in 15L..90L
+    }.takeLast(8).size
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SectionLabel(Icons.Outlined.EventRepeat, R.string.prediction_settings_preview)
+        when {
+            !settings.canPredictPeriods -> Text(stringResource(R.string.prediction_settings_disabled))
+            next == null -> Text(stringResource(R.string.prediction_settings_unavailable))
+            else -> {
+                Text(next.format(format), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                next.takeIf { it in prediction.estimatedPeriodStarts }?.let(prediction::uncertaintyWindow)?.let { (earliest, latest) ->
+                    Text(stringResource(R.string.month_start_window, "${earliest.format(format)} – ${latest.format(format)}"),
+                        style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        Text(stringResource(R.string.prediction_settings_lengths, prediction.averageCycleLength, prediction.averagePeriodLength))
+        if (settings.canEstimateFertility && prediction.averageCycleLength <= settings.lutealPhaseLength) {
+            Text(stringResource(R.string.prediction_fertility_unavailable), color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall)
+        }
+        Text(if (settings.cycleLengthOverride != null || settings.periodLengthOverride != null) {
+            stringResource(R.string.prediction_settings_manual)
+        } else stringResource(R.string.prediction_settings_basis, samples), style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.prediction_settings_live), color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -2907,7 +2870,7 @@ private fun DayOverviewSheet(
     val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale) }
     val shortDateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val log = state.logsByDay[day]
-    val insight = CycleInsights.forDate(state.backup, state.forecastSnapshots, day)
+    val insight = CycleInsights.forDate(state.backup, state.forecastSnapshots, day, referenceDate = state.referenceDate)
     val comparison = DayOverview.compare(day, state.backup, state.forecastSnapshots)
     val today = LocalDate.now()
     val canChangePeriod = !day.isAfter(today)
@@ -2998,8 +2961,9 @@ private fun DayOverviewSheet(
                 PhaseGuidanceCard(insight, onSelfCare)
                 comparison?.let {
                     SectionLabel(Icons.Outlined.EventAvailable, R.string.prediction_accuracy)
-                    Text(stringResource(R.string.forecast_saved, it.snapshot.earliestStart.format(shortDateFormat), it.snapshot.latestStart.format(shortDateFormat)))
-                    Text(when (it.accuracy) {
+                    Text(stringResource(if (it.snapshot.reconstructed) R.string.forecast_reconstructed else R.string.forecast_saved,
+                        it.snapshot.earliestStart.format(shortDateFormat), it.snapshot.latestStart.format(shortDateFormat)))
+                    Text(if (it.snapshot.reconstructed) stringResource(R.string.month_reconstruction_notice) else when (it.accuracy) {
                         EstimateAccuracy.NO_REALITY -> stringResource(R.string.estimate_no_reality)
                         EstimateAccuracy.EXACT -> stringResource(R.string.estimate_exact)
                         EstimateAccuracy.EARLY -> kotlin.math.abs(requireNotNull(it.differenceDays)).let { days ->
@@ -3535,7 +3499,7 @@ private fun cervicalMucusLabel(value: CervicalMucus): Int = cervicalMucusLabels.
 private fun testResultLabel(value: TestResult): Int = testResultLabels.first { it.value == value }.label
 
 @StringRes
-private fun wellbeingLevelLabel(value: WellbeingLevel): Int = wellbeingLevelLabels.first { it.value == value }.label
+internal fun wellbeingLevelLabel(value: WellbeingLevel): Int = wellbeingLevelLabels.first { it.value == value }.label
 
 @StringRes
 private fun activityLevelLabel(value: ActivityLevel): Int = activityLevelLabels.first { it.value == value }.label

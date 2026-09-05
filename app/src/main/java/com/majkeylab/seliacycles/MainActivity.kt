@@ -7,6 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.SideEffect
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.core.view.WindowCompat
 
 class MainActivity : AppCompatActivity() {
     private val viewModel by lazy { ViewModelProvider(this)[MainViewModel::class.java] }
@@ -16,6 +19,14 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()
+            val dark = state.backup.settings.theme == AppTheme.DARK ||
+                state.backup.settings.theme == AppTheme.SYSTEM && isSystemInDarkTheme()
+            SideEffect {
+                WindowCompat.getInsetsController(window, window.decorView).apply {
+                    isAppearanceLightStatusBars = !dark
+                    isAppearanceLightNavigationBars = !dark
+                }
+            }
             SeliaCyclesTheme(
                 state.backup.settings.theme,
                 state.backup.settings.palette,

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Selia Cycles</string>
     <string name="nav_today">Heute</string>
     <string name="nav_calendar">Kalender</string>
     <string name="nav_history">Verlauf</string>
@@ -397,4 +396,31 @@
     <string name="temperature_summary">Basaltemperatur: %1$.2f °C</string>
     <string name="sleep_summary">Schlaf: %1$.1f h</string>
     <string name="intimacy_summary">Intimität: %1$s</string>
+    <string name="month_bleeding_days">Eingetragene Menstruationstage</string>
+    <string name="month_detail_days">Tage mit persönlichen Angaben</string>
+    <string name="month_timeline">Dein Monat auf einen Blick</string>
+    <string name="month_timeline_hint">Jeder Abschnitt steht für einen Kalendertag. Eingetragene Tage und Schätzungen werden getrennt angezeigt.</string>
+    <string name="month_saved_prediction">Ursprünglich gespeicherte Vorhersage</string>
+    <string name="month_reconstructed_prediction">Nachträglich berechnete Vorhersage</string>
+    <string name="month_start_window">Erwarteter Beginn: %1$s</string>
+    <string name="month_reconstruction_notice">Nachträglich aus früheren Einträgen berechnet. Diese Vorhersage wurde nicht im Voraus gespeichert und wird bei der Genauigkeitsbewertung nicht berücksichtigt.</string>
+    <string name="month_prediction_matched">Die Menstruation begann am ursprünglich vorhergesagten Tag.</string>
+    <string name="month_prediction_earlier">Die Menstruation begann %1$s früher als in der gespeicherten Vorhersage.</string>
+    <string name="month_prediction_later">Die Menstruation begann %1$s später als in der gespeicherten Vorhersage.</string>
+    <string name="month_wellbeing">So hast du dich diesen Monat gefühlt</string>
+    <string name="month_observations_only">Nur aus Tagen mit Einträgen. Tage ohne Eintrag gelten nicht als beschwerdefrei.</string>
+    <string name="month_pain_days">Tage mit eingetragenen Schmerzen: %1$d</string>
+    <string name="month_sleep_average">Durchschnittliche eingetragene Schlafdauer: %1$s h</string>
+    <string name="month_observations_empty">Trage an einem beliebigen Tag deine Stimmung, Energie oder eine Notiz ein, um hier deine eigenen monatlichen Muster zu sehen. Zusätzliche Angaben sind freiwillig.</string>
+    <string name="prediction_auto_cycle">Zykluslänge aus bisherigen Einträgen lernen</string>
+    <string name="prediction_auto_period">Menstruationsdauer aus bisherigen Einträgen lernen</string>
+    <string name="prediction_auto_hint">Automatische Schätzungen lernen aus abgeschlossenen Einträgen. Schalte diese Option aus, um deine eigene Dauer zu verwenden.</string>
+    <string name="prediction_settings_preview">Deine aktuelle Schätzung</string>
+    <string name="prediction_settings_basis">Vorhandene eingetragene Zyklusintervalle: %1$d. Ungewöhnliche Abstände können bei der üblichen Zykluslänge unberücksichtigt bleiben.</string>
+    <string name="prediction_settings_manual">Deine gewählten Längen bestimmen zukünftige Schätzungen. Früher gespeicherte Vorhersagen bleiben zum Vergleich verfügbar.</string>
+    <string name="prediction_settings_unavailable">Trage den Beginn einer Menstruation ein, um hier eine Schätzung zu sehen.</string>
+    <string name="prediction_settings_disabled">Schätzungen sind durch deine Zyklus- oder Profileinstellungen pausiert.</string>
+    <string name="prediction_settings_lengths">Zyklus (Tage): %1$d · Menstruation (Tage): %2$d</string>
+    <string name="prediction_settings_live">Änderungen gelten für zukünftige Tage im Kalender und bei aktivierter Kalenderspiegelung auch im anderen Kalender.</string>
+    <string name="prediction_fertility_unavailable">Der Eisprung lässt sich nicht schätzen, wenn die Lutealphase genauso lang oder länger als der gesamte Zyklus ist. Prüfe unten beide Längen.</string>
 </resources>

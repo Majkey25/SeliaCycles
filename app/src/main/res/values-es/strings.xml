@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Selia Cycles</string>
     <string name="nav_today">Hoy</string>
     <string name="nav_calendar">Calendario</string>
     <string name="nav_history">Historial</string>
@@ -397,4 +396,31 @@
     <string name="temperature_summary">Temperatura basal: %1$.2f °C</string>
     <string name="sleep_summary">Sueño: %1$.1f h</string>
     <string name="intimacy_summary">Intimidad: %1$s</string>
+    <string name="month_bleeding_days">Días de menstruación registrados</string>
+    <string name="month_detail_days">Días con detalles personales</string>
+    <string name="month_timeline">Tu mes de un vistazo</string>
+    <string name="month_timeline_hint">Cada segmento representa un día del calendario. Los días registrados y las estimaciones se muestran por separado.</string>
+    <string name="month_saved_prediction">Predicción original guardada</string>
+    <string name="month_reconstructed_prediction">Predicción reconstruida</string>
+    <string name="month_start_window">Inicio previsto: %1$s</string>
+    <string name="month_reconstruction_notice">Calculada a partir de registros anteriores. Esta predicción no se guardó con antelación y no se incluye en los resultados de precisión.</string>
+    <string name="month_prediction_matched">La menstruación comenzó el día previsto originalmente.</string>
+    <string name="month_prediction_earlier">La menstruación comenzó %1$s antes de lo previsto en la predicción guardada.</string>
+    <string name="month_prediction_later">La menstruación comenzó %1$s después de lo previsto en la predicción guardada.</string>
+    <string name="month_wellbeing">Cómo te sentiste este mes</string>
+    <string name="month_observations_only">Solo a partir de los días registrados. Los días sin registro no se consideran días sin síntomas.</string>
+    <string name="month_pain_days">Días con dolor registrado: %1$d</string>
+    <string name="month_sleep_average">Promedio de sueño registrado: %1$s h</string>
+    <string name="month_observations_empty">Añade tu ánimo, energía o una nota a cualquier día para ver aquí tus propios patrones mensuales. El seguimiento adicional es opcional.</string>
+    <string name="prediction_auto_cycle">Aprender la duración del ciclo del historial</string>
+    <string name="prediction_auto_period">Aprender la duración de la menstruación del historial</string>
+    <string name="prediction_auto_hint">Las estimaciones automáticas aprenden de registros completados. Desactiva esta opción para usar tu propia duración.</string>
+    <string name="prediction_settings_preview">Tu estimación actual</string>
+    <string name="prediction_settings_basis">Intervalos registrados disponibles: %1$d. Los intervalos inusuales pueden excluirse del cálculo de la duración habitual del ciclo.</string>
+    <string name="prediction_settings_manual">Las duraciones que elijas determinan las estimaciones futuras. Las predicciones guardadas anteriormente siguen disponibles para compararlas.</string>
+    <string name="prediction_settings_unavailable">Registra el inicio de una menstruación para ver una estimación aquí.</string>
+    <string name="prediction_settings_disabled">Las estimaciones están en pausa por los ajustes del ciclo o del perfil.</string>
+    <string name="prediction_settings_lengths">Ciclo (días): %1$d · Menstruación (días): %2$d</string>
+    <string name="prediction_settings_live">Los cambios se aplican a los días futuros del calendario y a su copia en otro calendario si la sincronización está activada.</string>
+    <string name="prediction_fertility_unavailable">No se puede estimar la ovulación si la fase lútea dura tanto como el ciclo completo o más. Revisa ambas duraciones a continuación.</string>
 </resources>
