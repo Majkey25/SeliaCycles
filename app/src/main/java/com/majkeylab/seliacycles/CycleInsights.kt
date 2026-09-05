@@ -120,7 +120,9 @@ object CycleInsights {
     ): DailyCycleInsight {
         val prediction = prediction(backup, date)
         val estimates = calendarPeriodEstimates(backup, snapshots, date)
-        val estimatedPeriod = estimates.firstOrNull { date >= it.start && date < it.endExclusive }
+        val coveringEstimates = estimates.filter { date >= it.start && date < it.endExclusive }
+        val estimatedPeriod = coveringEstimates.firstOrNull { it.origin == EstimateOrigin.CURRENT }
+            ?: coveringEstimates.firstOrNull()
         val matchedSnapshot = estimatedPeriod?.takeIf { it.origin != EstimateOrigin.CURRENT }?.let { estimate ->
             snapshots.values.firstOrNull { it.periodStart == estimate.start }
         }?.takeIf { CycleAnalysis.closestRecordedStart(it, prediction.periodStarts) != null }

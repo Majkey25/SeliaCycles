@@ -3,11 +3,18 @@ package com.majkeylab.seliacycles
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
+import android.database.DatabaseUtils
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
+
+internal fun hasLogCapacity(existingCount: Long, replacing: Boolean): Boolean =
+    replacing || existingCount < CycleBackup.MAX_LOGS
+
+internal fun mergedTransferSettings(current: AppSettings, incoming: AppSettings): AppSettings =
+    incoming.copy(partnerViewEnabled = current.partnerViewEnabled)
 
 class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     override fun onCreate(database: SQLiteDatabase) {
@@ -141,12 +148,15 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         settings = readSettings(readableDatabase),
     )
 
-    fun saveLog(log: DayLog) {
+    fun saveLog(log: DayLog) = writableDatabase.runInTransaction {
         val normalized = PeriodActions.removeFutureBleeding(listOf(log), LocalDate.now()).singleOrNull()
         if (normalized == null || normalized.isEmpty) {
-            writableDatabase.delete("day_logs", "day = ?", arrayOf(log.day.toEpochDay().toString()))
+            delete("day_logs", "day = ?", arrayOf(log.day.toEpochDay().toString()))
         } else {
-            check(writableDatabase.insertWithOnConflict(
+            val day = normalized.day.toEpochDay().toString()
+            val replacing = DatabaseUtils.queryNumEntries(this, "day_logs", "day = ?", arrayOf(day)) > 0
+            require(hasLogCapacity(DatabaseUtils.queryNumEntries(this, "day_logs"), replacing))
+            check(insertWithOnConflict(
                 "day_logs",
                 null,
                 logValues(normalized),
@@ -172,13 +182,21 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
     }
 
     fun mergeTransfer(transfer: SeliaTransfer) = writableDatabase.runInTransaction {
+        val currentSettings = readSettings(this)
         val merged = readLogs(this).associateByTo(mutableMapOf(), DayLog::day)
         transfer.backup.logs.forEach { log -> merged[log.day] = merged[log.day]?.let { mergeDayLogs(it, log) } ?: log }
         if (merged.size > CycleBackup.MAX_LOGS) throw IllegalArgumentException("Too many imported records")
         replaceDayLogs(merged.values.toList())
-        check(update("settings", settingsValues(transfer.backup.settings.normalized()), "id = 1", null) == 1)
-        delete("forecast_snapshots", null, null)
-        transfer.snapshots.forEach { snapshot -> insertOrThrow("forecast_snapshots", null, forecastValues(snapshot)) }
+        val settings = mergedTransferSettings(currentSettings, transfer.backup.settings).normalized()
+        check(update("settings", settingsValues(settings), "id = 1", null) == 1)
+        transfer.snapshots.forEach { snapshot ->
+            insertWithOnConflict(
+                "forecast_snapshots",
+                null,
+                forecastValues(snapshot),
+                SQLiteDatabase.CONFLICT_IGNORE,
+            )
+        }
     }
 
     fun saveSettings(settings: AppSettings) {
@@ -230,9 +248,10 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
     fun clearAll() = replace(CycleBackup())
 
     private fun SQLiteDatabase.replaceDayLogs(logs: List<DayLog>, today: LocalDate = LocalDate.now()) {
+        val normalized = PeriodActions.removeFutureBleeding(logs, today).sortedBy(DayLog::day)
+        require(normalized.size <= CycleBackup.MAX_LOGS)
         delete("day_logs", null, null)
-        PeriodActions.removeFutureBleeding(logs, today).sortedBy(DayLog::day)
-            .forEach { insertOrThrow("day_logs", null, logValues(it)) }
+        normalized.forEach { insertOrThrow("day_logs", null, logValues(it)) }
     }
 
     private fun AppSettings.normalized(today: LocalDate = LocalDate.now()): AppSettings = copy(

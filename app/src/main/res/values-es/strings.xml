@@ -184,6 +184,7 @@
     <string name="permission_denied">Permiso denegado. No cambió nada.</string>
     <string name="operation_failed">La operación falló. Los datos existentes no se sustituyeron.</string>
     <string name="calendar_sync_failed">La sincronización del calendario falló. Los datos privados del ciclo no cambiaron.</string>
+    <string name="calendar_cleanup_pending">Los datos locales del ciclo se eliminaron. Las copias del calendario se eliminarán cuando se restablezca el acceso.</string>
     <string name="calendar_event_recorded">Selia · Periodo registrado</string>
     <string name="calendar_event_estimated">Selia · Periodo estimado</string>
     <string name="calendar_event_fertile">Selia · Ventana fértil estimada</string>

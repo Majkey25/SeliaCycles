@@ -198,6 +198,28 @@ class CycleInsightsTest {
     }
 
     @Test
+    fun `current estimate takes precedence over an overlapping historical snapshot`() {
+        val backup = CycleBackup(
+            logs = period(LocalDate.of(2026, 8, 3)),
+            settings = AppSettings(cycleLength = 28, periodLength = 3),
+        )
+        val snapshot = ForecastSnapshot(
+            month = java.time.YearMonth.of(2026, 8),
+            periodStart = LocalDate.of(2026, 8, 28),
+            earliestStart = LocalDate.of(2026, 8, 26),
+            latestStart = LocalDate.of(2026, 8, 30),
+            periodLength = 5,
+            reconstructed = false,
+        )
+
+        val insight = CycleInsights.forDate(backup, mapOf(snapshot.month to snapshot), LocalDate.of(2026, 9, 1))
+
+        assertEquals(LocalDate.of(2026, 8, 31), insight.nextPeriodStart)
+        assertEquals(CyclePhase.MENSTRUAL, insight.phase)
+        assertEquals(LocalDate.of(2026, 9, 28), insight.fertility?.periodStart)
+    }
+
+    @Test
     fun `reports unavailable fertility without cycle history`() {
         assertEquals(
             FertilityStatus.UNAVAILABLE,

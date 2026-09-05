@@ -154,7 +154,8 @@ class CalendarMirror(private val context: Context) {
     private fun Cursor.matches(values: ContentValues): Boolean =
         getLong(2) == values.getAsLong(CalendarContract.Events.CALENDAR_ID) &&
             getString(3).orEmpty() == values.getAsString(CalendarContract.Events.TITLE).orEmpty() &&
-            getString(4).orEmpty() == values.getAsString(CalendarContract.Events.DESCRIPTION).orEmpty() &&
+            (!values.containsKey(CalendarContract.Events.DESCRIPTION) ||
+                getString(4).orEmpty() == values.getAsString(CalendarContract.Events.DESCRIPTION).orEmpty()) &&
             getLong(5) == values.getAsLong(CalendarContract.Events.DTSTART) &&
             getLong(6) == values.getAsLong(CalendarContract.Events.DTEND) &&
             getString(7).orEmpty() == values.getAsString(CalendarContract.Events.EVENT_TIMEZONE).orEmpty() &&

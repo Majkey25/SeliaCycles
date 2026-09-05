@@ -184,6 +184,7 @@
     <string name="permission_denied">Oprávnění bylo zamítnuto. Nic se nezměnilo.</string>
     <string name="operation_failed">Operace selhala. Původní data nebyla nahrazena.</string>
     <string name="calendar_sync_failed">Synchronizace kalendáře selhala. Soukromá data cyklu se nezměnila.</string>
+    <string name="calendar_cleanup_pending">Místní data cyklu byla vymazána. Kopie v kalendáři se odstraní po obnovení přístupu ke kalendáři.</string>
     <string name="calendar_event_recorded">Selia · Zapsaná menstruace</string>
     <string name="calendar_event_estimated">Selia · Odhad menstruace</string>
     <string name="calendar_event_fertile">Selia · Odhad plodného období</string>

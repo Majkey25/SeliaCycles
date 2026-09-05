@@ -29,6 +29,10 @@ data class SeliaTransfer(
 )
 
 object MyCalendarExportMapper {
+    private const val RESERVED_CONTAINER_ENTRIES = 8
+    internal const val MAX_NOTE_FILES = MyCalendarContainerReader.MAX_ENTRIES - RESERVED_CONTAINER_ENTRIES
+    private const val NOTES_PER_FILE = (CycleBackup.MAX_LOGS + MAX_NOTE_FILES - 1) / MAX_NOTE_FILES
+
     fun periodRows(logs: List<DayLog>): List<MyCalendarPeriodRow> = logs.asSequence()
         .filter(DayLog::bleeding)
         .map(DayLog::day)
@@ -58,7 +62,12 @@ object MyCalendarExportMapper {
         )
     }
 
+    fun noteChunks(logs: List<DayLog>): List<List<MyCalendarNoteRow>> = noteRows(logs)
+        .chunked(NOTES_PER_FILE)
+        .ifEmpty { listOf(emptyList()) }
+
     private fun LocalDate.toBasicDate(): Int = format(DateTimeFormatter.BASIC_ISO_DATE).toInt()
+
 }
 
 class MyCalendarExporter(context: Context) {
@@ -174,8 +183,7 @@ class MyCalendarExporter(context: Context) {
             "1.pill" to encryptedMyCalendarJson("[]"),
             "1.pill_record" to encryptedMyCalendarJson("[]"),
         )
-        MyCalendarExportMapper.noteRows(transfer.backup.logs).chunked(NOTES_PER_FILE)
-            .ifEmpty { listOf(emptyList()) }
+        MyCalendarExportMapper.noteChunks(transfer.backup.logs)
             .forEachIndexed { index, rows -> result["${index + 1}.note"] = encryptedMyCalendarJson(noteJson(rows, now).toString()) }
         return result
     }
@@ -253,7 +261,6 @@ class MyCalendarExporter(context: Context) {
 
     private companion object {
         const val MY_CALENDAR_UID = 0
-        const val NOTES_PER_FILE = 100
     }
 }
 
@@ -280,6 +287,7 @@ object MyCalendarContainerWriter {
                     "1.note" to encryptedMyCalendarJson("[]"),
                     "1.pill_record" to encryptedMyCalendarJson("[]"),
                 ) })
+                require(entries.size <= MyCalendarContainerReader.MAX_ENTRIES)
                 entries.forEach { (name, value) ->
                     zip.putNextEntry(ZipEntry(name))
                     zip.write(value)

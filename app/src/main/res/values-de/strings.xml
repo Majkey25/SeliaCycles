@@ -184,6 +184,7 @@
     <string name="permission_denied">Berechtigung verweigert. Nichts wurde geändert.</string>
     <string name="operation_failed">Vorgang fehlgeschlagen. Vorhandene Daten wurden nicht ersetzt.</string>
     <string name="calendar_sync_failed">Kalendersynchronisierung fehlgeschlagen. Private Zyklusdaten bleiben unverändert.</string>
+    <string name="calendar_cleanup_pending">Lokale Zyklusdaten wurden gelöscht. Kalenderkopien werden entfernt, sobald der Kalenderzugriff wiederhergestellt ist.</string>
     <string name="calendar_event_recorded">Selia · Erfasste Periode</string>
     <string name="calendar_event_estimated">Selia · Geschätzte Periode</string>
     <string name="calendar_event_fertile">Selia · Geschätztes fruchtbares Fenster</string>

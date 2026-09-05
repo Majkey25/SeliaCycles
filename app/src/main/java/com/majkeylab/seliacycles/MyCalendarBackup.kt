@@ -27,7 +27,7 @@ data class MyCalendarContainer(val database: ByteArray, val generation: String?)
 object MyCalendarContainerReader {
     const val MAX_DATABASE_BYTES = 10 * 1024 * 1024
     private const val MAX_FILE_BYTES = 20 * 1024 * 1024
-    private const val MAX_ENTRIES = 32
+    internal const val MAX_ENTRIES = 32
     private const val MAX_GENERATION_BYTES = 64 * 1024
     private const val MAX_EXTRACTED_BYTES = 20 * 1024 * 1024
     private val sqliteHeader = "SQLite format 3\u0000".encodeToByteArray()

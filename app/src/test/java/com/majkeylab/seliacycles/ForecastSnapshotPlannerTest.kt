@@ -4,10 +4,45 @@ import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ForecastSnapshotPlannerTest {
+    @Test
+    fun `snapshot dates stay inside the supported calendar range`() {
+        assertFailsWith<IllegalArgumentException> {
+            ForecastSnapshot(
+                month = YearMonth.from(LocalDate.MIN),
+                periodStart = LocalDate.MIN,
+                earliestStart = LocalDate.MIN,
+                latestStart = LocalDate.MIN,
+                periodLength = 1,
+                reconstructed = false,
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            ForecastSnapshot(
+                month = YearMonth.from(DayLog.MIN_DATE),
+                periodStart = DayLog.MIN_DATE,
+                earliestStart = LocalDate.MIN,
+                latestStart = DayLog.MIN_DATE,
+                periodLength = 1,
+                reconstructed = false,
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            ForecastSnapshot(
+                month = YearMonth.from(DayLog.MAX_DATE),
+                periodStart = DayLog.MAX_DATE,
+                earliestStart = DayLog.MAX_DATE,
+                latestStart = LocalDate.MAX,
+                periodLength = 1,
+                reconstructed = false,
+            )
+        }
+    }
+
     @Test
     fun reconstructsPastEstimateWithoutUsingThatMonthsRealPeriod() {
         val backup = CycleBackup(logs = period(LocalDate.of(2026, 6, 1)) +

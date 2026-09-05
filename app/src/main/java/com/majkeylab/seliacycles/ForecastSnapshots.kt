@@ -12,6 +12,9 @@ data class ForecastSnapshot(
     val reconstructed: Boolean,
 ) {
     init {
+        require(periodStart in DayLog.MIN_DATE..DayLog.MAX_DATE)
+        require(earliestStart in DayLog.MIN_DATE..DayLog.MAX_DATE)
+        require(latestStart in DayLog.MIN_DATE..DayLog.MAX_DATE)
         require(YearMonth.from(periodStart) == month)
         require(!earliestStart.isAfter(periodStart))
         require(!latestStart.isBefore(periodStart))

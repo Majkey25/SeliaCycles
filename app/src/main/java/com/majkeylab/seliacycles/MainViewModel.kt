@@ -17,6 +17,7 @@ import kotlinx.coroutines.withContext
 data class AppState(
     val backup: CycleBackup = CycleBackup(),
     val forecastSnapshots: Map<java.time.YearMonth, ForecastSnapshot> = emptyMap(),
+    val referenceDate: java.time.LocalDate = java.time.LocalDate.now(),
     val calendarPermissionGranted: Boolean = false,
     val selectedCalendarId: Long? = null,
     val deviceCalendars: List<DeviceCalendar> = emptyList(),
@@ -34,11 +35,16 @@ data class AppState(
         cycleLengthOverride = backup.settings.cycleLengthOverride,
         periodLengthOverride = backup.settings.periodLengthOverride,
         activePeriodStart = backup.settings.activePeriodStart,
+        referenceDate = referenceDate,
     )
 
-    val periodEstimates: List<PeriodEstimate> = CycleInsights.calendarPeriodEstimates(backup, forecastSnapshots)
+    val periodEstimates: List<PeriodEstimate> = CycleInsights.calendarPeriodEstimates(
+        backup,
+        forecastSnapshots,
+        referenceDate,
+    )
 
-    val todayInsight: DailyCycleInsight = CycleInsights.forDate(backup, forecastSnapshots)
+    val todayInsight: DailyCycleInsight = CycleInsights.forDate(backup, forecastSnapshots, referenceDate)
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -92,17 +98,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(backup = _state.value.backup.copy(settings = settings))
         runStoreAction {
             store.saveSettings(settings)
-            ReminderWorker.sync(getApplication(), settings)
         }
     }
 
-    fun clearAll() = runStoreAction {
-        if (calendarMirror.selectedCalendarId() != null) calendarMirror.disconnect()
-        store.clearAll()
-        ReminderWorker.sync(getApplication(), AppSettings())
+    fun clearAll() = viewModelScope.launch {
+        _state.value = _state.value.copy(busy = true, message = null)
+        val result = runCatching {
+            withContext(Dispatchers.IO) {
+                storeMutex.withLock {
+                    val calendarConnected = calendarMirror.selectedCalendarId() != null
+                    store.clearAll()
+                    ReminderWorker.sync(getApplication(), AppSettings())
+                    calendarConnected && runCatching { calendarMirror.disconnect() }.isFailure
+                }
+            }
+        }
+        reload(result.fold(
+            onSuccess = { calendarFailed -> if (calendarFailed) R.string.calendar_cleanup_pending else null },
+            onFailure = { R.string.operation_failed },
+        ))
     }
 
     fun calendarPermissionChanged() = reload()
+
+    fun refreshForToday() {
+        if (_state.value.referenceDate != java.time.LocalDate.now()) reload()
+    }
 
     fun connectCalendar(calendarId: Long) = runStoreAction {
         calendarMirror.connect(
@@ -185,6 +206,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun reload(@StringRes message: Int? = null) = viewModelScope.launch {
+        val referenceDate = java.time.LocalDate.now()
         val loaded = runCatching {
             withContext(Dispatchers.IO) {
                 storeMutex.withLock {
@@ -193,6 +215,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val missingSnapshots = ForecastSnapshotPlanner.missingSnapshots(
                         backup = backup,
                         existing = existingSnapshots.associateBy(ForecastSnapshot::month),
+                        referenceDate = referenceDate,
                     )
                     store.saveForecastSnapshots(missingSnapshots)
                     val forecastSnapshots = (existingSnapshots + missingSnapshots).associateBy(ForecastSnapshot::month)
@@ -217,6 +240,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 AppState(
                     backup = it.backup,
                     forecastSnapshots = it.forecastSnapshots,
+                    referenceDate = referenceDate,
                     calendarPermissionGranted = it.calendar.permissionGranted,
                     selectedCalendarId = it.calendar.selectedCalendarId,
                     deviceCalendars = it.calendar.calendars,

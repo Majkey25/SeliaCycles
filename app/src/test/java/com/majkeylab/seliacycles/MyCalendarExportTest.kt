@@ -7,8 +7,22 @@ import java.time.YearMonth
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class MyCalendarExportTest {
+    @Test
+    fun `maximum supported history fits the backup entry limit`() {
+        val logs = List(CycleBackup.MAX_LOGS) { index ->
+            DayLog(DayLog.MIN_DATE.plusDays(index.toLong()), note = "note")
+        }
+
+        val chunks = MyCalendarExportMapper.noteChunks(logs)
+
+        assertTrue(chunks.size <= MyCalendarExportMapper.MAX_NOTE_FILES)
+        assertEquals(CycleBackup.MAX_LOGS, chunks.sumOf(List<MyCalendarNoteRow>::size))
+    }
+
     @Test
     fun `container writer matches the generation 7 envelope`() {
         val database = "SQLite format 3\u0000test".encodeToByteArray()
@@ -19,6 +33,16 @@ class MyCalendarExportTest {
         val container = MyCalendarContainerReader.read(ByteArrayInputStream(output.toByteArray()))
         assertContentEquals(database, container.database)
         assertEquals("7", container.generation)
+    }
+
+    @Test
+    fun `container writer refuses an unreadable entry count`() {
+        val database = "SQLite format 3\u0000test".encodeToByteArray()
+        val sidecars = (1..29).associate { index -> "$index.extra" to byteArrayOf() }
+
+        assertFailsWith<IllegalArgumentException> {
+            MyCalendarContainerWriter.write(database, ByteArrayOutputStream(), sidecars)
+        }
     }
 
     @Test

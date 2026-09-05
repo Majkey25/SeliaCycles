@@ -184,6 +184,7 @@
     <string name="permission_denied">Odmowa uprawnienia. Nic nie zmieniono.</string>
     <string name="operation_failed">Operacja nie powiodła się. Istniejące dane nie zostały zastąpione.</string>
     <string name="calendar_sync_failed">Synchronizacja kalendarza nie powiodła się. Prywatne dane cyklu pozostały bez zmian.</string>
+    <string name="calendar_cleanup_pending">Lokalne dane cyklu zostały usunięte. Kopie w kalendarzu zostaną usunięte po przywróceniu dostępu.</string>
     <string name="calendar_event_recorded">Selia · Zapisana miesiączka</string>
     <string name="calendar_event_estimated">Selia · Szacowana miesiączka</string>
     <string name="calendar_event_fertile">Selia · Szacowane dni płodne</string>

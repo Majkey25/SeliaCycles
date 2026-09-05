@@ -283,6 +283,7 @@
     <string name="permission_denied">Permission denied. Nothing changed.</string>
     <string name="operation_failed">Operation failed. Existing data was not replaced.</string>
     <string name="calendar_sync_failed">Calendar sync failed. Private cycle data is unchanged.</string>
+    <string name="calendar_cleanup_pending">Local cycle data was deleted. Calendar copies will be removed after Calendar access is restored.</string>
     <string name="calendar_event_recorded">Selia · Recorded period</string>
     <string name="calendar_event_estimated">Selia · Estimated period</string>
     <string name="calendar_event_fertile">Selia · Estimated fertile window</string>
