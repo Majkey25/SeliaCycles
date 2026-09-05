@@ -99,8 +99,6 @@
     <string name="section_reminders">Připomínky</string>
     <string name="period_reminder">Připomínka menstruace</string>
     <string name="remind_before">Dní před odhadem</string>
-    <string name="delete_all_data">Smazat všechna data</string>
-    <string name="delete_all_data_body">Tato akce trvale smaže všechny místní záznamy a obnoví výchozí nastavení.</string>
     <string name="confirm_delete">Trvale smazat</string>
     <string name="section_about">Soukromí a zdraví</string>
     <string name="privacy">Soukromí</string>

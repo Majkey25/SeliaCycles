@@ -6,6 +6,13 @@ import java.time.temporal.ChronoUnit
 enum class TodayPrimaryAction { START_PERIOD, END_PERIOD, OPEN_LOG }
 
 object PeriodActions {
+    fun suggestedStart(day: LocalDate, settings: AppSettings, logs: List<DayLog>, estimates: List<PeriodEstimate>): LocalDate? {
+        settings.activePeriodStart?.takeIf { ChronoUnit.DAYS.between(it, day) in 0 until MAX_PERIOD_DAYS }?.let { return it }
+        periodContaining(day, logs)?.let { return it.first }
+        if (!settings.canPredictPeriods) return null
+        return estimates.filter { day >= it.start && day < it.endExclusive }.maxOfOrNull(PeriodEstimate::start)
+    }
+
     fun removeFutureBleeding(logs: List<DayLog>, today: LocalDate): List<DayLog> = logs.mapNotNull { log ->
         if (!log.day.isAfter(today) || !log.bleeding) return@mapNotNull log
         log.copy(bleeding = false, flow = Flow.NONE).takeUnless(DayLog::isEmpty)

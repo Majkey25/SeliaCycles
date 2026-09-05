@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_retry_load">Skúsiť znova</string>
+    <string name="profile_default_name">Môj kalendár</string>
+    <string name="profiles_title">Miestne profily</string>
+    <string name="profile_manage">Spravovať profily</string>
+    <string name="profile_create">Pridať profil</string>
+    <string name="profile_name">Názov profilu</string>
+    <string name="profile_name_hint">Najviac %1$d znakov.</string>
+    <string name="profile_name_invalid">Zadajte názov do %1$d znakov bez riadiacich znakov.</string>
+    <string name="profile_delete">Vymazať profil</string>
+    <string name="profile_delete_title">Vymazať tento profil aj jeho údaje?</string>
+    <string name="profile_delete_body">Natrvalo sa vymažú všetky záznamy a nastavenia aktívneho profilu %1$s. Túto akciu nemožno vrátiť.</string>
+    <string name="profiles_privacy">Profily majú v tomto zariadení oddelené kalendáre. Nie sú to uzamknuté účty. Ktokoľvek môže otvoriť aplikáciu, môže otvoriť ktorýkoľvek profil.</string>
+    <string name="profile_limit">Môžete mať najviac %1$d miestnych profilov.</string>
+    <string name="ui_mode_label">Režim zobrazenia</string>
+    <string name="ui_mode_simple">Jednoduchý</string>
+    <string name="ui_mode_standard">Štandardný</string>
+    <string name="ui_mode_detailed">Podrobný</string>
+    <string name="ui_mode_simple_description">Kalendár a každodenné záznamy.</string>
+    <string name="ui_mode_standard_description">Denný prehľad a odhady cyklu.</string>
+    <string name="ui_mode_detailed_description">Odhady cyklu, štatistiky a osobné súvislosti.</string>
+    <string name="fertility_daily_title">Denný odhad plodnosti</string>
+    <string name="fertility_unavailable">Odhad nie je dostupný</string>
+    <string name="fertility_outside_estimate">Mimo odhadovaného plodného obdobia</string>
+    <string name="fertility_possible">Možno v plodnom období</string>
+    <string name="fertility_window">Odhadované plodné obdobie</string>
+    <string name="fertility_estimated_ovulation">Odhadovaná ovulácia</string>
+    <string name="fertility_uncertainty_warning">Kalendárne odhady sa môžu mýliť. Nepotvrdzujú ovuláciu ani bezpečné dni a neslúžia ako antikoncepcia.</string>
+    <string name="profile_transfer_scope">Import a export sa týkajú iba aktívneho profilu.</string>
+    <string name="calendar_add_period">Zapísať menštruáciu</string>
+    <string name="profile_clear_data">Vymazať tento kalendár</string>
+    <string name="profile_clear_data_body">Natrvalo sa vymažú všetky záznamy a obnovia nastavenia iba v aktívnom kalendári. Ostatné profily zostanú bez zmeny. Túto akciu nemožno vrátiť.</string>
+</resources>

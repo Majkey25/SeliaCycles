@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -144,6 +145,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -313,7 +315,29 @@ fun SeliaCyclesApp(
     state: AppState,
     viewModel: MainViewModel,
 ) {
+    key(state.activeProfile.id, state.activeProfile.mode) {
+        ProfileApp(state, viewModel)
+    }
+}
+
+private val AppState.showFertility: Boolean
+    get() = activeProfile.mode != UiMode.SIMPLE && backup.settings.canEstimateFertility
+
+@StringRes
+private fun dailyFertilityLabel(level: DailyFertilityLevel): Int = when (level) {
+    DailyFertilityLevel.UNAVAILABLE -> R.string.fertility_unavailable
+    DailyFertilityLevel.OUTSIDE_ESTIMATE -> R.string.fertility_outside_estimate
+    DailyFertilityLevel.POSSIBLE -> R.string.fertility_possible
+    DailyFertilityLevel.FERTILE_WINDOW -> R.string.fertility_window
+    DailyFertilityLevel.ESTIMATED_OVULATION -> R.string.fertility_estimated_ovulation
+}
+
+@Composable
+private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
     var screen by rememberSaveable { mutableStateOf(Screen.TODAY) }
+    var showProfiles by rememberSaveable { mutableStateOf(false) }
+    var documentProfileId by rememberSaveable { mutableStateOf<String?>(null) }
+    var reminderProfileId by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     var daySheetMode by rememberSaveable { mutableStateOf(DaySheetMode.OVERVIEW) }
     var infoDialog by remember { mutableStateOf<InfoDialog?>(null) }
@@ -325,17 +349,24 @@ fun SeliaCyclesApp(
     val snackbar = remember { SnackbarHostState() }
 
     val openMyCalendar = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) viewModel.inspectMyCalendar(uri)
+        if (uri != null) viewModel.inspectMyCalendar(uri, documentProfileId)
+        documentProfileId = null
     }
     val createMyCalendar = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream"),
-    ) { uri -> if (uri != null) viewModel.exportMyCalendar(uri) }
+    ) { uri ->
+        if (uri != null) viewModel.exportMyCalendar(uri, documentProfileId)
+        documentProfileId = null
+    }
 
     val notificationPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted) viewModel.saveSettings(state.backup.settings.copy(reminderEnabled = true))
+        if (granted && reminderProfileId == state.activeProfile.id) {
+            viewModel.saveSettings(state.backup.settings.copy(reminderEnabled = true), reminderProfileId)
+        }
         else viewModel.permissionDenied()
+        reminderProfileId = null
     }
     val calendarPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -353,11 +384,18 @@ fun SeliaCyclesApp(
     }
 
     Scaffold(
+        topBar = {
+            Box(Modifier.fillMaxWidth().statusBarsPadding(), contentAlignment = Alignment.Center) {
+                Box(Modifier.widthIn(max = 600.dp).fillMaxWidth()) {
+                    ProfileSwitcher(state, viewModel::selectProfile, onManage = { showProfiles = true })
+                }
+            }
+        },
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 NavigationBar(Modifier.widthIn(max = 600.dp).fillMaxWidth()) {
-                    Screen.entries.forEach { item ->
+                    Screen.entries.filter { state.activeProfile.mode != UiMode.SIMPLE || it != Screen.HISTORY }.forEach { item ->
                         NavigationBarItem(
                             selected = screen == item,
                             onClick = { screen = item },
@@ -379,7 +417,18 @@ fun SeliaCyclesApp(
                 modifier = Modifier.fillMaxHeight().widthIn(max = 600.dp).fillMaxWidth()
                     .align(Alignment.TopCenter),
             ) {
-                if (state.loading) {
+                if (state.loadFailed) {
+                    Column(Modifier.align(Alignment.Center).padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(stringResource(R.string.operation_failed))
+                        Button(onClick = viewModel::retryLoad) {
+                            Icon(Icons.Outlined.Refresh, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.profile_retry_load))
+                        }
+                    }
+                } else if (state.loading) {
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 } else {
                     when (screen) {
@@ -409,16 +458,21 @@ fun SeliaCyclesApp(
                                 selectedDay = it
                                 daySheetMode = DaySheetMode.OVERVIEW
                             },
+                            onEditPeriod = {
+                                selectedDay = it
+                                daySheetMode = DaySheetMode.PERIOD
+                            },
                         )
                         Screen.HISTORY -> HistoryScreen(state)
                         Screen.SETTINGS -> SettingsScreen(
                             state = state,
-                            onSave = viewModel::saveSettings,
+                            onSave = { viewModel.saveSettings(it) },
                             onReminderChange = { enabled ->
                                 if (enabled && Build.VERSION.SDK_INT >= 33 &&
                                     ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
                                     PackageManager.PERMISSION_GRANTED
                                 ) {
+                                    reminderProfileId = state.activeProfile.id
                                     notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                                 } else {
                                     viewModel.saveSettings(state.backup.settings.copy(reminderEnabled = enabled))
@@ -426,8 +480,12 @@ fun SeliaCyclesApp(
                             },
                             onInfo = { infoDialog = it },
                             onDeleteAll = { showDeleteConfirm = true },
-                            onMyCalendarImport = { openMyCalendar.launch(arrayOf("application/octet-stream", "*/*")) },
+                            onMyCalendarImport = {
+                                documentProfileId = state.activeProfile.id
+                                openMyCalendar.launch(arrayOf("application/octet-stream", "*/*"))
+                            },
                             onMyCalendarExport = {
+                                documentProfileId = state.activeProfile.id
                                 createMyCalendar.launch("Selia-Cycles-${LocalDate.now()}.pc")
                             },
                             onRequestCalendarPermission = {
@@ -483,7 +541,8 @@ fun SeliaCyclesApp(
             DaySheetMode.DETAILS -> DayLogSheet(
                 day = day,
                 initial = state.logsByDay[day],
-                showFertility = state.backup.settings.canEstimateFertility,
+                showFertility = state.showFertility,
+                mode = state.activeProfile.mode,
                 onDismiss = { daySheetMode = DaySheetMode.OVERVIEW },
                 onSave = {
                     viewModel.saveLog(it)
@@ -506,8 +565,8 @@ fun SeliaCyclesApp(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.delete_all_data)) },
-            text = { Text(stringResource(R.string.delete_all_data_body)) },
+            title = { Text(stringResource(R.string.profile_clear_data)) },
+            text = { Text(stringResource(R.string.profile_clear_data_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteConfirm = false
@@ -532,6 +591,13 @@ fun SeliaCyclesApp(
             selfCareDay = state.referenceDate
         },
         onDismiss = { showPhaseDetails = false },
+    )
+    if (showProfiles) ProfilesSheet(
+        state = state,
+        onDismiss = { showProfiles = false },
+        onCreate = { name, mode -> viewModel.createProfile(name, mode); showProfiles = false },
+        onUpdate = { name, mode -> viewModel.updateProfile(name, mode); showProfiles = false },
+        onDelete = { viewModel.deleteProfile(); showProfiles = false },
     )
 }
 
@@ -648,7 +714,7 @@ private fun TodayScreen(
         UpcomingCycleSection(
             insight = insight,
             fertility = CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots, today)
-                .firstOrNull { !it.fertileEnd.isBefore(today) },
+                .firstOrNull { !it.fertileEnd.isBefore(today) }.takeIf { state.showFertility },
             predictionsEnabled = predictionsEnabled,
             dateFormat = shortDateFormat,
             distance = distance,
@@ -666,7 +732,7 @@ private fun TodayScreen(
             body = R.string.self_care_dashboard_body,
             onClick = onSelfCare,
         )
-        if (state.backup.settings.showCycleDetails) DashboardLinkRow(
+        if (state.backup.settings.showCycleDetails && state.activeProfile.mode != UiMode.SIMPLE) DashboardLinkRow(
             icon = Icons.Outlined.Insights,
             title = R.string.cycle_analysis_title,
             body = R.string.cycle_analysis_dashboard_body,
@@ -1121,6 +1187,7 @@ private fun CalendarScreen(
     targetDay: LocalDate?,
     onTargetConsumed: () -> Unit,
     onEdit: (LocalDate) -> Unit,
+    onEditPeriod: (LocalDate) -> Unit,
 ) {
     val pagerState = rememberPagerState(
         initialPage = CalendarPaging.pageFor(YearMonth.now()),
@@ -1148,8 +1215,9 @@ private fun CalendarScreen(
             (0L until snapshot.periodLength.toLong()).map(snapshot.periodStart::plusDays)
         }).toSet()
     }
-    val fertility = remember(state.backup, state.forecastSnapshots, state.referenceDate) {
-        CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots, state.referenceDate)
+    val fertility = remember(state.backup, state.forecastSnapshots, state.referenceDate, state.showFertility) {
+        if (state.showFertility) CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots, state.referenceDate)
+        else emptyList()
     }
     val fertile = remember(fertility) {
         fertility.flatMap { estimate ->
@@ -1178,13 +1246,13 @@ private fun CalendarScreen(
     LaunchedEffect(pagerState.settledPage) { overviewExpanded = false }
     Column(Modifier.fillMaxSize()) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 stringResource(R.string.calendar_heading),
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
             Box {
@@ -1204,9 +1272,6 @@ private fun CalendarScreen(
                         )
                     }
                 }
-            }
-            IconButton(onClick = { onEdit(LocalDate.now()) }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_entry))
             }
         }
         HorizontalPager(
@@ -1229,6 +1294,7 @@ private fun CalendarScreen(
                 periodColor = periodColor,
                 onPeriodColor = onPeriodColor,
                 entryColor = entryColor,
+                onEditPeriod = onEditPeriod,
                 onDayClick = { day ->
                     focusedDay = day
                     val targetPage = CalendarPaging.pageFor(YearMonth.from(day))
@@ -1317,6 +1383,7 @@ private fun CalendarMonthPage(
     onPeriodColor: Color,
     entryColor: Color,
     onDayClick: (LocalDate) -> Unit,
+    onEditPeriod: (LocalDate) -> Unit,
 ) {
     val locale = currentLocale()
     val longDateFormat = remember(locale) {
@@ -1330,6 +1397,11 @@ private fun CalendarMonthPage(
         listOf(DayOfWeek.SUNDAY) + DayOfWeek.entries.dropLast(1)
     }
     val days = CalendarPaging.gridDays(shownMonth, firstDay)
+    val dailyFertility = remember(shownMonth, firstDay, state.content, state.activeProfile.mode) {
+        if (state.activeProfile.mode == UiMode.DETAILED && state.showFertility) days.associateWith {
+            DailyFertility.forDate(it, state.backup, state.prediction, state.periodEstimates, state.referenceDate)
+        } else emptyMap()
+    }
     var legendExpanded by remember { mutableStateOf(false) }
     val previousMonthLabel = stringResource(R.string.previous_month)
     val nextMonthLabel = stringResource(R.string.next_month)
@@ -1371,6 +1443,7 @@ private fun CalendarMonthPage(
                         dateDescription = day.format(longDateFormat),
                         isToday = day == today,
                         tracks = tracks,
+                        possibleFertile = dailyFertility[day] == DailyFertilityLevel.POSSIBLE,
                         selected = focusedDay == day,
                         hasDetails = state.logsByDay[day]?.let { log ->
                             if (selectedFilters.isEmpty()) log.hasCalendarMarker else {
@@ -1382,8 +1455,12 @@ private fun CalendarMonthPage(
                             tracks.period == tracksFor(day.minusDays(1)).period,
                         periodConnectNext = column < 6 && tracks.period != CalendarPeriodLayer.NONE &&
                             tracks.period == tracksFor(day.plusDays(1)).period,
-                        fertileConnectPrevious = column > 0 && tracks.fertile && tracksFor(day.minusDays(1)).fertile,
-                        fertileConnectNext = column < 6 && tracks.fertile && tracksFor(day.plusDays(1)).fertile,
+                        fertileConnectPrevious = column > 0 &&
+                            (tracks.fertile || dailyFertility[day] == DailyFertilityLevel.POSSIBLE) &&
+                            (tracksFor(day.minusDays(1)).fertile || dailyFertility[day.minusDays(1)] == DailyFertilityLevel.POSSIBLE),
+                        fertileConnectNext = column < 6 &&
+                            (tracks.fertile || dailyFertility[day] == DailyFertilityLevel.POSSIBLE) &&
+                            (tracksFor(day.plusDays(1)).fertile || dailyFertility[day.plusDays(1)] == DailyFertilityLevel.POSSIBLE),
                         periodColor = periodColor,
                         onPeriodColor = onPeriodColor,
                         entryColor = entryColor,
@@ -1393,6 +1470,18 @@ private fun CalendarMonthPage(
                     )
                 }
             }
+        }
+        Button(
+            onClick = {
+                onEditPeriod(focusedDay?.takeIf { YearMonth.from(it) == shownMonth && !it.isAfter(today) }
+                    ?: if (shownMonth == YearMonth.from(today)) today else shownMonth.atDay(1))
+            },
+            enabled = !state.busy && shownMonth <= YearMonth.from(today),
+            modifier = Modifier.fillMaxWidth().padding(top = 12.dp).heightIn(min = 56.dp),
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(28.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.calendar_add_period))
         }
         TextButton(
             onClick = { legendExpanded = !legendExpanded },
@@ -1414,7 +1503,7 @@ private fun CalendarMonthPage(
                     stringResource(R.string.predicted_legend),
                     stringResource(R.string.predicted_legend_detail),
                 )
-                if (state.backup.settings.canEstimateFertility) {
+                if (state.showFertility) {
                     LegendItem(
                         MaterialTheme.colorScheme.tertiary.copy(alpha = 0.20f),
                         stringResource(R.string.fertile_legend),
@@ -1424,6 +1513,11 @@ private fun CalendarMonthPage(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
                         stringResource(R.string.ovulation_legend),
                         stringResource(R.string.ovulation_legend_detail),
+                    )
+                    if (state.activeProfile.mode == UiMode.DETAILED) LegendItem(
+                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.08f),
+                        stringResource(R.string.fertility_possible),
+                        stringResource(R.string.fertility_uncertainty_warning),
                     )
                 }
                 LegendItem(
@@ -1455,6 +1549,7 @@ private fun CalendarDay(
     dateDescription: String,
     isToday: Boolean,
     tracks: CalendarDayTracks,
+    possibleFertile: Boolean,
     selected: Boolean,
     hasDetails: Boolean,
     inShownMonth: Boolean,
@@ -1503,6 +1598,7 @@ private fun CalendarDay(
         }
         if (tracks.predictedOverlap) add(stringResource(R.string.predicted_legend))
         if (tracks.fertile) add(stringResource(R.string.fertile_legend))
+        if (possibleFertile) add(stringResource(R.string.fertility_possible))
         if (tracks.ovulation) add(stringResource(R.string.ovulation_legend))
         if (hasDetails) add(stringResource(R.string.recorded_values))
     }
@@ -1511,11 +1607,11 @@ private fun CalendarDay(
         modifier = modifier.alpha(if (inShownMonth) 1f else 0.42f),
         contentAlignment = Alignment.Center,
     ) {
-        if (tracks.fertile) Box(
+        if (tracks.fertile || possibleFertile) Box(
             Modifier.fillMaxWidth().height(42.dp).padding(
                 start = if (fertileConnectPrevious) 0.dp else 3.dp,
                 end = if (fertileConnectNext) 0.dp else 3.dp,
-            ).clip(fertileShape).background(fertileColor),
+            ).clip(fertileShape).background(if (tracks.fertile) fertileColor else fertileColor.copy(alpha = 0.08f)),
         )
         if (tracks.period != CalendarPeriodLayer.NONE) Box(
             Modifier.fillMaxWidth().height(32.dp).padding(
@@ -1526,9 +1622,9 @@ private fun CalendarDay(
         Box(
             Modifier.size(36.dp).clip(CircleShape)
                 .then(if (tracks.ovulation) Modifier.background(ovulationColor) else Modifier)
-                .then(if (selected) {
+                .then(if (isToday) {
                     Modifier.border(3.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                } else if (isToday) {
+                } else if (selected) {
                     Modifier.border(2.dp, MaterialTheme.colorScheme.outline, CircleShape)
                 } else Modifier),
             contentAlignment = Alignment.Center,
@@ -1837,7 +1933,7 @@ private fun CycleLengthChart(periodStarts: List<LocalDate>, locale: Locale) {
         if (cycles.size < 2) {
             Text(stringResource(R.string.more_history_needed), color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            val monthFormat = remember(locale) { DateTimeFormatter.ofPattern("MMM yy", locale) }
+            val monthFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale) }
             val lineColor = MaterialTheme.colorScheme.primary
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Canvas(Modifier.fillMaxWidth().height(96.dp).padding(horizontal = 12.dp, vertical = 8.dp)) {
@@ -2039,6 +2135,7 @@ private fun SettingsScreen(
                     onDisconnect = onCalendarDisconnect,
                 )
                 SettingsPage.DATA -> {
+                    Text(stringResource(R.string.profile_transfer_scope), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     InfoBlock(R.string.device_transfer, R.string.device_transfer_body, Icons.Outlined.Devices)
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
                     InfoBlock(R.string.my_calendar_import, R.string.my_calendar_import_body, Icons.Outlined.CalendarMonth)
@@ -2065,7 +2162,7 @@ private fun SettingsScreen(
                     OutlinedButton(onClick = onDeleteAll, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
                         Icon(Icons.Outlined.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.delete_all_data), color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.profile_clear_data), color = MaterialTheme.colorScheme.error)
                     }
                 }
                 SettingsPage.PRIVACY -> {
@@ -2879,7 +2976,7 @@ private fun DayOverviewSheet(
     val statusLabels = buildList {
         if (log?.bleeding == true) add(R.string.selected_day_recorded)
         if (periodEstimate != null) add(R.string.selected_day_estimated)
-        when (insight.fertilityStatus) {
+        when (insight.fertilityStatus.takeIf { state.showFertility }) {
             FertilityStatus.OVULATION -> add(R.string.selected_day_ovulation)
             FertilityStatus.FERTILE -> add(R.string.selected_day_fertile)
             else -> Unit
@@ -2959,6 +3056,17 @@ private fun DayOverviewSheet(
                     }
                 }
                 PhaseGuidanceCard(insight, onSelfCare)
+                if (state.showFertility) {
+                    val fertilityLevel = remember(day, state.content) {
+                        if (day <= state.referenceDate && insight.fertilityStatus == FertilityStatus.UNAVAILABLE) {
+                            DailyFertilityLevel.UNAVAILABLE
+                        } else DailyFertility.forDate(day, state.backup, state.prediction, state.periodEstimates, state.referenceDate)
+                    }
+                    SectionLabel(Icons.Outlined.Spa, R.string.fertility_daily_title)
+                    Text(stringResource(dailyFertilityLabel(fertilityLevel)), fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.fertility_uncertainty_warning),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 comparison?.let {
                     SectionLabel(Icons.Outlined.EventAvailable, R.string.prediction_accuracy)
                     Text(stringResource(if (it.snapshot.reconstructed) R.string.forecast_reconstructed else R.string.forecast_saved,
@@ -3015,9 +3123,7 @@ private fun DayOverviewSheet(
 }
 
 private fun suggestedPeriodStart(state: AppState, day: LocalDate): LocalDate? =
-    (state.prediction.periodStarts + state.periodEstimates.map(PeriodEstimate::start))
-    .filter { !it.isAfter(day) && ChronoUnit.DAYS.between(it, day) in 0..13 }
-    .maxOrNull()
+    PeriodActions.suggestedStart(day, state.backup.settings, state.backup.logs, state.periodEstimates)
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -3179,6 +3285,7 @@ private fun DayLogSheet(
     day: LocalDate,
     initial: DayLog?,
     showFertility: Boolean,
+    mode: UiMode,
     onDismiss: () -> Unit,
     onSave: (DayLog) -> Unit,
 ) {
@@ -3187,7 +3294,7 @@ private fun DayLogSheet(
     var mood by rememberSaveable(day, initial) { mutableStateOf(initial?.mood) }
     var symptoms by rememberSaveable(day, initial) { mutableStateOf(initial?.symptoms.orEmpty()) }
     var note by rememberSaveable(day, initial) { mutableStateOf(initial?.note.orEmpty()) }
-    var showMore by rememberSaveable(day) { mutableStateOf(false) }
+    var showMore by rememberSaveable(day) { mutableStateOf(mode == UiMode.DETAILED) }
     var weight by rememberSaveable(day, initial) { mutableStateOf(initial?.weightKg?.toString().orEmpty()) }
     var temperature by rememberSaveable(day, initial) { mutableStateOf(initial?.temperatureC?.toString().orEmpty()) }
     var sleep by rememberSaveable(day, initial) { mutableStateOf(initial?.sleepHours?.toString().orEmpty()) }
@@ -3288,12 +3395,12 @@ private fun DayLogSheet(
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
                 )
-                TextButton(onClick = { showMore = !showMore }) {
+                if (mode != UiMode.SIMPLE) TextButton(onClick = { showMore = !showMore }) {
                     Icon(Icons.Outlined.Tune, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(if (showMore) R.string.fewer_details else R.string.more_details))
                 }
-                if (showMore) {
+                if (showMore && mode != UiMode.SIMPLE) {
                     SwitchRow(R.string.spotting, spotting, Icons.Outlined.WaterDrop) { spotting = it }
                     if (showFertility) {
                         SectionLabel(Icons.Outlined.Spa, R.string.fertility_signs)

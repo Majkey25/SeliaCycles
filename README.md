@@ -5,12 +5,16 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 <p align="center">
-  <img src="docs/play-store/assets/icon-512.png" width="180" alt="Selia Cycles calendar and drop icon">
+  <img src="docs/play-store/assets/icon-512.png" width="180" alt="Selia Cycles calendar icon">
 </p>
 
 Selia Cycles is a private period calendar for Android. It records bleeding, spotting, flow, symptoms, mood, cervical mucus, ovulation and pregnancy tests, pain, energy, stress, activity, medication, weight, basal temperature, sleep, intimacy, and notes without an account, ads, analytics, or network permission.
 
 ## Features
+
+- Separate local calendars with a profile switcher. Simple, Standard, and Detailed modes change the amount of information shown without deleting hidden records.
+- Daily fertility labels share the calendar calculation. Detailed mode also shows the uncertainty around estimated fertile days. These are not pregnancy probabilities or safe-day labels.
+- A full-width period-entry button below the month grid. Today has the stronger circle; the selected date has a quieter outline.
 
 - Calendar-first Material 3 UI with one-tap Period started / Period ended actions that record only confirmed days.
 - Direct period-day editing can add, remove, shorten, extend, split, or clear exact bleeding days while preserving other daily information.

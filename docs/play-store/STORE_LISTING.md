@@ -12,19 +12,19 @@ Full description:
 
 Selia Cycles keeps period tracking clear and private.
 
-Mark Period started or Period ended with one tap. Start records only the confirmed first day; End completes the recorded span. A recorded period can be shortened, extended, split, or removed by selecting its exact days without deleting other information. Optional symptoms, mood, cervical mucus, tests, wellbeing, notes, and measurements use a separate information editor and cannot change period dates.
+Record when a period starts or ends, or tap individual calendar days to correct its length. Optional daily details include mood, symptoms, pain, energy, sleep, notes, measurements and fertility signs. They stay separate from period editing.
 
-Personal estimates use recent recorded intervals and reduce the effect of isolated unusual gaps. Long cycles remain long cycles instead of being split into invented records. Saved monthly estimates remain visible across history, and accuracy results use only predictions saved in advance. A real period start or a manual length change updates future months. Estimated ovulation, fertile windows, daily fertility status, recorded fertility signs, cycle phase, and personal mood trends add context without claiming medical certainty.
+Estimates use your recorded cycle history. New records update future estimates, while saved forecasts remain available for comparison. Missed expected periods stay marked as overdue. Ovulation and fertile-window dates are estimates, not measurements or pregnancy probabilities.
 
-Expand the month overview to see recorded-day counts, separate timelines for reality and predictions, every overlapping period, and summaries of the mood, energy, pain, and sleep you recorded. Tap a date range to open its day. Cycle and period length can each learn from history or use your own setting, with a preview of the resulting estimate.
+Keep separate local calendars for yourself or family members and switch between them. Simple, Standard and Detailed display modes control how much information appears without deleting hidden records. These profiles are not locked accounts: anyone who can open the app can access them.
 
-Private details stay in app storage. Selia Cycles has no account, app cloud, ads, analytics, or network permission. Android can transfer the database directly while setting up a new device. Compatible `.pc` backups can be imported locally, and Selia can export a local `.pc` backup for transfer or re-import. An optional calendar mirror can copy short cycle labels to an existing Google Calendar, Outlook, Exchange, or local calendar chosen by the user; the calendar provider controls its own account sync.
+Selia Cycles has no app account, cloud service, ads, analytics or network permission. Optional .pc import and export work with the selected local profile. Exported files are not encrypted, so store and share them carefully. Android can transfer local databases during device setup.
 
-Phase guidance names the current phase and separates possible physical signs from emotions and energy. The calendar shows muted dates from adjacent months and switches to the correct full month when one is opened. Its color key stays fully hidden until requested. Menstruation remains prominent red and optional user entries use a blue marker; custom palettes can change both.
+Optional calendar mirroring copies short cycle labels to a calendar selected through Android, including Google Calendar, Outlook, Exchange or a local calendar. The calendar provider controls synchronization and sharing. Private notes and raw health details are not mirrored.
 
-Choose System, Light, or Dark mode from visual previews and use six presets or your own custom color palette. Available in English, Czech, Slovak, German, Polish, and Spanish. Requires Android 10 or newer.
+Choose system, light or dark appearance, preset palettes or your own colors. Available in English, Czech, Slovak, German, Polish and Spanish. Requires Android 10 or newer.
 
-Estimates are informational. They are not medical advice or contraception.
+Estimates, phase information and self-care suggestions are informational. They do not diagnose conditions, confirm ovulation or provide contraception.
 
 ## Czech
 
@@ -37,6 +37,8 @@ Short description:
 Full description:
 
 Selia Cycles nabízí přehledné a soukromé sledování menstruace.
+
+V jednom zařízení můžeš mít oddělené místní kalendáře pro sebe nebo členy rodiny. Jednoduchý, standardní a podrobný režim určují množství zobrazených informací bez mazání skrytých záznamů. Profily nejsou uzamčené účty. Kdo může otevřít aplikaci, může otevřít kterýkoli profil. Import a export se týkají jen vybraného profilu. Exportovaný soubor není šifrovaný, proto jej ukládej a sdílej opatrně.
 
 Jedním klepnutím označ začátek nebo konec menstruace. Začátek zapíše jen potvrzený první den a konec doplní skutečně proběhlé období. Zapsanou menstruaci lze zkrátit, prodloužit, rozdělit nebo odstranit výběrem přesných dnů bez smazání ostatních informací. Volitelné příznaky, nálada, cervikální hlen, testy, kondice, poznámka a měření používají samostatný editor informací a nemohou změnit dny menstruace.
 
@@ -54,4 +56,4 @@ Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
 
 ## Closed test release notes
 
-`New month overview with timelines and personal summaries. Independent automatic cycle and period lengths. More consistent predictions and faster state updates, with safer rapid settings changes.`
+`Local calendar profiles and Simple, Standard or Detailed modes. Clearer period entry, stronger today highlight and complete chart dates. Missed periods stay overdue. Safer profile switching and recovery after failed reads. New calendar icon and refreshed screenshots.`

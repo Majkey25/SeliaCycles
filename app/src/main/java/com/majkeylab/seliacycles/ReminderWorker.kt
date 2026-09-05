@@ -13,11 +13,13 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import java.time.Duration
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -30,25 +32,49 @@ internal fun shouldNotifyPeriod(
     lastNotifiedKey: Long?,
 ): Boolean = daysUntil in 0..reminderDays && periodKey != lastNotifiedKey
 
+internal fun reminderWorkName(profileId: String): String {
+    requireValidProfileId(profileId)
+    return if (profileId == LocalProfiles.DEFAULT_ID) "selia-cycles-period-reminder"
+    else "selia-cycles-period-reminder-$profileId"
+}
+
+internal fun reminderStateName(profileId: String): String {
+    requireValidProfileId(profileId)
+    return if (profileId == LocalProfiles.DEFAULT_ID) "reminder-state" else "reminder-state-$profileId"
+}
+
+internal fun reminderNotificationTag(profileId: String): String? {
+    requireValidProfileId(profileId)
+    return profileId.takeUnless { it == LocalProfiles.DEFAULT_ID }
+}
+
 class ReminderWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
+        val profileId = inputData.getString(PROFILE_ID_EXTRA) ?: LocalProfiles.DEFAULT_ID
+        if (runCatching { requireValidProfileId(profileId) }.isFailure) return Result.success()
+        if (LocalProfiles(applicationContext).profiles().none { it.id == profileId }) {
+            cancel(applicationContext, profileId)
+            return Result.success()
+        }
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
         ) return Result.success()
-        val (backup, snapshots) = CycleStore(applicationContext).use { store ->
+        val (backup, snapshots) = CycleStore(applicationContext, profileId).use { store ->
             store.load() to store.loadForecastSnapshots().associateBy(ForecastSnapshot::month)
         }
         if (!backup.settings.reminderEnabled || !backup.settings.canPredictPeriods) return Result.success()
 
         val next = CycleInsights.forDate(backup, snapshots).nextPeriodStart ?: return Result.success()
         val daysUntil = ChronoUnit.DAYS.between(LocalDate.now(), next).toInt()
-        val reminderState = applicationContext.getSharedPreferences(REMINDER_STATE, Context.MODE_PRIVATE)
+        val reminderState = applicationContext.getSharedPreferences(reminderStateName(profileId), Context.MODE_PRIVATE)
         val lastNotified = reminderState.getLong(LAST_NOTIFIED_PERIOD, Long.MIN_VALUE).takeUnless { it == Long.MIN_VALUE }
         if (!shouldNotifyPeriod(daysUntil, backup.settings.reminderDays, next.toEpochDay(), lastNotified)) return Result.success()
 
         createChannel()
         val intent = Intent(applicationContext, MainActivity::class.java)
+            .setData("selia://local-profile/$profileId".toUri())
+            .putExtra(PROFILE_ID_EXTRA, profileId)
         val pendingIntent = PendingIntent.getActivity(
             applicationContext,
             0,
@@ -68,7 +94,7 @@ class ReminderWorker(context: Context, parameters: WorkerParameters) : Coroutine
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .build()
-        NotificationManagerCompat.from(applicationContext).notify(NOTIFICATION_ID, notification)
+        NotificationManagerCompat.from(applicationContext).notify(reminderNotificationTag(profileId), NOTIFICATION_ID, notification)
         reminderState.edit { putLong(LAST_NOTIFIED_PERIOD, next.toEpochDay()) }
         return Result.success()
     }
@@ -83,25 +109,31 @@ class ReminderWorker(context: Context, parameters: WorkerParameters) : Coroutine
     }
 
     companion object {
-        private const val WORK_NAME = "selia-cycles-period-reminder"
+        const val PROFILE_ID_EXTRA = "local_profile_id"
         private const val CHANNEL_ID = "period-reminders"
         private const val NOTIFICATION_ID = 1_210
-        private const val REMINDER_STATE = "reminder-state"
         private const val LAST_NOTIFIED_PERIOD = "last-notified-period"
 
-        fun sync(context: Context, settings: AppSettings) {
+        fun cancel(context: Context, profileId: String = LocalProfiles.DEFAULT_ID) {
+            WorkManager.getInstance(context).cancelUniqueWork(reminderWorkName(profileId))
+            context.getSharedPreferences(reminderStateName(profileId), Context.MODE_PRIVATE).edit {
+                remove(LAST_NOTIFIED_PERIOD)
+            }
+            NotificationManagerCompat.from(context).cancel(reminderNotificationTag(profileId), NOTIFICATION_ID)
+        }
+
+        fun sync(context: Context, settings: AppSettings, profileId: String = LocalProfiles.DEFAULT_ID) {
+            val workName = reminderWorkName(profileId)
             val workManager = WorkManager.getInstance(context)
             if (!settings.reminderEnabled || !settings.canPredictPeriods) {
-                workManager.cancelUniqueWork(WORK_NAME)
-                context.getSharedPreferences(REMINDER_STATE, Context.MODE_PRIVATE).edit {
-                    remove(LAST_NOTIFIED_PERIOD)
-                }
+                cancel(context, profileId)
                 return
             }
             val request = PeriodicWorkRequestBuilder<ReminderWorker>(24, TimeUnit.HOURS)
+                .setInputData(workDataOf(PROFILE_ID_EXTRA to profileId))
                 .setInitialDelay(Duration.ofHours(1))
                 .build()
-            workManager.enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.UPDATE, request)
+            workManager.enqueueUniquePeriodicWork(workName, ExistingPeriodicWorkPolicy.UPDATE, request)
         }
     }
 }

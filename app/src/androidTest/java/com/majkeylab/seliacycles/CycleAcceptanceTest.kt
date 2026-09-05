@@ -37,6 +37,8 @@ class CycleAcceptanceTest {
     @Before
     fun seedIsolatedApp() {
         check(context.packageName.endsWith(".qa")) { "Device tests must never use the personal app database" }
+        LocalProfiles(context).select(LocalProfiles.DEFAULT_ID)
+        LocalProfiles(context).update(LocalProfiles.DEFAULT_ID, "", UiMode.STANDARD)
         CycleStore(context).use { store ->
             store.clearAll()
             store.replace(CycleBackup(
@@ -126,7 +128,8 @@ class CycleAcceptanceTest {
         ActivityScenario.launch(MainActivity::class.java).use { activity ->
             awaitNavigation()
             compose.onAllNodesWithText(text(R.string.nav_calendar)).onLast().performClick()
-            compose.onNodeWithContentDescription(text(R.string.add_entry)).performClick()
+            compose.onNodeWithContentDescription(today.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
+                .withLocale(context.resources.configuration.locales[0])), substring = true).performClick()
             compose.onNodeWithText(text(R.string.add_information)).performScrollTo().performClick()
             compose.onNodeWithText(text(R.string.note)).performScrollTo().performTextInput("QA unfinished note")
             activity.recreate()
@@ -166,8 +169,7 @@ class CycleAcceptanceTest {
                 assertEquals(snapshot, store.loadForecastSnapshots().first { it.month == snapshot.month })
             }
             compose.onAllNodesWithText(text(R.string.nav_calendar)).onLast().performClick()
-            compose.onNodeWithContentDescription(text(R.string.add_entry)).performClick()
-            compose.onNodeWithText(text(R.string.edit_period)).performClick()
+            compose.onNodeWithText(text(R.string.calendar_add_period)).performScrollTo().performClick()
             compose.onNodeWithText(text(R.string.clear_period)).performClick()
             compose.onNodeWithText(text(R.string.save)).performClick()
             compose.waitUntil(5_000) { CycleStore(context).use { store -> store.load().logs.none { it.day == today && it.bleeding } } }

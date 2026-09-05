@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_retry_load">Erneut versuchen</string>
+    <string name="profile_default_name">Mein Kalender</string>
+    <string name="profiles_title">Lokale Profile</string>
+    <string name="profile_manage">Profile verwalten</string>
+    <string name="profile_create">Profil hinzufügen</string>
+    <string name="profile_name">Profilname</string>
+    <string name="profile_name_hint">Bis zu %1$d Zeichen.</string>
+    <string name="profile_name_invalid">Verwende einen Namen mit höchstens %1$d Zeichen ohne Steuerzeichen.</string>
+    <string name="profile_delete">Profil löschen</string>
+    <string name="profile_delete_title">Dieses Profil und seine Daten löschen?</string>
+    <string name="profile_delete_body">Alle Einträge und Einstellungen des aktiven Profils %1$s werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.</string>
+    <string name="profiles_privacy">Profile haben getrennte Kalender auf diesem Gerät. Sie sind keine gesperrten Konten. Wer die App öffnen kann, kann jedes Profil öffnen.</string>
+    <string name="profile_limit">Du kannst bis zu %1$d lokale Profile haben.</string>
+    <string name="ui_mode_label">Anzeigemodus</string>
+    <string name="ui_mode_simple">Einfach</string>
+    <string name="ui_mode_standard">Standard</string>
+    <string name="ui_mode_detailed">Ausführlich</string>
+    <string name="ui_mode_simple_description">Kalender und tägliche Einträge.</string>
+    <string name="ui_mode_standard_description">Tagesübersicht und Zyklusschätzungen.</string>
+    <string name="ui_mode_detailed_description">Zyklusschätzungen, Statistiken und persönliche Muster.</string>
+    <string name="fertility_daily_title">Tägliche Fruchtbarkeitsschätzung</string>
+    <string name="fertility_unavailable">Schätzung nicht verfügbar</string>
+    <string name="fertility_outside_estimate">Außerhalb des geschätzten fruchtbaren Zeitraums</string>
+    <string name="fertility_possible">Möglicherweise im fruchtbaren Zeitraum</string>
+    <string name="fertility_window">Geschätzter fruchtbarer Zeitraum</string>
+    <string name="fertility_estimated_ovulation">Geschätzter Eisprung</string>
+    <string name="fertility_uncertainty_warning">Kalenderschätzungen können falsch sein. Sie bestätigen weder einen Eisprung noch sichere Tage und dürfen nicht zur Verhütung verwendet werden.</string>
+    <string name="profile_transfer_scope">Import und Export gelten nur für das aktive Profil.</string>
+    <string name="calendar_add_period">Periode eintragen</string>
+    <string name="profile_clear_data">Diesen Kalender leeren</string>
+    <string name="profile_clear_data_body">Alle Einträge werden dauerhaft gelöscht und die Einstellungen nur im aktiven Kalender zurückgesetzt. Andere Profile bleiben unverändert. Dies kann nicht rückgängig gemacht werden.</string>
+</resources>
