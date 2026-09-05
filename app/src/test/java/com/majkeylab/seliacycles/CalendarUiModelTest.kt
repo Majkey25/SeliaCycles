@@ -20,6 +20,19 @@ class CalendarUiModelTest {
     }
 
     @Test
+    fun `period editor follows the configured first weekday`() {
+        val base = LocalDate.of(2026, 8, 15)
+
+        val monday = CalendarPaging.periodEditorDays(base, DayOfWeek.MONDAY)
+        val sunday = CalendarPaging.periodEditorDays(base, DayOfWeek.SUNDAY)
+
+        assertEquals(LocalDate.of(2026, 8, 3), monday.first())
+        assertEquals(LocalDate.of(2026, 8, 2), sunday.first())
+        assertEquals(DayOfWeek.MONDAY, monday.first().dayOfWeek)
+        assertEquals(DayOfWeek.SUNDAY, sunday.first().dayOfWeek)
+    }
+
+    @Test
     fun `pager maps the supported month range without drift`() {
         val current = YearMonth.of(2026, 8)
 
@@ -78,5 +91,20 @@ class CalendarUiModelTest {
         assertEquals(PeriodTiming.UPCOMING, TodayDashboard.periodTiming(1))
         assertEquals(PeriodTiming.TODAY, TodayDashboard.periodTiming(0))
         assertEquals(PeriodTiming.LATE, TodayDashboard.periodTiming(-1))
+    }
+
+    @Test
+    fun `App state derives Today values from one reference date`() {
+        val reference = LocalDate.of(2026, 7, 29)
+        val state = AppState(
+            backup = CycleBackup(logs = (0L..2L).map { offset ->
+                DayLog(LocalDate.of(2026, 7, 1).plusDays(offset), bleeding = true, flow = Flow.UNKNOWN)
+            }),
+            referenceDate = reference,
+        )
+
+        assertEquals(reference, state.referenceDate)
+        assertEquals(LocalDate.of(2026, 7, 29), state.prediction.nextPeriodStart)
+        assertEquals(CyclePhase.MENSTRUAL, state.todayInsight.phase)
     }
 }

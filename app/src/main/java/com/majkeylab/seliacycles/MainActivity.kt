@@ -9,10 +9,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 
 class MainActivity : AppCompatActivity() {
+    private val viewModel by lazy { ViewModelProvider(this)[MainViewModel::class.java] }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()
             SeliaCyclesTheme(
@@ -23,5 +24,10 @@ class MainActivity : AppCompatActivity() {
                 SeliaCyclesApp(state, viewModel)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshForToday()
     }
 }

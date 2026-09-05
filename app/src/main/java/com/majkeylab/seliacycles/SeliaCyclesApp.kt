@@ -36,6 +36,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -163,6 +166,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.text.KeyboardOptions
@@ -310,8 +314,8 @@ fun SeliaCyclesApp(
     viewModel: MainViewModel,
 ) {
     var screen by rememberSaveable { mutableStateOf(Screen.TODAY) }
-    var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
-    var daySheetMode by remember { mutableStateOf(DaySheetMode.OVERVIEW) }
+    var selectedDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
+    var daySheetMode by rememberSaveable { mutableStateOf(DaySheetMode.OVERVIEW) }
     var infoDialog by remember { mutableStateOf<InfoDialog?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var selfCareInsight by remember { mutableStateOf<DailyCycleInsight?>(null) }
@@ -464,6 +468,7 @@ fun SeliaCyclesApp(
             DaySheetMode.PERIOD -> PeriodEditorSheet(
                 day = day,
                 logs = state.backup.logs,
+                firstDayOfWeek = state.backup.settings.firstDayOfWeek,
                 periodColor = calendarPeriodRgb(
                     state.backup.settings.palette,
                     state.backup.settings.customPalette,
@@ -860,9 +865,9 @@ private fun PhaseDetailsSheet(insight: DailyCycleInsight, onSelfCare: () -> Unit
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun SelfCareSheet(insight: DailyCycleInsight, onDismiss: () -> Unit) {
-    var selected by remember { mutableStateOf<SelfCareActivity?>(null) }
-    var remainingSeconds by remember { mutableIntStateOf(0) }
-    var targetMillis by remember { mutableStateOf<Long?>(null) }
+    var selected by rememberSaveable { mutableStateOf<SelfCareActivity?>(null) }
+    var remainingSeconds by rememberSaveable { mutableIntStateOf(0) }
+    var targetMillis by rememberSaveable { mutableStateOf<Long?>(null) }
     val running = targetMillis != null && remainingSeconds > 0
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     LaunchedEffect(targetMillis) {
@@ -1486,6 +1491,8 @@ private fun CalendarDay(
         bottomEndPercent = if (fertileConnectNext) 0 else 50,
     )
     val labels = buildList {
+        if (isToday) add(stringResource(R.string.today_heading))
+        if (selected) add(stringResource(R.string.calendar_selected))
         when (tracks.period) {
             CalendarPeriodLayer.RECORDED -> add(stringResource(R.string.recorded_legend))
             CalendarPeriodLayer.PREDICTED -> add(stringResource(R.string.predicted_legend))
@@ -2193,13 +2200,18 @@ private fun ProfileSettings(settings: AppSettings, onSave: (AppSettings) -> Unit
     val profile = settings.profile
     var age by remember(profile.age) { mutableStateOf(profile.age?.toString().orEmpty()) }
     var height by remember(profile.heightCm) { mutableStateOf(profile.heightCm?.toString().orEmpty()) }
-    var weight by remember(profile.weightKg) { mutableStateOf(profile.weightKg?.toString().orEmpty()) }
+    var weight by rememberSaveable { mutableStateOf(profile.weightKg?.toString().orEmpty()) }
+    var lastProfileWeight by remember { mutableStateOf(profile.weightKg) }
     val ageValue = age.toIntOrNull()
     val heightValue = height.toIntOrNull()
     val weightValue = parseDecimal(weight)
     val ageValid = age.isBlank() || ageValue != null && ageValue in UserProfile.MIN_AGE..UserProfile.MAX_AGE
     val heightValid = height.isBlank() || heightValue != null && heightValue in UserProfile.MIN_HEIGHT_CM..UserProfile.MAX_HEIGHT_CM
     val weightValid = weight.isBlank() || weightValue != null && weightValue in DayLog.MIN_WEIGHT_KG..DayLog.MAX_WEIGHT_KG
+    LaunchedEffect(profile.weightKg) {
+        if (profile.weightKg != lastProfileWeight) weight = profile.weightKg?.toString().orEmpty()
+        lastProfileWeight = profile.weightKg
+    }
 
     ChoiceRow(
         label = R.string.profile_goal,
@@ -2243,6 +2255,7 @@ private fun ProfileSettings(settings: AppSettings, onSave: (AppSettings) -> Unit
         weight = it
         val parsed = parseDecimal(it)
         if (it.isBlank() || parsed != null && parsed in DayLog.MIN_WEIGHT_KG..DayLog.MAX_WEIGHT_KG) {
+            lastProfileWeight = parsed
             onSave(settings.copy(profile = profile.copy(weightKg = parsed)))
         }
     }, R.string.profile_weight, R.string.profile_weight_example, weightValid, decimal = true, icon = Icons.Outlined.MonitorWeight)
@@ -2471,7 +2484,15 @@ private fun SwitchRow(
     enabled: Boolean = true,
     onChange: (Boolean) -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth().toggleable(
+            value = checked,
+            enabled = enabled,
+            role = Role.Switch,
+            onValueChange = onChange,
+        ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         icon?.let {
             Icon(it, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(12.dp))
@@ -2482,7 +2503,7 @@ private fun SwitchRow(
             style = MaterialTheme.typography.bodyLarge,
             color = if (enabled) Color.Unspecified else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
         )
-        Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
+        Switch(checked = checked, onCheckedChange = null, enabled = enabled)
     }
 }
 
@@ -2583,7 +2604,7 @@ private fun AppearancePreviewRow(
 
 @Composable
 private fun ThemeModeSelector(selected: AppTheme, onSelect: (AppTheme) -> Unit) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         AppTheme.entries.forEach { theme ->
             val isSelected = selected == theme
             val shape = RoundedCornerShape(16.dp)
@@ -2595,7 +2616,11 @@ private fun ThemeModeSelector(selected: AppTheme, onSelect: (AppTheme) -> Unit) 
                         if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                         shape,
                     )
-                    .clickable { onSelect(theme) }.padding(horizontal = 6.dp, vertical = 10.dp),
+                    .selectable(
+                        selected = isSelected,
+                        role = Role.RadioButton,
+                        onClick = { onSelect(theme) },
+                    ).padding(horizontal = 6.dp, vertical = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
@@ -3035,6 +3060,7 @@ private fun suggestedPeriodStart(state: AppState, day: LocalDate): LocalDate? =
 private fun PeriodEditorSheet(
     day: LocalDate,
     logs: List<DayLog>,
+    firstDayOfWeek: DayOfWeek,
     periodColor: Color,
     onDismiss: () -> Unit,
     onSave: (Set<LocalDate>) -> Unit,
@@ -3042,12 +3068,11 @@ private fun PeriodEditorSheet(
     val today = LocalDate.now()
     val locale = currentLocale()
     val initialDays = remember(day, logs) { PeriodActions.periodDays(day, logs) }
-    var selectedDays by remember(day, initialDays) { mutableStateOf(initialDays) }
-    var selectionError by remember(day) { mutableStateOf(false) }
+    var selectedDays by rememberSaveable(day, initialDays) { mutableStateOf(initialDays) }
+    var selectionError by rememberSaveable(day) { mutableStateOf(false) }
     val base = initialDays.minOrNull() ?: day
-    val monday = base.minusDays((base.dayOfWeek.value - DayOfWeek.MONDAY.value).toLong())
-    val windowStart = maxOf(DayLog.MIN_DATE, monday.minusWeeks(1))
-    val days = remember(windowStart) { (0L..27L).map(windowStart::plusDays) }
+    val days = remember(base, firstDayOfWeek) { CalendarPaging.periodEditorDays(base, firstDayOfWeek) }
+    val weekdays = remember(firstDayOfWeek) { (0L..6L).map(firstDayOfWeek::plus) }
     val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val selectedDescription = stringResource(R.string.period_day_selected)
     val notSelectedDescription = stringResource(R.string.period_day_not_selected)
@@ -3078,7 +3103,7 @@ private fun PeriodEditorSheet(
                     )
                 }
                 Row(Modifier.fillMaxWidth()) {
-                    DayOfWeek.entries.forEach { weekday ->
+                    weekdays.forEach { weekday ->
                         Text(
                             weekday.getDisplayName(TextStyle.NARROW, locale),
                             modifier = Modifier.weight(1f),
@@ -3193,24 +3218,24 @@ private fun DayLogSheet(
     onDismiss: () -> Unit,
     onSave: (DayLog) -> Unit,
 ) {
-    var flow by remember(day, initial) { mutableStateOf(initial?.flow?.takeIf { initial.bleeding } ?: Flow.UNKNOWN) }
-    var spotting by remember(day, initial) { mutableStateOf(initial?.spotting == true) }
-    var mood by remember(day, initial) { mutableStateOf(initial?.mood) }
-    var symptoms by remember(day, initial) { mutableStateOf(initial?.symptoms.orEmpty()) }
-    var note by remember(day, initial) { mutableStateOf(initial?.note.orEmpty()) }
+    var flow by rememberSaveable(day, initial) { mutableStateOf(initial?.flow?.takeIf { initial.bleeding } ?: Flow.UNKNOWN) }
+    var spotting by rememberSaveable(day, initial) { mutableStateOf(initial?.spotting == true) }
+    var mood by rememberSaveable(day, initial) { mutableStateOf(initial?.mood) }
+    var symptoms by rememberSaveable(day, initial) { mutableStateOf(initial?.symptoms.orEmpty()) }
+    var note by rememberSaveable(day, initial) { mutableStateOf(initial?.note.orEmpty()) }
     var showMore by rememberSaveable(day) { mutableStateOf(false) }
-    var weight by remember(day, initial) { mutableStateOf(initial?.weightKg?.toString().orEmpty()) }
-    var temperature by remember(day, initial) { mutableStateOf(initial?.temperatureC?.toString().orEmpty()) }
-    var sleep by remember(day, initial) { mutableStateOf(initial?.sleepHours?.toString().orEmpty()) }
-    var intimacy by remember(day, initial) { mutableStateOf(initial?.intimacy) }
-    var cervicalMucus by remember(day, initial) { mutableStateOf(initial?.cervicalMucus) }
-    var ovulationTest by remember(day, initial) { mutableStateOf(initial?.ovulationTest) }
-    var pregnancyTest by remember(day, initial) { mutableStateOf(initial?.pregnancyTest) }
-    var painLevel by remember(day, initial) { mutableStateOf(initial?.painLevel) }
-    var energy by remember(day, initial) { mutableStateOf(initial?.energy) }
-    var stress by remember(day, initial) { mutableStateOf(initial?.stress) }
-    var activity by remember(day, initial) { mutableStateOf(initial?.activity) }
-    var medication by remember(day, initial) { mutableStateOf(initial?.medication) }
+    var weight by rememberSaveable(day, initial) { mutableStateOf(initial?.weightKg?.toString().orEmpty()) }
+    var temperature by rememberSaveable(day, initial) { mutableStateOf(initial?.temperatureC?.toString().orEmpty()) }
+    var sleep by rememberSaveable(day, initial) { mutableStateOf(initial?.sleepHours?.toString().orEmpty()) }
+    var intimacy by rememberSaveable(day, initial) { mutableStateOf(initial?.intimacy) }
+    var cervicalMucus by rememberSaveable(day, initial) { mutableStateOf(initial?.cervicalMucus) }
+    var ovulationTest by rememberSaveable(day, initial) { mutableStateOf(initial?.ovulationTest) }
+    var pregnancyTest by rememberSaveable(day, initial) { mutableStateOf(initial?.pregnancyTest) }
+    var painLevel by rememberSaveable(day, initial) { mutableStateOf(initial?.painLevel) }
+    var energy by rememberSaveable(day, initial) { mutableStateOf(initial?.energy) }
+    var stress by rememberSaveable(day, initial) { mutableStateOf(initial?.stress) }
+    var activity by rememberSaveable(day, initial) { mutableStateOf(initial?.activity) }
+    var medication by rememberSaveable(day, initial) { mutableStateOf(initial?.medication) }
     val weightValue = parseDecimal(weight)
     val temperatureValue = parseDecimal(temperature)
     val sleepValue = parseDecimal(sleep)
@@ -3526,7 +3551,10 @@ private fun InfoDialogContent(dialog: InfoDialog, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text(stringResource(title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 Text(stringResource(body))
                 if (dialog == InfoDialog.CYCLE) {
                     Text(stringResource(R.string.medical_sources), fontWeight = FontWeight.SemiBold)
