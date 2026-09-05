@@ -14,7 +14,9 @@ Selia Cycles keeps period tracking clear and private.
 
 Mark Period started or Period ended with one tap. Start records only the confirmed first day; End completes the recorded span. A recorded period can be shortened, extended, split, or removed by selecting its exact days without deleting other information. Optional symptoms, mood, cervical mucus, tests, wellbeing, notes, and measurements use a separate information editor and cannot change period dates.
 
-Personal estimates use recent history, handle missed tracking cycles, and reduce the effect of isolated unusual gaps. Saved monthly estimates remain visible across recorded history, with average prediction error and in-range results summarized in History. A real recorded period start immediately updates future months. Estimated ovulation, fertile windows, daily fertility status, recorded fertility signs, cycle phase, and evidence-gated personal mood trends add context without claiming medical certainty. Short guidance explains why the first few cycles can move while the estimate learns.
+Personal estimates use recent recorded intervals and reduce the effect of isolated unusual gaps. Long cycles remain long cycles instead of being split into invented records. Saved monthly estimates remain visible across history, and accuracy results use only predictions saved in advance. A real period start or a manual length change updates future months. Estimated ovulation, fertile windows, daily fertility status, recorded fertility signs, cycle phase, and personal mood trends add context without claiming medical certainty.
+
+Expand the month overview to see recorded-day counts, separate timelines for reality and predictions, every overlapping period, and summaries of the mood, energy, pain, and sleep you recorded. Tap a date range to open its day. Cycle and period length can each learn from history or use your own setting, with a preview of the resulting estimate.
 
 Private details stay in app storage. Selia Cycles has no account, app cloud, ads, analytics, or network permission. Android can transfer the database directly while setting up a new device. Compatible `.pc` backups can be imported locally, and Selia can export a local `.pc` backup for transfer or re-import. An optional calendar mirror can copy short cycle labels to an existing Google Calendar, Outlook, Exchange, or local calendar chosen by the user; the calendar provider controls its own account sync.
 
@@ -38,7 +40,9 @@ Selia Cycles nabízí přehledné a soukromé sledování menstruace.
 
 Jedním klepnutím označ začátek nebo konec menstruace. Začátek zapíše jen potvrzený první den a konec doplní skutečně proběhlé období. Zapsanou menstruaci lze zkrátit, prodloužit, rozdělit nebo odstranit výběrem přesných dnů bez smazání ostatních informací. Volitelné příznaky, nálada, cervikální hlen, testy, kondice, poznámka a měření používají samostatný editor informací a nemohou změnit dny menstruace.
 
-Osobní odhad vychází z poslední historie, umí zohlednit vynechané zápisy a omezuje vliv jednorázových neobvyklých mezer. Uložený měsíční odhad zůstává vedle reality v celé zaznamenané historii; Historie ukazuje průměrnou odchylku a počet výsledků v původním rozmezí. Nový skutečný začátek upraví budoucí měsíce. Aplikace přidává dnešní odhad plodnosti, odhad ovulace, plodné období, zaznamenané známky plodnosti, fázi cyklu a osobní trend nálady jen při dostatku vlastních dat. Krátké vysvětlení upozorní, že první cykly mohou být nepravidelné a odhad se teprve učí.
+Osobní odhad vychází ze zapsaných intervalů a omezuje vliv jednorázových neobvyklých mezer. Dlouhé cykly zůstávají dlouhými cykly; aplikace z nich nevytváří domnělé kratší záznamy. Uložený měsíční odhad zůstává vedle reality v historii. Hodnocení přesnosti používá pouze odhady uložené předem. Nový skutečný začátek nebo změna vlastní délky upraví budoucí měsíce. Aplikace přidává odhad ovulace a plodného období, zaznamenané známky plodnosti, fázi cyklu a osobní trend nálady při dostatku vlastních dat.
+
+V rozbaleném přehledu měsíce najdeš počty zapsaných dní, oddělené časové osy reality a odhadů, všechna období zasahující do měsíce a souhrny zapsané nálady, energie, bolesti a spánku. Klepnutím na datum otevřeš příslušný den. Délka cyklu i menstruace se mohou nezávisle učit z historie nebo vycházet z vlastní hodnoty. Výsledek hned uvidíš v náhledu nastavení.
 
 Soukromé podrobnosti zůstávají v úložišti aplikace. Selia Cycles nemá účet, vlastní cloud, reklamy, analytiku ani oprávnění k síti. Kompatibilní zálohu `.pc` lze importovat místně a Selia umí vytvořit místní `.pc` zálohu pro přenos nebo opětovný import. Volitelně může aplikace přes Android zrcadlit krátké štítky cyklu do vybraného Google Kalendáře, Outlooku, Exchange nebo místního kalendáře; synchronizaci účtu řídí poskytovatel kalendáře.
 
@@ -50,4 +54,4 @@ Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
 
 ## Closed test release notes
 
-`Adds exact period-day editing, separates period dates from daily information, and replaces calendar dots with clear information underlines.`
+`New month overview with timelines and personal summaries. Independent automatic cycle and period lengths. More consistent predictions and faster state updates, with safer rapid settings changes.`

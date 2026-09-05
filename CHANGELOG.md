@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.9.0-beta.12 - 2026-09-05
+
+### Added
+
+- Month overview with recorded-day counts, separate timelines, every overlapping period, date links, and summaries of recorded mood, energy, pain, and sleep.
+- Independent automatic/manual cycle and period length settings with a live prediction preview.
+- Isolated physical-device tests for editing, future recalculation, backup round trips, recreation, and rapid settings updates.
+
+### Fixed
+
+- Long recorded cycles are no longer split into invented shorter cycles or hidden from history.
+- Irregular history widens date estimates; future periods retain their uncertainty ranges.
+- Reconstructed estimates are clearly labeled and excluded from saved-prediction accuracy.
+- Daily detail and monthly calendar agree on historical and short-cycle fertility windows. Incompatible cycle/luteal lengths pause fertility estimates with an explanation.
+- History averages use observed records rather than manual prediction lengths.
+- Older background operations cannot overwrite newer settings, import previews, or deletion results.
+- Status updates reuse existing cycle calculations. On Huawei Android 10 with 10,000 synthetic daily records, median status-copy time dropped from 14.63 ms to 0.0052 ms across 21 warmed samples.
+- Dark-mode system icons, light-theme accent contrast, and custom-palette text remain readable.
+- The relief-care sheet remains open across screen recreation.
+
 ## 0.9.0-beta.11 - 2026-09-04
 
 ### Changed

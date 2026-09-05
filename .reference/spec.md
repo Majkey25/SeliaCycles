@@ -13,7 +13,8 @@ Build `com.majkeylab.seliacycles`, a private local-only Android period calendar 
 ## Boundaries
 
 - Keep cycle data in app-private storage.
-- No account, cloud sync, partner access, analytics, ads, external import, manual backup, or network permission.
+- No Selia account, cloud service, analytics, ads, or network permission.
+- Support local `.pc` import/export and optional selected-calendar mirroring. Exports are unencrypted; notes and raw health details never go to the calendar provider.
 - Allow Android device-to-device transfer only.
 - Keep the SQLite schema compatible with existing installed data.
 - Estimates are not diagnosis, ovulation confirmation, or contraception.
@@ -22,7 +23,7 @@ Build `com.majkeylab.seliacycles`, a private local-only Android period calendar 
 
 - Any day can record bleeding, flow, symptoms, mood, note, weight, basal temperature, sleep, and intimacy.
 - Real bleeding starts immediately re-anchor the prediction.
-- Robust local statistics handle skipped tracking cycles and isolated outliers.
-- Today shows recorded or estimated status for this month and next month.
+- Local estimates preserve observed long intervals, handle isolated outliers, and show uncertainty without inventing unrecorded cycles.
+- Today and the expanded month overview distinguish recorded days, current estimates, saved original estimates, and reconstructed history.
 - Calendar marks recorded and future estimated days.
 - Unit, lint, APK, AAB, physical-phone, and cold-start checks pass.

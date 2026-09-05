@@ -27,7 +27,7 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - Clean line-only cycle-length graph with exact values per recorded cycle.
 - Saved-prediction accuracy summarizes average start-date error and results inside the original range.
 - Personal symptom patterns appear only after repeated observations across completed cycles.
-- Robust personal estimates that normalize missed tracking cycles and reject isolated outliers.
+- Personal estimates based on recorded intervals, with isolated outliers excluded from typical length and retained in the uncertainty range. Long cycles are never silently divided into invented cycles.
 - Recorded or estimated windows for this month and next month.
 - Real bleeding starts immediately re-anchor future estimates.
 - Saved monthly estimates stay visible beside recorded reality.
@@ -45,6 +45,8 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - Android device-to-device transfer during new-device setup without ordinary cloud backup of reproductive data.
 - One-action deletion of all local app data.
 - Separate period and daily-information editors prevent optional tracking changes from altering menstruation dates.
+- Expanded month overview with recorded-day counts, separate timeline rows for reality and estimates, all overlapping date ranges, and observed mood, energy, pain, and sleep summaries.
+- Independent automatic/manual cycle and period lengths with a live settings preview.
 
 Existing local records remain in the SQLite database across normal app updates. Selia Cycles has no Selia cloud or partner account. A selected `.pc` backup is read and merged locally. An exported `.pc` file is created only after the user chooses a destination and is not encrypted, so it should be stored securely. If calendar mirroring is enabled, short cycle labels are copied through Android to the selected provider; notes and raw health details are never mirrored.
 
@@ -57,6 +59,19 @@ Requirements: JDK 17 and Android SDK 36.
 ```
 
 The default release bundle is unsigned. Publication uses an external upload keystore that is never committed. See [release signing and publication](docs/RELEASE.md).
+
+## Device tests
+
+`qa` uses `com.majkeylab.seliacycles.qa` and its own database. Instrumentation refuses to seed data outside that package. Reserve the shared physical phone before running:
+
+```powershell
+.\gradlew.bat assembleQa assembleQaAndroidTest --console=plain
+adb -s BQLDU19927002646 install -r app/build/outputs/apk/qa/app-qa.apk
+adb -s BQLDU19927002646 install -r app/build/outputs/apk/androidTest/qa/app-qa-androidTest.apk
+adb -s BQLDU19927002646 shell am instrument -w -r -e class com.majkeylab.seliacycles.CycleAcceptanceTest com.majkeylab.seliacycles.qa.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+The device suite covers independent automatic settings, period start/edit/removal and future recalculation, draft recreation, monthly navigation, and `.pc` re-import over existing snapshots without widening partner access.
 
 ## Privacy and medical scope
 
