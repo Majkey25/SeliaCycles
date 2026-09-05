@@ -1933,7 +1933,7 @@ private fun CycleLengthChart(periodStarts: List<LocalDate>, locale: Locale) {
         if (cycles.size < 2) {
             Text(stringResource(R.string.more_history_needed), color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            val monthFormat = remember(locale) { DateTimeFormatter.ofPattern("MMM yy", locale) }
+            val monthFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale) }
             val lineColor = MaterialTheme.colorScheme.primary
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Canvas(Modifier.fillMaxWidth().height(96.dp).padding(horizontal = 12.dp, vertical = 8.dp)) {
@@ -3123,9 +3123,7 @@ private fun DayOverviewSheet(
 }
 
 private fun suggestedPeriodStart(state: AppState, day: LocalDate): LocalDate? =
-    (state.prediction.periodStarts + state.periodEstimates.map(PeriodEstimate::start))
-    .filter { !it.isAfter(day) && ChronoUnit.DAYS.between(it, day) in 0..13 }
-    .maxOrNull()
+    PeriodActions.suggestedStart(day, state.backup.settings, state.backup.logs, state.periodEstimates)
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)

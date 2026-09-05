@@ -1,6 +1,6 @@
 # Calendar icon
 
-Generated with the built-in ImageGen tool on September 5, 2026. The source is `icon-master-imagegen.png`; `icon-512.png` is its 512-pixel store export. The Android foreground uses the same export at 88 dp on an opaque pale background. Android supplies the launcher mask. The monochrome resource is a matching native calendar silhouette.
+Generated with the built-in ImageGen tool on September 5, 2026. The source is `icon-master-imagegen.png`; `icon-512.png` is its 512-pixel store export. The Android foreground uses the same export with proportional 12% padding on an opaque pale background. Android supplies the launcher mask. The monochrome resource is a matching native calendar silhouette.
 
 Final icon prompt:
 
