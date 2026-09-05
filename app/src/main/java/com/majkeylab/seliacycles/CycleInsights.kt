@@ -40,6 +40,9 @@ data class DailyCycleInsight(
 )
 
 object CycleInsights {
+    fun canEstimateFertility(backup: CycleBackup, prediction: CyclePrediction): Boolean =
+        backup.settings.canEstimateFertility && prediction.averageCycleLength > backup.settings.lutealPhaseLength
+
     fun fertilityForPeriod(periodStart: LocalDate, lutealPhaseDays: Int = DEFAULT_LUTEAL_PHASE_DAYS): FertilityEstimate {
         require(lutealPhaseDays in 7..19)
         val ovulation = periodStart.minusDays(lutealPhaseDays.toLong())
@@ -69,18 +72,19 @@ object CycleInsights {
             return saved.filter { !it.start.isAfter(referenceDate) }.sortedBy(PeriodEstimate::start)
         }
         val prediction = prediction(backup, referenceDate)
-        val dynamic = prediction.estimatedPeriodStarts.mapIndexedNotNull { index, start ->
+        val dynamic = prediction.estimatedPeriodStarts.mapNotNull { start ->
             val month = YearMonth.from(start)
             val snapshot = snapshots[month]
             val include = snapshot == null || prediction.periodStarts.any { actual ->
                 YearMonth.from(actual) == month && ChronoUnit.DAYS.between(actual, start) >= MIN_CYCLE_DAYS
             } && start != snapshot.periodStart
-            if (!include) return@mapIndexedNotNull null
+            if (!include) return@mapNotNull null
+            val window = prediction.uncertaintyWindow(start)
             PeriodEstimate(
                 start = start,
                 endExclusive = start.plusDays(prediction.averagePeriodLength.toLong()),
-                earliestStart = prediction.earliestPeriodStart.takeIf { index == 0 },
-                latestStart = prediction.latestPeriodStart.takeIf { index == 0 },
+                earliestStart = window.first,
+                latestStart = window.second,
                 origin = EstimateOrigin.CURRENT,
             )
         }
@@ -105,39 +109,66 @@ object CycleInsights {
         referenceDate: LocalDate = LocalDate.now(),
     ): List<FertilityEstimate> {
         if (!backup.settings.canEstimateFertility) return emptyList()
-        val futureRecorded = prediction(backup, referenceDate).periodStarts.filter { it.isAfter(referenceDate) }
+        return fertilityEstimates(
+            backup, prediction(backup, referenceDate), calendarPeriodEstimates(backup, snapshots, referenceDate), referenceDate,
+        )
+    }
+
+    private fun fertilityEstimates(
+        backup: CycleBackup,
+        prediction: CyclePrediction,
+        estimates: List<PeriodEstimate>,
+        referenceDate: LocalDate,
+    ): List<FertilityEstimate> {
+        if (!canEstimateFertility(backup, prediction)) return emptyList()
+        val futureRecorded = prediction.periodStarts.filter { it.isAfter(referenceDate) }
         val recordedMonths = futureRecorded.mapTo(mutableSetOf(), YearMonth::from)
-        val estimated = calendarPeriodEstimates(backup, snapshots, referenceDate).map(PeriodEstimate::start)
+        val estimated = estimates.map(PeriodEstimate::start)
             .filterNot { YearMonth.from(it) in recordedMonths }
-        return (estimated + futureRecorded)
-            .distinct().sorted().map { fertilityForPeriod(it, backup.settings.lutealPhaseLength) }
+        return (estimated + futureRecorded).distinct().sorted().mapNotNull { start ->
+            if (start in futureRecorded) {
+                val previous = prediction.periodStarts.lastOrNull { it < start }
+                if (previous != null && ChronoUnit.DAYS.between(previous, start) <= backup.settings.lutealPhaseLength) {
+                    return@mapNotNull null
+                }
+            }
+            fertilityForPeriod(start, backup.settings.lutealPhaseLength)
+        }
     }
 
     fun forDate(
         backup: CycleBackup,
         snapshots: Map<YearMonth, ForecastSnapshot>,
         date: LocalDate = LocalDate.now(),
+        referenceDate: LocalDate = date,
     ): DailyCycleInsight {
-        val prediction = prediction(backup, date)
-        val estimates = calendarPeriodEstimates(backup, snapshots, date)
+        val prediction = prediction(backup, referenceDate)
+        val estimates = calendarPeriodEstimates(backup, snapshots, referenceDate)
         val coveringEstimates = estimates.filter { date >= it.start && date < it.endExclusive }
         val estimatedPeriod = coveringEstimates.firstOrNull { it.origin == EstimateOrigin.CURRENT }
             ?: coveringEstimates.firstOrNull()
         val matchedSnapshot = estimatedPeriod?.takeIf { it.origin != EstimateOrigin.CURRENT }?.let { estimate ->
             snapshots.values.firstOrNull { it.periodStart == estimate.start }
         }?.takeIf { CycleAnalysis.closestRecordedStart(it, prediction.periodStarts) != null }
-        val unresolvedEstimate = estimatedPeriod.takeIf { matchedSnapshot == null }
+        val unresolvedEstimate = estimatedPeriod.takeIf { backup.settings.canPredictPeriods && matchedSnapshot == null }
+        val overduePrediction = estimates.firstOrNull { estimate ->
+            backup.settings.canPredictPeriods && estimate.origin == EstimateOrigin.CURRENT && estimate.start < date &&
+                date <= maxOf(estimate.endExclusive.minusDays(1), estimate.latestStart ?: estimate.start)
+        }?.start
         val futurePeriod = if (!backup.settings.canPredictPeriods) null else {
             prediction.periodStarts.firstOrNull { it.isAfter(date) }
-                ?: estimates.firstOrNull { it.start.isAfter(estimatedPeriod?.start ?: date) }?.start
+                ?: estimates.firstOrNull { it.start.isAfter(date) }?.start
         }
-        val displayedPeriod = unresolvedEstimate?.start ?: futurePeriod
+        val displayedPeriod = overduePrediction ?: unresolvedEstimate?.start ?: futurePeriod
         val activeStart = prediction.periodStarts.lastOrNull { !it.isAfter(date) }
-        val fertility = futurePeriod?.takeIf { backup.settings.canEstimateFertility }?.let {
-            fertilityForPeriod(it, backup.settings.lutealPhaseLength)
-        }
+        val fertilityEstimates = fertilityEstimates(backup, prediction, estimates, referenceDate)
+        val fertility = fertilityEstimates.firstOrNull { it.ovulation == date }
+            ?: fertilityEstimates.firstOrNull { date in it.fertileStart..it.fertileEnd }
+            ?: fertilityEstimates.firstOrNull { it.periodStart == futurePeriod }
         val phase = when {
-            unresolvedEstimate != null || backup.logs.any { it.day == date && it.bleeding } -> CyclePhase.MENSTRUAL
+            backup.logs.any { it.day == date && it.bleeding } -> CyclePhase.MENSTRUAL
+            overduePrediction != null && unresolvedEstimate?.origin != EstimateOrigin.CURRENT -> null
+            unresolvedEstimate != null -> CyclePhase.MENSTRUAL
             activeStart == null || fertility == null -> null
             else -> phaseFor(
                 day = date,
@@ -202,9 +233,10 @@ object CycleInsights {
         lutealPhaseDays: Int,
     ): CyclePhase? {
         if (day < cycleStart || !day.isBefore(nextPeriodStart)) return null
+        if (day < cycleStart.plusDays(periodLength.toLong())) return CyclePhase.MENSTRUAL
+        if (ChronoUnit.DAYS.between(cycleStart, nextPeriodStart) <= lutealPhaseDays) return null
         val fertility = fertilityForPeriod(nextPeriodStart, lutealPhaseDays)
         return when {
-            day < cycleStart.plusDays(periodLength.toLong()) -> CyclePhase.MENSTRUAL
             day < fertility.fertileStart -> CyclePhase.FOLLICULAR
             !day.isAfter(fertility.fertileEnd) -> CyclePhase.FERTILE
             else -> CyclePhase.LUTEAL

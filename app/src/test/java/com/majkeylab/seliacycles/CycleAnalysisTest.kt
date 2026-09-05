@@ -7,12 +7,38 @@ import kotlin.test.assertEquals
 
 class CycleAnalysisTest {
     @Test
-    fun `chart ignores long gaps caused by missed tracking`() {
+    fun `recorded average excludes an unfinished period and has no default for empty history`() {
+        val first = LocalDate.of(2026, 8, 1)
+        val second = first.plusDays(28)
+        val bleeding = (0L..4L).map(first::plusDays).toSet() + second
+        assertEquals(5, CycleAnalysis.averageRecordedPeriodDays(listOf(first, second), bleeding, second))
+        assertEquals(null, CycleAnalysis.averageRecordedPeriodDays(emptyList(), emptySet(), null))
+    }
+
+    @Test
+    fun `impossible luteal estimates are omitted without removing observed cycle lengths`() {
+        val first = LocalDate.of(2026, 9, 1)
+        val starts = listOf(first, first.plusDays(15), first.plusDays(43))
+        val history = CycleAnalysis.recentHistory(starts, starts.toSet(), lutealPhaseDays = 19)
+
+        assertEquals(listOf(15, 28), CycleAnalysis.recentLengths(starts).map(CycleLengthSample::days))
+        assertEquals(listOf(first.plusDays(15)), history.map(CycleHistorySample::start))
+    }
+
+    @Test
+    fun `reconstructed history is not measured as a prediction made in advance`() {
+        val start = LocalDate.of(2026, 9, 1)
+        val snapshot = ForecastSnapshot(YearMonth.from(start), start, start.minusDays(2), start.plusDays(2), 5, true)
+        assertEquals(null, CycleAnalysis.predictionAccuracy(listOf(start), mapOf(snapshot.month to snapshot)))
+    }
+
+    @Test
+    fun `chart preserves long observed cycles without assuming missed tracking`() {
         val first = LocalDate.of(2026, 1, 1)
         val starts = listOf(first, first.plusDays(28), first.plusDays(90), first.plusDays(121))
 
         assertEquals(
-            listOf(28, 31),
+            listOf(28, 62, 31),
             CycleAnalysis.recentLengths(starts).map(CycleLengthSample::days),
         )
     }

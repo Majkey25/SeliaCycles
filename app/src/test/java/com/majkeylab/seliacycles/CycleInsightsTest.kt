@@ -8,6 +8,130 @@ import kotlin.test.assertTrue
 
 class CycleInsightsTest {
     @Test
+    fun `historical day detail uses the same saved fertility baseline as its calendar`() {
+        val backup = CycleBackup(logs = listOf(
+            LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 29), LocalDate.of(2026, 9, 26),
+        ).flatMap { period(it) })
+        val start = LocalDate.of(2026, 9, 25)
+        val snapshot = ForecastSnapshot(java.time.YearMonth.from(start), start, start.minusDays(2), start.plusDays(2), 3, false)
+        val snapshots = mapOf(snapshot.month to snapshot)
+        val reference = LocalDate.of(2026, 10, 1)
+        val selected = LocalDate.of(2026, 9, 11)
+        val calendar = CycleInsights.fertilityEstimates(backup, snapshots, reference).single { it.ovulation == selected }
+
+        val insight = CycleInsights.forDate(backup, snapshots, selected, referenceDate = reference)
+
+        assertEquals(calendar, insight.fertility)
+        assertEquals(FertilityStatus.OVULATION, insight.fertilityStatus)
+    }
+
+    @Test
+    fun `viewing a future day does not reuse todays pending period`() {
+        val backup = CycleBackup(logs = period(LocalDate.of(2026, 9, 1)))
+        val selected = LocalDate.of(2026, 11, 26)
+
+        val insight = CycleInsights.forDate(backup, emptyMap(), selected, referenceDate = LocalDate.of(2026, 9, 10))
+
+        assertEquals(LocalDate.of(2026, 11, 24), insight.nextPeriodStart)
+        assertEquals(CyclePhase.MENSTRUAL, insight.phase)
+        assertEquals(LocalDate.of(2026, 12, 22), insight.fertility?.periodStart)
+    }
+
+    @Test
+    fun `luteal phase longer than modeled cycle disables fertility without changing period dates`() {
+        val backup = shortCycle(lutealPhaseDays = 19)
+        val reference = LocalDate.of(2026, 9, 12)
+        val insight = CycleInsights.forDate(backup, emptyMap(), reference)
+
+        assertEquals(LocalDate.of(2026, 9, 16), insight.nextPeriodStart)
+        assertEquals(CyclePhase.MENSTRUAL, insight.phase)
+        assertNull(insight.fertility)
+        assertEquals(FertilityStatus.UNAVAILABLE, insight.fertilityStatus)
+        assertTrue(CycleInsights.fertilityEstimates(backup, emptyMap(), reference).isEmpty())
+        assertEquals(19, backup.settings.lutealPhaseLength)
+    }
+
+    @Test
+    fun `daily fertility matches the calendar window across a short cycle boundary`() {
+        val backup = shortCycle(lutealPhaseDays = 14)
+        val reference = LocalDate.of(2026, 9, 12)
+        val calendar = CycleInsights.fertilityEstimates(backup, emptyMap(), reference)
+            .single { reference in it.fertileStart..it.fertileEnd }
+        val insight = CycleInsights.forDate(backup, emptyMap(), reference)
+
+        assertEquals(LocalDate.of(2026, 9, 16), insight.nextPeriodStart)
+        assertEquals(LocalDate.of(2026, 10, 1), calendar.periodStart)
+        assertEquals(calendar, insight.fertility)
+        assertEquals(FertilityStatus.FERTILE, insight.fertilityStatus)
+        assertEquals(CyclePhase.MENSTRUAL, insight.phase)
+    }
+
+    @Test
+    fun `recorded bleeding does not erase a possible overlapping fertility window`() {
+        val insight = CycleInsights.forDate(shortCycle(lutealPhaseDays = 14), emptyMap(), LocalDate.of(2026, 9, 2))
+
+        assertEquals(CyclePhase.MENSTRUAL, insight.phase)
+        assertEquals(FertilityStatus.OVULATION, insight.fertilityStatus)
+        assertEquals(LocalDate.of(2026, 9, 2), insight.fertility?.ovulation)
+    }
+
+    @Test
+    fun `a longer average cannot put historical ovulation before its recorded cycle start`() {
+        val starts = listOf(
+            LocalDate.of(2026, 6, 6), LocalDate.of(2026, 7, 4), LocalDate.of(2026, 8, 1),
+            LocalDate.of(2026, 8, 29), LocalDate.of(2026, 9, 13),
+        )
+        val backup = CycleBackup(logs = starts.flatMap { period(it) }, settings = AppSettings(lutealPhaseLength = 19))
+        val reference = LocalDate.of(2026, 9, 1)
+
+        assertTrue(CycleInsights.fertilityEstimates(backup, emptyMap(), reference).none {
+            it.periodStart == LocalDate.of(2026, 9, 13)
+        })
+        assertNull(CycleInsights.forDate(backup, emptyMap(), reference).fertility)
+    }
+
+    @Test
+    fun `future calendar estimates retain widening uncertainty windows`() {
+        val backup = CycleBackup(logs = period(LocalDate.of(2026, 8, 1)))
+        val estimates = CycleInsights.calendarPeriodEstimates(backup, emptyMap(), LocalDate.of(2026, 8, 10))
+
+        assertTrue(estimates.size > 2)
+        assertTrue(estimates.all { it.earliestStart != null && it.latestStart != null })
+        assertTrue(requireNotNull(estimates[1].latestStart).toEpochDay() - estimates[1].start.toEpochDay() >
+            requireNotNull(estimates[0].latestStart).toEpochDay() - estimates[0].start.toEpochDay())
+    }
+
+    @Test
+    fun `disabled forecasts cannot classify today from a historical estimate`() {
+        val start = LocalDate.of(2026, 8, 31)
+        val snapshot = ForecastSnapshot(java.time.YearMonth.from(start), start, start, start, 5, false)
+        val backup = CycleBackup(settings = AppSettings(predictionsEnabled = false))
+
+        val insight = CycleInsights.forDate(backup, mapOf(snapshot.month to snapshot), LocalDate.of(2026, 9, 1))
+
+        assertNull(insight.nextPeriodStart)
+        assertNull(insight.phase)
+        assertEquals(FertilityStatus.UNAVAILABLE, insight.fertilityStatus)
+        assertEquals(listOf(start), CycleInsights.periodEstimates(
+            backup, mapOf(snapshot.month to snapshot), LocalDate.of(2026, 9, 1),
+        ).map(PeriodEstimate::start))
+    }
+
+    @Test
+    fun `overdue start remains visible throughout its uncertainty window`() {
+        val backup = CycleBackup(logs = listOf(
+            LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 29),
+            LocalDate.of(2026, 2, 26), LocalDate.of(2026, 4, 10), LocalDate.of(2026, 5, 8),
+        ).flatMap { period(it) })
+
+        val insight = CycleInsights.forDate(backup, emptyMap(), LocalDate.of(2026, 6, 8))
+
+        assertEquals(LocalDate.of(2026, 6, 5), insight.nextPeriodStart)
+        assertNull(insight.phase)
+        assertEquals(LocalDate.of(2026, 7, 3), insight.fertility?.periodStart)
+    }
+
+    @Test
     fun `pregnancy hides future estimates but keeps saved history`() {
         val august = ForecastSnapshot(
             month = java.time.YearMonth.of(2026, 8),
@@ -299,6 +423,13 @@ class CycleInsightsTest {
 
         assertEquals(listOf(LocalDate.of(2026, 8, 5), LocalDate.of(2026, 8, 25)), starts.take(2))
     }
+
+    private fun shortCycle(lutealPhaseDays: Int): CycleBackup = CycleBackup(
+        logs = (0L..11L).map { offset ->
+            DayLog(LocalDate.of(2026, 9, 1).plusDays(offset), bleeding = true, flow = Flow.UNKNOWN)
+        },
+        settings = AppSettings(cycleLengthOverride = 15, periodLengthOverride = 14, lutealPhaseLength = lutealPhaseDays),
+    )
 
     private fun period(start: LocalDate, vararg moods: Mood): List<DayLog> = (0L..2L).map { offset ->
         DayLog(

@@ -1,6 +1,7 @@
 package com.majkeylab.seliacycles
 
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 data class SymptomPattern(
     val symptom: Symptom,
@@ -22,7 +23,8 @@ object PersonalPatterns {
         val observations = cycles.flatMap { (start, next) ->
             backup.logs.asSequence().filter { it.day >= start && it.day < next && it.symptoms.isNotEmpty() }
                 .flatMap { log ->
-                    val phase = phaseFor(log, next, backup.settings.lutealPhaseLength)
+                    val phase = phaseFor(log, start, next, backup.settings.lutealPhaseLength)
+                        ?: return@flatMap emptySequence()
                     log.symptoms.asSequence().map { symptom -> Observation(symptom, phase, start) }
                 }.toList()
         }
@@ -38,8 +40,9 @@ object PersonalPatterns {
             .take(MAX_PATTERNS)
     }
 
-    private fun phaseFor(log: DayLog, nextPeriod: LocalDate, lutealPhaseDays: Int): CyclePhase {
+    private fun phaseFor(log: DayLog, cycleStart: LocalDate, nextPeriod: LocalDate, lutealPhaseDays: Int): CyclePhase? {
         if (log.bleeding) return CyclePhase.MENSTRUAL
+        if (ChronoUnit.DAYS.between(cycleStart, nextPeriod) <= lutealPhaseDays) return null
         val fertility = CycleInsights.fertilityForPeriod(nextPeriod, lutealPhaseDays)
         return when {
             log.day < fertility.fertileStart -> CyclePhase.FOLLICULAR

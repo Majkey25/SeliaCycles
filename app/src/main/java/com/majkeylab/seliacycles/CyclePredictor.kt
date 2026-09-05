@@ -30,7 +30,21 @@ data class CyclePrediction(
     val latestPeriodStart: LocalDate?,
     val estimatedPeriodStarts: List<LocalDate>,
     val monthlyForecasts: List<MonthlyForecast>,
-)
+) {
+    fun uncertaintyWindow(start: LocalDate): Pair<LocalDate, LocalDate> {
+        require(start in estimatedPeriodStarts)
+        val cyclesAhead = (ChronoUnit.DAYS.between(periodStarts.last(), start) / averageCycleLength).toInt()
+        return forecastWindow(start, uncertaintyDays, cyclesAhead)
+    }
+}
+
+private fun forecastWindow(start: LocalDate, baseDays: Int, cyclesAhead: Int): Pair<LocalDate, LocalDate> {
+    val days = ceil(baseDays * sqrt(cyclesAhead.coerceAtLeast(1).toDouble())).toLong()
+        .coerceAtMost(MAX_UNCERTAINTY_DAYS.toLong())
+    return start.minusDays(days) to start.plusDays(days)
+}
+
+private const val MAX_UNCERTAINTY_DAYS = 14
 
 object CyclePredictor {
     fun predict(
@@ -59,16 +73,19 @@ object CyclePredictor {
         val starts = periods.map { it.first() }
         val rawIntervals = starts.zipWithNext { first, second ->
             ChronoUnit.DAYS.between(first, second).toInt()
-        }
+        }.filter { it in MIN_CYCLE_LENGTH..MAX_CYCLE_LENGTH }.takeLast(MAX_RECENT_CYCLES)
         val cycleLengths = robustCycleLengths(rawIntervals, defaultCycleLength)
         val cycleLength = cycleLengthOverride ?: cycleLengths.weightedAverageOr(defaultCycleLength)
-        val learnedPeriodLength = periods.filterNot { it.first() == activePeriodStart }.map { period ->
+        val learnedPeriodLength = periods.filterNot { period ->
+            activePeriodStart != null && activePeriodStart in period.first()..period.last()
+        }.map { period ->
             ChronoUnit.DAYS.between(period.first(), period.last()).toInt() + 1
         }.filter { it in 1..14 }.takeLast(MAX_RECENT_PERIODS).weightedAverageOr(defaultPeriodLength)
         val periodLength = periodLengthOverride ?: learnedPeriodLength
-        val uncertainty = when (cycleLengths.size) {
+        val uncertainty = when (rawIntervals.size) {
             0, 1 -> DEFAULT_UNCERTAINTY_DAYS
-            else -> max(1, cycleLengths.weightedAverageOf { abs(it - cycleLength).toDouble() }.roundToInt())
+            else -> rawIntervals.weightedAverageOf { abs(it - cycleLength).toDouble() }.roundToInt()
+                .coerceIn(1, MAX_UNCERTAINTY_DAYS)
         }
         val predictions = predictedStarts(
             anchor = starts.lastOrNull(),
@@ -103,31 +120,12 @@ object CyclePredictor {
     }
 
     private fun robustCycleLengths(rawIntervals: List<Int>, fallback: Int): List<Int> {
-        val valid = rawIntervals.filter { it in MIN_CYCLE_LENGTH..MAX_TRACKING_GAP_DAYS }
-        val common = valid.filter { it in COMMON_CYCLE_RANGE }.takeLast(MAX_RECENT_CYCLES)
-        val direct = valid.filter { it <= MAX_CYCLE_LENGTH }.takeLast(MAX_RECENT_CYCLES)
-        val baseline = (common.ifEmpty { direct }).medianOr(fallback)
-        val normalized = valid.mapNotNull { interval -> normalizeInterval(interval, baseline) }
-            .takeLast(MAX_RECENT_CYCLES)
-        if (normalized.size < 3) return normalized
+        if (rawIntervals.size < 3) return rawIntervals
 
-        val median = normalized.medianOr(fallback)
-        val medianDeviation = normalized.map { abs(it - median) }.medianOr(0)
+        val median = rawIntervals.medianOr(fallback)
+        val medianDeviation = rawIntervals.map { abs(it - median) }.medianOr(0)
         val tolerance = max(MIN_OUTLIER_TOLERANCE, medianDeviation * 3)
-        return normalized.filter { abs(it - median) <= tolerance }
-    }
-
-    private fun normalizeInterval(interval: Int, baseline: Int): Int? {
-        val splitThreshold = max(COMMON_CYCLE_RANGE.last, (baseline * 1.6).roundToInt())
-        if (interval <= splitThreshold) return interval.takeIf { it <= MAX_CYCLE_LENGTH }
-
-        val cycles = (interval.toDouble() / baseline).roundToInt().coerceAtLeast(2)
-        val expected = baseline * cycles
-        val relativeError = abs(interval - expected).toDouble() / expected
-        val normalized = (interval.toDouble() / cycles).roundToInt()
-        return normalized.takeIf {
-            relativeError <= MAX_MULTIPLE_ERROR && it in MIN_CYCLE_LENGTH..MAX_CYCLE_LENGTH
-        } ?: interval.takeIf { it <= MAX_CYCLE_LENGTH }
+        return rawIntervals.filter { abs(it - median) <= tolerance }
     }
 
     private fun predictedStarts(
@@ -188,10 +186,8 @@ object CyclePredictor {
         return MonthlyForecast(month, status, null, null, null, null)
     }
 
-    private fun PredictedStart.uncertainty(baseDays: Int): Pair<LocalDate, LocalDate> {
-        val days = ceil(baseDays * sqrt(cyclesAhead.toDouble())).toLong().coerceAtMost(MAX_UNCERTAINTY_DAYS)
-        return day.minusDays(days) to day.plusDays(days)
-    }
+    private fun PredictedStart.uncertainty(baseDays: Int): Pair<LocalDate, LocalDate> =
+        forecastWindow(day, baseDays, cyclesAhead)
 
     private fun List<Int>.medianOr(fallback: Int): Int {
         if (isEmpty()) return fallback
@@ -212,14 +208,10 @@ object CyclePredictor {
 
     private const val MIN_CYCLE_LENGTH = 15
     private const val MAX_CYCLE_LENGTH = 90
-    private const val MAX_TRACKING_GAP_DAYS = 180
     private const val MAX_PERIOD_GAP_DAYS = 2L
     private const val MAX_RECENT_CYCLES = 8
     private const val MAX_RECENT_PERIODS = 8
     private const val DEFAULT_UNCERTAINTY_DAYS = 2
     private const val MIN_OUTLIER_TOLERANCE = 4
-    private const val MAX_MULTIPLE_ERROR = 0.2
-    private const val MAX_UNCERTAINTY_DAYS = 14L
     private const val FORECAST_MONTHS = 12
-    private val COMMON_CYCLE_RANGE = 21..45
 }

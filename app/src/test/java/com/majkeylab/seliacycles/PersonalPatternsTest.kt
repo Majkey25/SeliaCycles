@@ -11,6 +11,21 @@ class PersonalPatternsTest {
     private val third = LocalDate.of(2026, 2, 26)
 
     @Test
+    fun `impossible cycle phase settings preserve observed menstrual patterns only`() {
+        val starts = listOf(first, first.plusDays(15), first.plusDays(30))
+        val backup = CycleBackup(
+            logs = trackedPeriods(starts, mapOf(
+                first.plusDays(1) to setOf(Symptom.CRAMPS),
+                first.plusDays(2) to setOf(Symptom.CRAMPS),
+                first.plusDays(16) to setOf(Symptom.CRAMPS),
+            )) + listOf(6L, 7L, 21L).map { DayLog(first.plusDays(it), symptoms = setOf(Symptom.HEADACHE)) },
+            settings = AppSettings(lutealPhaseLength = 19),
+        )
+
+        assertEquals(listOf(Symptom.CRAMPS), PersonalPatterns.symptomPatterns(backup).map(SymptomPattern::symptom))
+    }
+
+    @Test
     fun `finds a recurring symptom phase across completed cycles`() {
         val backup = CycleBackup(logs = trackedPeriods(listOf(first, second, third), mapOf(
             first.plusDays(1) to setOf(Symptom.CRAMPS),

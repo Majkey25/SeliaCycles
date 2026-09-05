@@ -24,9 +24,23 @@ data class PredictionAccuracySummary(
 )
 
 object CycleAnalysis {
+    fun averageRecordedPeriodDays(
+        periodStarts: List<LocalDate>,
+        bleedingDays: Set<LocalDate>,
+        activePeriodStart: LocalDate?,
+    ): Int? {
+        val lengths = periodStarts.takeLast(6).mapNotNull { start ->
+            val next = periodStarts.firstOrNull { it > start }
+            val end = bleedingDays.filter { it >= start && (next == null || it < next) }.maxOrNull() ?: return@mapNotNull null
+            if (activePeriodStart != null && activePeriodStart in start..end) return@mapNotNull null
+            (ChronoUnit.DAYS.between(start, end).toInt() + 1).takeIf { it in 1..14 }
+        }
+        return lengths.takeIf { it.isNotEmpty() }?.average()?.roundToInt()
+    }
+
     fun recentLengths(periodStarts: List<LocalDate>): List<CycleLengthSample> = periodStarts
         .zipWithNext { start, next -> CycleLengthSample(start, ChronoUnit.DAYS.between(start, next).toInt()) }
-        .filter { it.days in 15..45 }
+        .filter { it.days in 15..90 }
         .takeLast(6)
 
     fun recentHistory(
@@ -35,7 +49,7 @@ object CycleAnalysis {
         lutealPhaseDays: Int,
     ): List<CycleHistorySample> = periodStarts.zipWithNext().mapNotNull { (start, next) ->
         val cycleDays = ChronoUnit.DAYS.between(start, next).toInt()
-        if (cycleDays !in 15..45) return@mapNotNull null
+        if (cycleDays !in 15..90 || cycleDays <= lutealPhaseDays) return@mapNotNull null
         val fertility = CycleInsights.fertilityForPeriod(next, lutealPhaseDays)
         CycleHistorySample(
             start = start,
@@ -52,7 +66,8 @@ object CycleAnalysis {
         periodStarts: List<LocalDate>,
         snapshots: Map<YearMonth, ForecastSnapshot>,
     ): PredictionAccuracySummary? {
-        val samples = snapshots.values.sortedBy(ForecastSnapshot::month).mapNotNull { snapshot ->
+        val samples = snapshots.values.filterNot(ForecastSnapshot::reconstructed)
+            .sortedBy(ForecastSnapshot::month).mapNotNull { snapshot ->
             val actual = closestRecordedStart(snapshot, periodStarts) ?: return@mapNotNull null
             AccuracySample(
                 errorDays = abs(ChronoUnit.DAYS.between(snapshot.periodStart, actual).toInt()),

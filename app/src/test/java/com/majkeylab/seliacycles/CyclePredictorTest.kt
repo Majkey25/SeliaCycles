@@ -130,7 +130,7 @@ class CyclePredictorTest {
     }
 
     @Test
-    fun normalizesSkippedTrackingCycles() {
+    fun `does not invent missing periods inside long recorded cycles`() {
         val result = CyclePredictor.predict(
             bleedingDays = periodDays(
                 LocalDate.of(2026, 1, 1),
@@ -143,8 +143,47 @@ class CyclePredictorTest {
             referenceDate = LocalDate.of(2026, 6, 20),
         )
 
+        assertEquals(65, result.averageCycleLength)
+        assertEquals(LocalDate.of(2026, 8, 22), result.nextPeriodStart)
+        assertTrue(result.uncertaintyDays >= 10)
+    }
+
+    @Test
+    fun `a single long interval is not halved by a short default`() {
+        val result = CyclePredictor.predict(
+            periodDays(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 2, 26)),
+            28, 5, LocalDate.of(2026, 3, 1),
+        )
+
+        assertEquals(56, result.averageCycleLength)
+        assertEquals(LocalDate.of(2026, 4, 23), result.nextPeriodStart)
+    }
+
+    @Test
+    fun `active period remains excluded when its marker is inside the bleeding group`() {
+        val currentStart = LocalDate.of(2026, 8, 1)
+        val result = CyclePredictor.predict(
+            periodDays(LocalDate.of(2026, 7, 4)) + currentStart + currentStart.plusDays(1),
+            28, 5, currentStart.plusDays(1),
+            activePeriodStart = currentStart.plusDays(1),
+        )
+
+        assertEquals(5, result.averagePeriodLength)
+        assertEquals(LocalDate.of(2026, 8, 29), result.nextPeriodStart)
+    }
+
+    @Test
+    fun `outlier rejection cannot imply a precise prediction window`() {
+        val result = CyclePredictor.predict(
+            periodDays(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 29),
+                LocalDate.of(2026, 2, 26), LocalDate.of(2026, 4, 10), LocalDate.of(2026, 5, 8),
+            ),
+            28, 5, LocalDate.of(2026, 5, 10),
+        )
+
         assertEquals(28, result.averageCycleLength)
-        assertEquals(LocalDate.of(2026, 7, 16), result.nextPeriodStart)
+        assertTrue(result.uncertaintyDays > 1)
     }
 
     @Test
