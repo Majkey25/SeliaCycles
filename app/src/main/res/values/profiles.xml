@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_retry_load">Try again</string>
+    <string name="profile_default_name">My calendar</string>
+    <string name="profiles_title">Local profiles</string>
+    <string name="profile_manage">Manage profiles</string>
+    <string name="profile_create">Add profile</string>
+    <string name="profile_name">Profile name</string>
+    <string name="profile_name_hint">Character limit: %1$d.</string>
+    <string name="profile_name_invalid">Use a name without control characters. Character limit: %1$d.</string>
+    <string name="profile_delete">Delete profile</string>
+    <string name="profile_delete_title">Delete this profile and its data?</string>
+    <string name="profile_delete_body">This permanently deletes all logs and settings for %1$s, the active profile. This cannot be undone.</string>
+    <string name="profiles_privacy">Profiles keep separate calendars on this device. They are not locked accounts. Anyone who can open this app can open any profile.</string>
+    <string name="profile_limit">Local profile limit: %1$d.</string>
+    <string name="ui_mode_label">Display mode</string>
+    <string name="ui_mode_simple">Simple</string>
+    <string name="ui_mode_standard">Standard</string>
+    <string name="ui_mode_detailed">Detailed</string>
+    <string name="ui_mode_simple_description">Calendar and everyday logging.</string>
+    <string name="ui_mode_standard_description">Daily overview and cycle estimates.</string>
+    <string name="ui_mode_detailed_description">Cycle estimates, statistics and personal patterns.</string>
+    <string name="fertility_daily_title">Daily fertility estimate</string>
+    <string name="fertility_unavailable">Estimate unavailable</string>
+    <string name="fertility_outside_estimate">Outside estimated fertile window</string>
+    <string name="fertility_possible">Possibly within fertile window</string>
+    <string name="fertility_window">Estimated fertile window</string>
+    <string name="fertility_estimated_ovulation">Estimated ovulation</string>
+    <string name="fertility_uncertainty_warning">Calendar estimates can be wrong. They do not confirm ovulation or safe days and must not be used as contraception.</string>
+    <string name="profile_transfer_scope">Import and export apply only to the active profile.</string>
+    <string name="calendar_add_period">Log period</string>
+    <string name="profile_clear_data">Clear this calendar</string>
+    <string name="profile_clear_data_body">This permanently deletes all records and resets settings in the active calendar only. Other profiles are unaffected. This cannot be undone.</string>
+</resources>

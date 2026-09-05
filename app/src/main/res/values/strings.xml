@@ -159,8 +159,6 @@
     <string name="section_reminders">Reminders</string>
     <string name="period_reminder">Period reminder</string>
     <string name="remind_before">Days before estimate</string>
-    <string name="delete_all_data">Delete all data</string>
-    <string name="delete_all_data_body">This permanently deletes every local log and resets settings.</string>
     <string name="confirm_delete">Delete permanently</string>
     <string name="section_about">Privacy and health</string>
     <string name="privacy">Privacy</string>

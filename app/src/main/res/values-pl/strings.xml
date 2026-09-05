@@ -99,8 +99,6 @@
     <string name="section_reminders">Przypomnienia</string>
     <string name="period_reminder">Przypomnienie o miesiączce</string>
     <string name="remind_before">Dni przed oszacowaniem</string>
-    <string name="delete_all_data">Usuń wszystkie dane</string>
-    <string name="delete_all_data_body">Trwale usuwa wszystkie lokalne wpisy i resetuje ustawienia.</string>
     <string name="confirm_delete">Usuń trwale</string>
     <string name="section_about">Prywatność i zdrowie</string>
     <string name="privacy">Prywatność</string>

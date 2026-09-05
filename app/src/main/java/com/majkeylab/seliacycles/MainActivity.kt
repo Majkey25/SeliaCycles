@@ -1,5 +1,6 @@
 package com.majkeylab.seliacycles
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,6 +18,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (savedInstanceState == null) routeProfile(intent)
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()
             val dark = state.backup.settings.theme == AppTheme.DARK ||
@@ -40,5 +42,16 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.refreshForToday()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        routeProfile(intent)
+    }
+
+    private fun routeProfile(intent: Intent) {
+        val id = intent.getStringExtra(ReminderWorker.PROFILE_ID_EXTRA) ?: return
+        viewModel.selectProfile(id)
     }
 }

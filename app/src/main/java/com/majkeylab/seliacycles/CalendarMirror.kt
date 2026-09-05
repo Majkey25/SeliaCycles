@@ -28,9 +28,21 @@ data class CalendarMirrorSnapshot(
     val calendars: List<DeviceCalendar>,
 )
 
-class CalendarMirror(private val context: Context) {
+internal fun calendarMirrorUriPrefix(profileId: String): String {
+    requireValidProfileId(profileId)
+    return if (profileId == LocalProfiles.DEFAULT_ID) "selia://calendar-mirror/"
+    else "selia://profile-calendar-mirror/$profileId/"
+}
+
+internal fun calendarMirrorSelectionFile(profileId: String): String {
+    requireValidProfileId(profileId)
+    return if (profileId == LocalProfiles.DEFAULT_ID) "calendar-mirror-id" else "calendar-mirror-id-$profileId"
+}
+
+class CalendarMirror(private val context: Context, profileId: String = LocalProfiles.DEFAULT_ID) {
     private val resolver: ContentResolver = context.contentResolver
-    private val selectionFile = File(context.noBackupFilesDir, "calendar-mirror-id")
+    private val customUriPrefix = calendarMirrorUriPrefix(profileId)
+    private val selectionFile = File(context.noBackupFilesDir, calendarMirrorSelectionFile(profileId))
 
     fun snapshot(backup: CycleBackup, snapshots: Map<java.time.YearMonth, ForecastSnapshot>): CalendarMirrorSnapshot {
         val selectedId = selectedCalendarId()
@@ -130,13 +142,13 @@ class CalendarMirror(private val context: Context) {
             CalendarContract.Events.CONTENT_URI,
             EVENT_COLUMNS,
             "${CalendarContract.Events.CUSTOM_APP_PACKAGE} = ? AND ${CalendarContract.Events.CUSTOM_APP_URI} LIKE ?",
-            arrayOf(context.packageName, "$CUSTOM_URI_PREFIX%"),
+            arrayOf(context.packageName, "$customUriPrefix%"),
             null,
         )?.use { cursor ->
             buildList {
                 while (cursor.moveToNext()) {
                     val uri = cursor.getString(1).orEmpty()
-                    val key = uri.removePrefix(CUSTOM_URI_PREFIX)
+                    val key = uri.removePrefix(customUriPrefix)
                     val desiredEvent = desiredByKey[key]
                     val values = desiredEvent?.let {
                         eventValues(requireNotNull(calendarId), it, partnerViewEnabled)
@@ -197,7 +209,7 @@ class CalendarMirror(private val context: Context) {
             CalendarContract.Events.STATUS_TENTATIVE
         })
         put(CalendarContract.Events.CUSTOM_APP_PACKAGE, context.packageName)
-        put(CalendarContract.Events.CUSTOM_APP_URI, "$CUSTOM_URI_PREFIX${event.kind.name.lowercase()}/${event.start}")
+        put(CalendarContract.Events.CUSTOM_APP_URI, "$customUriPrefix${event.kind.name.lowercase()}/${event.start}")
     }
 
     private fun saveSelectedCalendarId(calendarId: Long?) {
@@ -209,7 +221,6 @@ class CalendarMirror(private val context: Context) {
     companion object {
         val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
         private const val UTC = "UTC"
-        private const val CUSTOM_URI_PREFIX = "selia://calendar-mirror/"
         private val CALENDAR_COLUMNS = arrayOf(
             BaseColumns._ID,
             CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,

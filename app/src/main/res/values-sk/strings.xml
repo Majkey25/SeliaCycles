@@ -99,8 +99,6 @@
     <string name="section_reminders">Pripomienky</string>
     <string name="period_reminder">Pripomienka menštruácie</string>
     <string name="remind_before">Dní pred odhadom</string>
-    <string name="delete_all_data">Vymazať všetky dáta</string>
-    <string name="delete_all_data_body">Táto akcia natrvalo vymaže všetky miestne záznamy a obnoví predvolené nastavenia.</string>
     <string name="confirm_delete">Natrvalo vymazať</string>
     <string name="section_about">Súkromie a zdravie</string>
     <string name="privacy">Súkromie</string>

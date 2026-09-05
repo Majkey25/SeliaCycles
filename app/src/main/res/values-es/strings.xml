@@ -99,8 +99,6 @@
     <string name="section_reminders">Recordatorios</string>
     <string name="period_reminder">Recordatorio del periodo</string>
     <string name="remind_before">Días antes de la estimación</string>
-    <string name="delete_all_data">Eliminar todos los datos</string>
-    <string name="delete_all_data_body">Elimina permanentemente todos los registros locales y restablece los ajustes.</string>
     <string name="confirm_delete">Eliminar permanentemente</string>
     <string name="section_about">Privacidad y salud</string>
     <string name="privacy">Privacidad</string>

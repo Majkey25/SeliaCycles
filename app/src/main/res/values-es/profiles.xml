@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_retry_load">Volver a intentar</string>
+    <string name="profile_default_name">Mi calendario</string>
+    <string name="profiles_title">Perfiles locales</string>
+    <string name="profile_manage">Gestionar perfiles</string>
+    <string name="profile_create">Añadir perfil</string>
+    <string name="profile_name">Nombre del perfil</string>
+    <string name="profile_name_hint">Hasta %1$d caracteres.</string>
+    <string name="profile_name_invalid">Usa un nombre de hasta %1$d caracteres sin caracteres de control.</string>
+    <string name="profile_delete">Eliminar perfil</string>
+    <string name="profile_delete_title">¿Eliminar este perfil y sus datos?</string>
+    <string name="profile_delete_body">Se eliminarán permanentemente todos los registros y ajustes del perfil activo %1$s. Esta acción no se puede deshacer.</string>
+    <string name="profiles_privacy">Los perfiles tienen calendarios separados en este dispositivo. No son cuentas bloqueadas. Cualquiera que pueda abrir la aplicación puede abrir cualquier perfil.</string>
+    <string name="profile_limit">Puedes tener hasta %1$d perfiles locales.</string>
+    <string name="ui_mode_label">Modo de visualización</string>
+    <string name="ui_mode_simple">Simple</string>
+    <string name="ui_mode_standard">Estándar</string>
+    <string name="ui_mode_detailed">Detallado</string>
+    <string name="ui_mode_simple_description">Calendario y registros diarios.</string>
+    <string name="ui_mode_standard_description">Resumen diario y estimaciones del ciclo.</string>
+    <string name="ui_mode_detailed_description">Estimaciones del ciclo, estadísticas y patrones personales.</string>
+    <string name="fertility_daily_title">Estimación diaria de fertilidad</string>
+    <string name="fertility_unavailable">Estimación no disponible</string>
+    <string name="fertility_outside_estimate">Fuera del período fértil estimado</string>
+    <string name="fertility_possible">Posiblemente dentro del período fértil</string>
+    <string name="fertility_window">Período fértil estimado</string>
+    <string name="fertility_estimated_ovulation">Ovulación estimada</string>
+    <string name="fertility_uncertainty_warning">Las estimaciones del calendario pueden ser incorrectas. No confirman la ovulación ni los días seguros y no deben usarse como anticonceptivo.</string>
+    <string name="profile_transfer_scope">La importación y exportación solo se aplican al perfil activo.</string>
+    <string name="calendar_add_period">Registrar menstruación</string>
+    <string name="profile_clear_data">Vaciar este calendario</string>
+    <string name="profile_clear_data_body">Se eliminarán permanentemente todos los registros y se restablecerán los ajustes solo del calendario activo. Los demás perfiles no se verán afectados. Esta acción no se puede deshacer.</string>
+</resources>

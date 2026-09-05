@@ -1,6 +1,6 @@
 # Selia Cycles privacy policy
 
-Effective: August 30, 2026
+Effective: September 5, 2026
 
 Selia Cycles is published by MajkeyLab. Contact `majkeylab@gmail.com` about this policy.
 
@@ -10,9 +10,13 @@ Selia Cycles stores menstrual dates, spotting, flow, symptoms, mood, notes, cerv
 
 The app has no account, ads, analytics, telemetry, Selia cloud, or network permission. MajkeyLab does not receive cycle data.
 
+Each local profile has a separate calendar database. Profile names and display modes are stored on the device. Profiles are not password-protected accounts: anyone who can open the app can switch between them. Add another person's health data only with appropriate consent.
+
 ## Optional `.pc` import and export
 
 When the user selects a compatible `.pc` backup, Selia Cycles reads the file locally, previews the dated records, and merges confirmed records into private app storage. The file and imported health data are not uploaded. Existing Selia values take priority for the same day.
+
+Import and export apply only to the selected profile. A `.pc` file does not contain the other local profiles.
 
 ## Optional `.pc` export
 
@@ -34,7 +38,7 @@ Selia Cycles does not sell personal data. Enabling the optional calendar mirror 
 
 ## Retention and deletion
 
-Local data remains until the user chooses **Settings > Delete all data**, clears app storage, or uninstalls the app. **Stop calendar sync** removes Selia-created calendar events while permission is available. If permission was revoked or the app was uninstalled first, calendar copies must be removed in the calendar app.
+**Settings > Data and transfer > Clear this calendar** clears the selected profile's records and settings without changing other profiles. **Manage profiles > Delete profile** removes an additional profile and its records. Clearing Android app storage or uninstalling removes all local profiles. **Stop calendar sync** removes the selected profile's Selia-created calendar events while permission is available. If permission was revoked or the app was uninstalled first, calendar copies must be removed in the calendar app.
 
 ## Security
 

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_retry_load">Spróbuj ponownie</string>
+    <string name="profile_default_name">Mój kalendarz</string>
+    <string name="profiles_title">Profile lokalne</string>
+    <string name="profile_manage">Zarządzaj profilami</string>
+    <string name="profile_create">Dodaj profil</string>
+    <string name="profile_name">Nazwa profilu</string>
+    <string name="profile_name_hint">Maksymalnie %1$d znaków.</string>
+    <string name="profile_name_invalid">Użyj nazwy do %1$d znaków bez znaków sterujących.</string>
+    <string name="profile_delete">Usuń profil</string>
+    <string name="profile_delete_title">Usunąć ten profil i jego dane?</string>
+    <string name="profile_delete_body">Wszystkie wpisy i ustawienia aktywnego profilu %1$s zostaną trwale usunięte. Tej czynności nie można cofnąć.</string>
+    <string name="profiles_privacy">Profile mają osobne kalendarze na tym urządzeniu. Nie są zablokowanymi kontami. Każdy, kto może otworzyć aplikację, może otworzyć dowolny profil.</string>
+    <string name="profile_limit">Możesz mieć maksymalnie %1$d profili lokalnych.</string>
+    <string name="ui_mode_label">Tryb wyświetlania</string>
+    <string name="ui_mode_simple">Prosty</string>
+    <string name="ui_mode_standard">Standardowy</string>
+    <string name="ui_mode_detailed">Szczegółowy</string>
+    <string name="ui_mode_simple_description">Kalendarz i codzienne wpisy.</string>
+    <string name="ui_mode_standard_description">Podsumowanie dnia i szacunki cyklu.</string>
+    <string name="ui_mode_detailed_description">Szacunki cyklu, statystyki i osobiste wzorce.</string>
+    <string name="fertility_daily_title">Dzienne oszacowanie płodności</string>
+    <string name="fertility_unavailable">Oszacowanie niedostępne</string>
+    <string name="fertility_outside_estimate">Poza szacowanym okresem płodnym</string>
+    <string name="fertility_possible">Możliwy okres płodny</string>
+    <string name="fertility_window">Szacowany okres płodny</string>
+    <string name="fertility_estimated_ovulation">Szacowana owulacja</string>
+    <string name="fertility_uncertainty_warning">Szacunki kalendarzowe mogą być błędne. Nie potwierdzają owulacji ani bezpiecznych dni i nie wolno ich używać jako antykoncepcji.</string>
+    <string name="profile_transfer_scope">Import i eksport dotyczą tylko aktywnego profilu.</string>
+    <string name="calendar_add_period">Zapisz miesiączkę</string>
+    <string name="profile_clear_data">Wyczyść ten kalendarz</string>
+    <string name="profile_clear_data_body">Wszystkie wpisy zostaną trwale usunięte, a ustawienia zresetowane tylko w aktywnym kalendarzu. Pozostałe profile pozostaną bez zmian. Tej czynności nie można cofnąć.</string>
+</resources>

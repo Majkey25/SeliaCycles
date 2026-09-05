@@ -99,8 +99,6 @@
     <string name="section_reminders">Erinnerungen</string>
     <string name="period_reminder">Periodenerinnerung</string>
     <string name="remind_before">Tage vor der Schätzung</string>
-    <string name="delete_all_data">Alle Daten löschen</string>
-    <string name="delete_all_data_body">Löscht dauerhaft alle lokalen Einträge und setzt Einstellungen zurück.</string>
     <string name="confirm_delete">Dauerhaft löschen</string>
     <string name="section_about">Datenschutz und Gesundheit</string>
     <string name="privacy">Datenschutz</string>

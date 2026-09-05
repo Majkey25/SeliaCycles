@@ -19,8 +19,8 @@ android {
         applicationId = "com.majkeylab.seliacycles"
         minSdk = 29
         targetSdk = 36
-        versionCode = 20
-        versionName = "0.9.0-beta.12"
+        versionCode = 21
+        versionName = "0.9.0-beta.13"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

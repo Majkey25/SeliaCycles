@@ -8,6 +8,49 @@ import kotlin.test.assertTrue
 
 class CycleInsightsTest {
     @Test
+    fun `an unconfirmed period remains overdue after the forecast window expires`() {
+        val backup = CycleBackup(logs = period(LocalDate.of(2026, 8, 1)))
+        val expected = LocalDate.of(2026, 8, 29)
+        val reference = LocalDate.of(2026, 9, 5)
+
+        listOf(reference, reference.plusMonths(2)).forEach { date ->
+            val insight = CycleInsights.forDate(backup, emptyMap(), date)
+            assertEquals(expected, insight.nextPeriodStart)
+            assertNull(insight.phase)
+            assertEquals(FertilityStatus.UNAVAILABLE, insight.fertilityStatus)
+        }
+        val historical = CycleInsights.forDate(backup, emptyMap(), reference, referenceDate = reference.plusMonths(2))
+        assertEquals(expected, historical.nextPeriodStart)
+        assertNull(historical.phase)
+        assertEquals(FertilityStatus.UNAVAILABLE, historical.fertilityStatus)
+
+        val future = CycleInsights.forDate(backup, emptyMap(), LocalDate.of(2026, 9, 26), reference)
+        assertEquals(LocalDate.of(2026, 9, 26), future.nextPeriodStart)
+        assertEquals(CyclePhase.MENSTRUAL, future.phase)
+    }
+
+    @Test
+    fun `a newly recorded period clears overdue state and recalculates the next cycle`() {
+        val backup = CycleBackup(logs = period(LocalDate.of(2026, 8, 1)) + period(LocalDate.of(2026, 8, 30)))
+        val insight = CycleInsights.forDate(backup, emptyMap(), LocalDate.of(2026, 9, 5))
+
+        assertEquals(LocalDate.of(2026, 9, 28), insight.nextPeriodStart)
+        assertEquals(CyclePhase.FOLLICULAR, insight.phase)
+        assertEquals(FertilityStatus.OUTSIDE, insight.fertilityStatus)
+    }
+
+    @Test
+    fun `a later recorded period preserves retrospective fertility rather than imposing overdue state`() {
+        val backup = CycleBackup(logs = period(LocalDate.of(2026, 8, 1)) + period(LocalDate.of(2026, 9, 15)),
+            settings = AppSettings(cycleLengthOverride = 28))
+        val insight = CycleInsights.forDate(backup, emptyMap(), LocalDate.of(2026, 9, 5))
+
+        assertEquals(LocalDate.of(2026, 9, 15), insight.nextPeriodStart)
+        assertEquals(CyclePhase.LUTEAL, insight.phase)
+        assertEquals(FertilityStatus.OUTSIDE, insight.fertilityStatus)
+    }
+
+    @Test
     fun `historical day detail uses the same saved fertility baseline as its calendar`() {
         val backup = CycleBackup(logs = listOf(
             LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 29), LocalDate.of(2026, 9, 26),

@@ -16,7 +16,8 @@ internal fun hasLogCapacity(existingCount: Long, replacing: Boolean): Boolean =
 internal fun mergedTransferSettings(current: AppSettings, incoming: AppSettings): AppSettings =
     incoming.copy(partnerViewEnabled = current.partnerViewEnabled)
 
-class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID) :
+    SQLiteOpenHelper(context, profileDatabaseName(profileId), null, DATABASE_VERSION) {
     override fun onCreate(database: SQLiteDatabase) {
         database.execSQL(
             """
@@ -434,7 +435,6 @@ class CycleStore(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
     }
 
     companion object {
-        private const val DATABASE_NAME = "selia-cycles.db"
         private const val DATABASE_VERSION = 10
         private val LOG_COLUMNS = arrayOf(
             "day",

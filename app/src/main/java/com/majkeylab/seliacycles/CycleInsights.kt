@@ -114,7 +114,7 @@ object CycleInsights {
         )
     }
 
-    private fun fertilityEstimates(
+    internal fun fertilityEstimates(
         backup: CycleBackup,
         prediction: CyclePrediction,
         estimates: List<PeriodEstimate>,
@@ -151,6 +151,14 @@ object CycleInsights {
             snapshots.values.firstOrNull { it.periodStart == estimate.start }
         }?.takeIf { CycleAnalysis.closestRecordedStart(it, prediction.periodStarts) != null }
         val unresolvedEstimate = estimatedPeriod.takeIf { backup.settings.canPredictPeriods && matchedSnapshot == null }
+        val unconfirmedStart = prediction.periodStarts.lastOrNull()
+            ?.takeIf { it <= date && date <= referenceDate && backup.settings.canPredictPeriods }
+            ?.plusDays(prediction.averageCycleLength.toLong())
+            ?.takeIf { it <= date }
+        val recordedBleeding = backup.logs.any { it.day == date && it.bleeding }
+        val elapsedCycle = !recordedBleeding && unconfirmedStart?.let { start ->
+            date > start.plusDays(maxOf(prediction.averagePeriodLength - 1, prediction.uncertaintyDays).toLong())
+        } == true
         val overduePrediction = estimates.firstOrNull { estimate ->
             backup.settings.canPredictPeriods && estimate.origin == EstimateOrigin.CURRENT && estimate.start < date &&
                 date <= maxOf(estimate.endExclusive.minusDays(1), estimate.latestStart ?: estimate.start)
@@ -159,14 +167,15 @@ object CycleInsights {
             prediction.periodStarts.firstOrNull { it.isAfter(date) }
                 ?: estimates.firstOrNull { it.start.isAfter(date) }?.start
         }
-        val displayedPeriod = overduePrediction ?: unresolvedEstimate?.start ?: futurePeriod
+        val displayedPeriod = unconfirmedStart ?: overduePrediction ?: unresolvedEstimate?.start ?: futurePeriod
         val activeStart = prediction.periodStarts.lastOrNull { !it.isAfter(date) }
         val fertilityEstimates = fertilityEstimates(backup, prediction, estimates, referenceDate)
         val fertility = fertilityEstimates.firstOrNull { it.ovulation == date }
             ?: fertilityEstimates.firstOrNull { date in it.fertileStart..it.fertileEnd }
             ?: fertilityEstimates.firstOrNull { it.periodStart == futurePeriod }
         val phase = when {
-            backup.logs.any { it.day == date && it.bleeding } -> CyclePhase.MENSTRUAL
+            recordedBleeding -> CyclePhase.MENSTRUAL
+            elapsedCycle -> null
             overduePrediction != null && unresolvedEstimate?.origin != EstimateOrigin.CURRENT -> null
             unresolvedEstimate != null -> CyclePhase.MENSTRUAL
             activeStart == null || fertility == null -> null
@@ -183,6 +192,7 @@ object CycleInsights {
             phase = phase,
             fertility = fertility,
             fertilityStatus = when {
+                elapsedCycle -> FertilityStatus.UNAVAILABLE
                 fertility == null -> FertilityStatus.UNAVAILABLE
                 date == fertility.ovulation -> FertilityStatus.OVULATION
                 date in fertility.fertileStart..fertility.fertileEnd -> FertilityStatus.FERTILE
