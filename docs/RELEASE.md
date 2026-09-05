@@ -28,4 +28,4 @@ Verify `app/build/outputs/bundle/release/app-release.aab` with `jarsigner -verif
 6. Add a tester email list or Google Group and a feedback email.
 7. Review warnings. Roll out only when every required form is complete.
 
-Package name and version code cannot be changed after the first uploaded bundle.
+The package name cannot change after the first uploaded bundle. Every later upload needs a new, higher `versionCode`; an uploaded code cannot be reused.

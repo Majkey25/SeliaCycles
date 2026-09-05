@@ -5,10 +5,21 @@
 ### Changed
 
 - The launcher and Play Store icon now use one clear calendar mark with a red tracked-day drop, transparent outer space, and safer adaptive-icon scaling.
+- Theme controls, calendar-day selection, switches, and long information dialogs now expose clearer accessible behavior.
+- The period editor follows the user's configured first day of week and unsaved editor or care-timer state survives screen recreation.
+- The public privacy page now explains local unencrypted `.pc` export.
 
 ### Fixed
 
 - An expected period no longer disappears or jumps forward by a full cycle immediately after its predicted start. The dashboard now shows how many days late it is while future fertility stays on the next cycle.
+- Current live estimates take priority over overlapping saved historical estimates without deleting the historical baseline.
+- Maximum-size exports stay within the reader's container-entry limit, and the store cannot grow beyond the supported backup size.
+- Imported backups cannot enable partner calendar visibility, replace newer local forecast history, or fail merely because a snapshot month already exists.
+- Invalid imported forecast dates are rejected before persistence.
+- Deleting local data succeeds even when Calendar access was revoked; calendar cleanup resumes when access returns.
+- Delayed reminders still arrive within their configured window, but only once per predicted period.
+- Calendar mirroring no longer rewrites recorded events only because their private description is intentionally preserved.
+- Today data refreshes after the local date changes while the app is backgrounded.
 
 ## 0.9.0-beta.10 - 2026-09-04
 

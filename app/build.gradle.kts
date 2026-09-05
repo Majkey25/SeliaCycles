@@ -1,11 +1,10 @@
 import java.util.Properties
 
-val releaseSigningProperties =
-    (providers.gradleProperty("seliaCyclesKeystoreProperties").orNull
-        ?: providers.environmentVariable("SELIA_CYCLES_KEYSTORE_PROPERTIES").orNull)
-        ?.let(::file)
-        ?.takeIf { it.isFile }
-        ?.let { propertiesFile -> Properties().apply { propertiesFile.inputStream().use(::load) } }
+val releaseSigningPropertiesPath = providers.gradleProperty("seliaCyclesKeystoreProperties").orNull
+    ?: providers.environmentVariable("SELIA_CYCLES_KEYSTORE_PROPERTIES").orNull
+val releaseSigningProperties = releaseSigningPropertiesPath?.let(::file)?.also { propertiesFile ->
+    require(propertiesFile.isFile) { "Release signing properties file does not exist: $propertiesFile" }
+}?.let { propertiesFile -> Properties().apply { propertiesFile.inputStream().use(::load) } }
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
