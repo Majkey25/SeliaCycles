@@ -14,17 +14,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-data class AppState(
+data class CycleContent(
     val backup: CycleBackup = CycleBackup(),
     val forecastSnapshots: Map<java.time.YearMonth, ForecastSnapshot> = emptyMap(),
     val referenceDate: java.time.LocalDate = java.time.LocalDate.now(),
-    val calendarPermissionGranted: Boolean = false,
-    val selectedCalendarId: Long? = null,
-    val deviceCalendars: List<DeviceCalendar> = emptyList(),
-    val loading: Boolean = true,
-    val busy: Boolean = false,
-    val myCalendarPreview: MyCalendarPreview? = null,
-    @param:StringRes val message: Int? = null,
 ) {
     val logsByDay: Map<java.time.LocalDate, DayLog> = backup.logs.associateBy(DayLog::day)
 
@@ -47,12 +40,32 @@ data class AppState(
     val todayInsight: DailyCycleInsight = CycleInsights.forDate(backup, forecastSnapshots, referenceDate)
 }
 
+data class AppState(
+    val content: CycleContent = CycleContent(),
+    val calendarPermissionGranted: Boolean = false,
+    val selectedCalendarId: Long? = null,
+    val deviceCalendars: List<DeviceCalendar> = emptyList(),
+    val loading: Boolean = true,
+    val busy: Boolean = false,
+    val myCalendarPreview: MyCalendarPreview? = null,
+    @param:StringRes val message: Int? = null,
+) {
+    val backup get() = content.backup
+    val forecastSnapshots get() = content.forecastSnapshots
+    val referenceDate get() = content.referenceDate
+    val logsByDay get() = content.logsByDay
+    val prediction get() = content.prediction
+    val periodEstimates get() = content.periodEstimates
+    val todayInsight get() = content.todayInsight
+}
+
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val store = CycleStore(application)
     private val calendarMirror = CalendarMirror(application)
     private val myCalendarImporter = MyCalendarImporter(application)
     private val myCalendarExporter = MyCalendarExporter(application)
     private val storeMutex = Mutex()
+    private var storeRevision = 0L
     private val _state = MutableStateFlow(AppState())
     val state = _state.asStateFlow()
 
@@ -95,17 +108,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun saveSettings(settings: AppSettings) {
-        _state.value = _state.value.copy(backup = _state.value.backup.copy(settings = settings))
+        _state.value = _state.value.copy(content = _state.value.content.copy(backup = _state.value.backup.copy(settings = settings)))
         runStoreAction {
             store.saveSettings(settings)
         }
     }
 
     fun clearAll() = viewModelScope.launch {
-        _state.value = _state.value.copy(busy = true, message = null)
+        val revision = ++storeRevision
+        _state.value = _state.value.copy(busy = true, message = null, myCalendarPreview = null)
         val result = runCatching {
-            withContext(Dispatchers.IO) {
-                storeMutex.withLock {
+            storeMutex.withLock {
+                withContext(Dispatchers.IO) {
                     val calendarConnected = calendarMirror.selectedCalendarId() != null
                     store.clearAll()
                     ReminderWorker.sync(getApplication(), AppSettings())
@@ -113,16 +127,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
+        if (revision != storeRevision) return@launch
         reload(result.fold(
             onSuccess = { calendarFailed -> if (calendarFailed) R.string.calendar_cleanup_pending else null },
             onFailure = { R.string.operation_failed },
-        ))
+        ), revision)
     }
 
-    fun calendarPermissionChanged() = reload()
+    fun calendarPermissionChanged() {
+        if (!_state.value.busy) reload()
+    }
 
     fun refreshForToday() {
-        if (_state.value.referenceDate != java.time.LocalDate.now()) reload()
+        if (!_state.value.busy && _state.value.referenceDate != java.time.LocalDate.now()) reload()
     }
 
     fun connectCalendar(calendarId: Long) = runStoreAction {
@@ -140,24 +157,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun inspectMyCalendar(uri: Uri) = viewModelScope.launch {
+        val revision = ++storeRevision
         _state.value = _state.value.copy(busy = true, message = null, myCalendarPreview = null)
         val result = runCatching {
-            withContext(Dispatchers.IO) {
-                getApplication<Application>().contentResolver.openInputStream(uri)?.use(myCalendarImporter::inspect)
-                    ?: error("Cannot open My Calendar backup")
+            storeMutex.withLock {
+                withContext(Dispatchers.IO) {
+                    getApplication<Application>().contentResolver.openInputStream(uri)?.use(myCalendarImporter::inspect)
+                        ?: error("Cannot open My Calendar backup")
+                }
             }
         }
+        if (revision != storeRevision) return@launch
         result.fold(
-            onSuccess = { preview -> _state.value = _state.value.copy(busy = false, myCalendarPreview = preview) },
+            onSuccess = { preview ->
+                _state.value = _state.value.copy(myCalendarPreview = preview)
+                reload(revision = revision)
+            },
             onFailure = { error ->
                 Log.e("SeliaCycles", "My Calendar import failed", error)
-                _state.value = _state.value.copy(
-                    busy = false,
+                reload(
                     message = when ((error as? MyCalendarFormatException)?.failure) {
                         MyCalendarFailure.UNSUPPORTED -> R.string.my_calendar_import_unsupported
                         MyCalendarFailure.EMPTY -> R.string.my_calendar_import_empty
                         MyCalendarFailure.DAMAGED, null -> R.string.my_calendar_import_damaged
                     },
+                    revision = revision,
                 )
             },
         )
@@ -165,16 +189,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun confirmMyCalendarImport() {
         val preview = _state.value.myCalendarPreview ?: return
+        _state.value = _state.value.copy(myCalendarPreview = null)
         runStoreAction(R.string.my_calendar_import_complete) {
             preview.seliaTransfer?.let(store::mergeTransfer) ?: store.mergeImported(preview.logs)
         }
     }
 
     fun exportMyCalendar(uri: Uri) = viewModelScope.launch {
+        val revision = ++storeRevision
         _state.value = _state.value.copy(busy = true, message = null)
         val result = runCatching {
-            withContext(Dispatchers.IO) {
-                storeMutex.withLock {
+            storeMutex.withLock {
+                withContext(Dispatchers.IO) {
                     val transfer = SeliaTransfer(store.load(), store.loadForecastSnapshots())
                     require(transfer.backup.logs.isNotEmpty())
                     getApplication<Application>().contentResolver.openOutputStream(uri, "w")?.use {
@@ -184,7 +210,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         result.exceptionOrNull()?.let { Log.e("SeliaCycles", "My Calendar export failed", it) }
-        reload(if (result.isSuccess) R.string.my_calendar_export_complete else R.string.operation_failed)
+        if (revision == storeRevision) {
+            reload(if (result.isSuccess) R.string.my_calendar_export_complete else R.string.operation_failed, revision)
+        }
     }
 
     fun cancelMyCalendarImport() {
@@ -200,12 +228,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun runStoreAction(@StringRes successMessage: Int? = null, action: suspend () -> Unit) = viewModelScope.launch {
+        val revision = ++storeRevision
         _state.value = _state.value.copy(busy = true, message = null)
-        val result = runCatching { withContext(Dispatchers.IO) { storeMutex.withLock { action() } } }
-        reload(if (result.isFailure) R.string.operation_failed else successMessage)
+        val result = runCatching { storeMutex.withLock { withContext(Dispatchers.IO) { action() } } }
+        if (revision == storeRevision) reload(if (result.isFailure) R.string.operation_failed else successMessage, revision)
     }
 
-    private fun reload(@StringRes message: Int? = null) = viewModelScope.launch {
+    private fun reload(@StringRes message: Int? = null, revision: Long = storeRevision) = viewModelScope.launch {
         val referenceDate = java.time.LocalDate.now()
         val loaded = runCatching {
             withContext(Dispatchers.IO) {
@@ -221,8 +250,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val forecastSnapshots = (existingSnapshots + missingSnapshots).associateBy(ForecastSnapshot::month)
                     val calendar = runCatching { calendarMirror.snapshot(backup, forecastSnapshots) }
                     LoadedState(
-                        backup = backup,
-                        forecastSnapshots = forecastSnapshots,
+                        content = CycleContent(backup, forecastSnapshots, referenceDate),
                         calendar = calendar.getOrElse {
                             CalendarMirrorSnapshot(
                                 permissionGranted = calendarMirror.hasPermissions(),
@@ -235,16 +263,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
+        if (revision != storeRevision) return@launch
         _state.value = loaded.fold(
             onSuccess = {
                 AppState(
-                    backup = it.backup,
-                    forecastSnapshots = it.forecastSnapshots,
-                    referenceDate = referenceDate,
+                    content = it.content,
                     calendarPermissionGranted = it.calendar.permissionGranted,
                     selectedCalendarId = it.calendar.selectedCalendarId,
                     deviceCalendars = it.calendar.calendars,
                     loading = false,
+                    myCalendarPreview = _state.value.myCalendarPreview,
                     message = message ?: if (it.calendarFailed) R.string.calendar_sync_failed else null,
                 )
             },
@@ -258,8 +286,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 }
 
 private data class LoadedState(
-    val backup: CycleBackup,
-    val forecastSnapshots: Map<java.time.YearMonth, ForecastSnapshot>,
+    val content: CycleContent,
     val calendar: CalendarMirrorSnapshot,
     val calendarFailed: Boolean,
 )

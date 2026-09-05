@@ -17,7 +17,7 @@ class DayLogTrackersTest {
 
         assertFalse(log.bleeding)
         assertFalse(log.isEmpty)
-        assertNull(AppState(backup = CycleBackup(logs = listOf(log))).prediction.nextPeriodStart)
+        assertNull(AppState(content = CycleContent(backup = CycleBackup(logs = listOf(log)))).prediction.nextPeriodStart)
     }
 
     @Test

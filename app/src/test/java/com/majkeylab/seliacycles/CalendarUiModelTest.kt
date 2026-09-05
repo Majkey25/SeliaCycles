@@ -10,6 +10,20 @@ import java.time.LocalDate
 
 class CalendarUiModelTest {
     @Test
+    fun `status copies reuse cycle calculations but changed inputs recalculate`() {
+        val today = LocalDate.of(2026, 9, 1)
+        val content = CycleContent(
+            backup = CycleBackup(listOf(DayLog(today, bleeding = true, flow = Flow.UNKNOWN))),
+            referenceDate = today,
+        )
+        val state = AppState(content = content)
+        kotlin.test.assertSame(content, state.copy(busy = true).content)
+        val edited = state.copy(content = content.copy(backup = content.backup.copy(settings = AppSettings(cycleLengthOverride = 35))))
+        assertEquals(today.plusDays(35), edited.prediction.nextPeriodStart)
+        assertEquals(today.plusDays(28), state.prediction.nextPeriodStart)
+    }
+
+    @Test
     fun `month grid fills adjacent dates around a Saturday start`() {
         val days = CalendarPaging.gridDays(YearMonth.of(2026, 8), DayOfWeek.MONDAY)
 
@@ -97,10 +111,10 @@ class CalendarUiModelTest {
     fun `App state derives Today values from one reference date`() {
         val reference = LocalDate.of(2026, 7, 29)
         val state = AppState(
-            backup = CycleBackup(logs = (0L..2L).map { offset ->
+            content = CycleContent(backup = CycleBackup(logs = (0L..2L).map { offset ->
                 DayLog(LocalDate.of(2026, 7, 1).plusDays(offset), bleeding = true, flow = Flow.UNKNOWN)
             }),
-            referenceDate = reference,
+            referenceDate = reference),
         )
 
         assertEquals(reference, state.referenceDate)
