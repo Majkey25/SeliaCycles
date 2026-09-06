@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="delete_information_title">Delete this day\'s details?</string>
+    <string name="delete_information_body">This removes all notes and optional details for %1$s, including hidden or imported details. Period dates and flow stay unchanged.</string>
+    <string name="unsaved_changes_title">Discard changes?</string>
+    <string name="unsaved_changes_body">Your changes have not been saved.</string>
+    <string name="keep_editing">Keep editing</string>
+    <string name="discard_changes">Discard changes</string>
+</resources>

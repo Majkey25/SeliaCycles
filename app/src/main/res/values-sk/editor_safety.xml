@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="delete_information_title">Vymazať podrobnosti tohto dňa?</string>
+    <string name="delete_information_body">Vymažú sa všetky poznámky a voliteľné údaje pre %1$s vrátane skrytých alebo importovaných údajov. Dni menštruácie a intenzita krvácania zostanú bez zmeny.</string>
+    <string name="unsaved_changes_title">Zahodiť zmeny?</string>
+    <string name="unsaved_changes_body">Zmeny ešte nie sú uložené.</string>
+    <string name="keep_editing">Pokračovať v úpravách</string>
+    <string name="discard_changes">Zahodiť zmeny</string>
+</resources>

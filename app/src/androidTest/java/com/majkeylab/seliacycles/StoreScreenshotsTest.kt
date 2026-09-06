@@ -54,6 +54,7 @@ class StoreScreenshotsTest {
                 .performScrollTo().performClick()
             capture("03-period-editor.png")
             compose.onNodeWithText(text(R.string.cancel)).performClick()
+            compose.onNodeWithText(text(R.string.discard_changes)).performClick()
             capture("04-day-overview.png")
             compose.onNodeWithText(text(R.string.edit_information)).performScrollTo().performClick()
             capture("06-information.png")

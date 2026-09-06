@@ -3139,6 +3139,10 @@ private fun PeriodEditorSheet(
     val locale = currentLocale()
     val initialDays = remember(day, logs) { PeriodActions.periodDays(day, logs) }
     var selectedDays by rememberSaveable(day, initialDays) { mutableStateOf(initialDays) }
+    var confirmDiscard by rememberSaveable(day) { mutableStateOf(false) }
+    val requestDismiss: () -> Unit = {
+        if (selectedDays != initialDays) confirmDiscard = true else onDismiss()
+    }
     var selectionError by rememberSaveable(day) { mutableStateOf(false) }
     val base = initialDays.minOrNull() ?: day
     val days = remember(base, firstDayOfWeek) { CalendarPaging.periodEditorDays(base, firstDayOfWeek) }
@@ -3147,9 +3151,9 @@ private fun PeriodEditorSheet(
     val selectedDescription = stringResource(R.string.period_day_selected)
     val notSelectedDescription = stringResource(R.string.period_day_not_selected)
     val onPeriodColor = periodColor.contrastColor()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberEditorSheetState({ selectedDays != initialDays }) { confirmDiscard = true }
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = requestDismiss,
         sheetState = sheetState,
         dragHandle = null,
         sheetGesturesEnabled = false,
@@ -3160,7 +3164,7 @@ private fun PeriodEditorSheet(
                     .padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                SheetHeader(R.string.edit_period, onDismiss)
+                SheetHeader(R.string.edit_period, requestDismiss)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Text(
@@ -3269,7 +3273,7 @@ private fun PeriodEditorSheet(
                     }
                 }
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = requestDismiss) { Text(stringResource(R.string.cancel)) }
                 Button(
                     onClick = { onSave(selectedDays) },
                     enabled = PeriodActions.isValidSelection(selectedDays, today),
@@ -3277,6 +3281,10 @@ private fun PeriodEditorSheet(
             }
         }
     }
+    if (confirmDiscard) DiscardChangesDialog(
+        onKeepEditing = { confirmDiscard = false },
+        onDiscard = { confirmDiscard = false; onDismiss() },
+    )
 }
 
 @Composable
@@ -3307,6 +3315,8 @@ private fun DayLogSheet(
     var stress by rememberSaveable(day, initial) { mutableStateOf(initial?.stress) }
     var activity by rememberSaveable(day, initial) { mutableStateOf(initial?.activity) }
     var medication by rememberSaveable(day, initial) { mutableStateOf(initial?.medication) }
+    var confirmDelete by rememberSaveable(day) { mutableStateOf(false) }
+    var confirmDiscard by rememberSaveable(day) { mutableStateOf(false) }
     val weightValue = parseDecimal(weight)
     val temperatureValue = parseDecimal(temperature)
     val sleepValue = parseDecimal(sleep)
@@ -3315,10 +3325,43 @@ private fun DayLogSheet(
         temperatureValue in DayLog.MIN_TEMPERATURE_C..DayLog.MAX_TEMPERATURE_C
     val sleepValid = sleep.isBlank() || sleepValue != null && sleepValue in 0.0..24.0
     val canSave = weightValid && temperatureValid && sleepValid
+    fun draftLog(): DayLog? {
+        val currentWeight = parseDecimal(weight)
+        val currentTemperature = parseDecimal(temperature)
+        val currentSleep = parseDecimal(sleep)
+        if (weight.isNotBlank() && (currentWeight == null || currentWeight !in DayLog.MIN_WEIGHT_KG..DayLog.MAX_WEIGHT_KG) ||
+            temperature.isNotBlank() && (currentTemperature == null || currentTemperature !in DayLog.MIN_TEMPERATURE_C..DayLog.MAX_TEMPERATURE_C) ||
+            sleep.isNotBlank() && (currentSleep == null || currentSleep !in 0.0..24.0)) return null
+        return DayLog(
+            day = day,
+            spotting = spotting,
+            mood = mood,
+            symptoms = symptoms,
+            note = note.trim(),
+            weightKg = currentWeight,
+            temperatureC = currentTemperature,
+            sleepHours = currentSleep,
+            intimacy = intimacy,
+            cervicalMucus = cervicalMucus,
+            ovulationTest = ovulationTest,
+            pregnancyTest = pregnancyTest,
+            painLevel = painLevel,
+            energy = energy,
+            stress = stress,
+            activity = activity,
+            medication = medication,
+            importedDetails = initial?.importedDetails.orEmpty(),
+        ).preservePeriodFrom(initial, flow)
+    }
+    val saved = (initial ?: DayLog(day)).let { it.copy(note = it.note.trim()).preservePeriodFrom(initial) }
+    val requestDismiss: () -> Unit = {
+        if (draftLog() != saved) confirmDiscard = true else onDismiss()
+    }
     val locale = currentLocale()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val dateLabel = day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale))
+    val sheetState = rememberEditorSheetState({ draftLog() != saved }) { confirmDiscard = true }
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = requestDismiss,
         sheetState = sheetState,
         dragHandle = null,
         sheetGesturesEnabled = false,
@@ -3333,10 +3376,10 @@ private fun DayLogSheet(
             ) {
                 SheetHeader(
                     if (initial?.hasCalendarMarker == true) R.string.edit_information else R.string.add_information,
-                    onDismiss,
+                    requestDismiss,
                 )
                 Text(
-                    day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)),
+                    dateLabel,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (initial?.bleeding == true) {
@@ -3484,37 +3527,25 @@ private fun DayLogSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (initial?.hasCalendarMarker == true) {
-                    TextButton(onClick = { onSave(DayLog(day).preservePeriodFrom(initial)) }) {
+                    TextButton(onClick = { confirmDelete = true }) {
                         Text(stringResource(R.string.delete_information))
                     }
                 }
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-                Button(onClick = {
-                    onSave(DayLog(
-                        day = day,
-                        spotting = spotting,
-                        mood = mood,
-                        symptoms = symptoms,
-                        note = note.trim(),
-                        weightKg = weightValue,
-                        temperatureC = temperatureValue,
-                        sleepHours = sleepValue,
-                        intimacy = intimacy,
-                        cervicalMucus = cervicalMucus,
-                        ovulationTest = ovulationTest,
-                        pregnancyTest = pregnancyTest,
-                        painLevel = painLevel,
-                        energy = energy,
-                        stress = stress,
-                        activity = activity,
-                        medication = medication,
-                        importedDetails = initial?.importedDetails.orEmpty(),
-                    ).preservePeriodFrom(initial, flow))
-                }, enabled = canSave) { Text(stringResource(R.string.save)) }
+                TextButton(onClick = requestDismiss) { Text(stringResource(R.string.cancel)) }
+                Button(onClick = { draftLog()?.let(onSave) }, enabled = canSave) { Text(stringResource(R.string.save)) }
             }
         }
     }
+    if (confirmDelete) DeleteInformationDialog(
+        dateLabel = dateLabel,
+        onCancel = { confirmDelete = false },
+        onConfirm = { confirmDelete = false; onSave(DayLog(day).preservePeriodFrom(initial)) },
+    )
+    if (confirmDiscard) DiscardChangesDialog(
+        onKeepEditing = { confirmDiscard = false },
+        onDiscard = { confirmDiscard = false; onDismiss() },
+    )
 }
 
 @Composable

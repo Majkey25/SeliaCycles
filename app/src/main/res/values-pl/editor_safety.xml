@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="delete_information_title">Usunąć szczegóły tego dnia?</string>
+    <string name="delete_information_body">Zostaną usunięte wszystkie notatki i opcjonalne dane z dnia %1$s, także ukryte lub zaimportowane. Dni miesiączki i intensywność krwawienia pozostaną bez zmian.</string>
+    <string name="unsaved_changes_title">Odrzucić zmiany?</string>
+    <string name="unsaved_changes_body">Zmiany nie zostały jeszcze zapisane.</string>
+    <string name="keep_editing">Kontynuuj edycję</string>
+    <string name="discard_changes">Odrzuć zmiany</string>
+</resources>

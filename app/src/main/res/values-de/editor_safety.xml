@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="delete_information_title">Details dieses Tages löschen?</string>
+    <string name="delete_information_body">Alle Notizen und optionalen Angaben für %1$s werden gelöscht, auch ausgeblendete oder importierte Angaben. Die Periodentage und Blutungsstärke bleiben unverändert.</string>
+    <string name="unsaved_changes_title">Änderungen verwerfen?</string>
+    <string name="unsaved_changes_body">Die Änderungen wurden noch nicht gespeichert.</string>
+    <string name="keep_editing">Weiter bearbeiten</string>
+    <string name="discard_changes">Änderungen verwerfen</string>
+</resources>
