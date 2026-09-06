@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="delete_information_title">¿Eliminar los detalles de este día?</string>
+    <string name="delete_information_body">Se eliminarán todas las notas y los datos opcionales de %1$s, incluidos los ocultos o importados. Los días de menstruación y la intensidad del flujo no cambiarán.</string>
+    <string name="unsaved_changes_title">¿Descartar los cambios?</string>
+    <string name="unsaved_changes_body">Los cambios aún no se han guardado.</string>
+    <string name="keep_editing">Seguir editando</string>
+    <string name="discard_changes">Descartar cambios</string>
+</resources>
