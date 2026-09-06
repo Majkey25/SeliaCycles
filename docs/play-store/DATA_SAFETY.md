@@ -16,7 +16,7 @@ These answers describe code 22, version 0.9.0-beta.14. Rechecked September 6, 20
 - User-requested `.pc` exports are written only to the selected Android file-provider destination. They are not encrypted. A cloud-backed provider may upload the file under its own terms; Selia Cycles has no upload service.
 - Clearing app data does not delete exported files or provider-held copies. Users must delete these separately.
 - Optional Android calendar read/write permission lists writable calendars and mirrors short cycle labels to the calendar the user selects.
-- Selia Cycles does not transmit calendar or cycle data. A selected calendar provider may synchronize the user-directed copies under its own terms.
+- Selia Cycles does not upload calendar or cycle data to a MajkeyLab service. A selected calendar provider may synchronize the user-directed copies under its own terms.
 - The calendar transfer is an explicit user-initiated action with an in-app disclosure before the runtime permission and target selection; Google Play lists this as an exception from the Data safety "shared" disclosure.
 - External support, source, and privacy links open in the browser without attaching cycle data. Browser connections and any support correspondence are described in the privacy policy.
 
