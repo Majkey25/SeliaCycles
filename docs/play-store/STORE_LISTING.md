@@ -24,7 +24,7 @@ Optional calendar mirroring copies short cycle labels to a calendar selected thr
 
 Choose system, light or dark appearance, preset palettes or your own colors. Available in English, Czech, Slovak, German, Polish and Spanish. Requires Android 10 or newer.
 
-Estimates, phase information and self-care suggestions are informational. They do not diagnose conditions, confirm ovulation or provide contraception.
+Estimates, phase information and self-care suggestions are informational. Selia Cycles is not a medical device and does not diagnose, treat, cure, or prevent any medical condition. It cannot confirm ovulation or provide contraception. Consult a healthcare professional for medical advice, diagnosis, or treatment.
 
 ## Czech
 
@@ -52,7 +52,7 @@ Vysvětlení pojmenuje aktuální fázi a odděluje možné fyzické projevy od 
 
 Vyber si podle náhledů systémový, světlý nebo tmavý režim, šest palet nebo vlastní barvy. Aplikace je v češtině, angličtině, slovenštině, němčině, polštině a španělštině. Vyžaduje Android 10 nebo novější.
 
-Odhady jsou pouze informativní. Nejde o lékařskou radu ani antikoncepci.
+Odhady, informace o fázích a návrhy péče jsou pouze informativní. Selia Cycles není zdravotnický prostředek a neslouží k diagnostice, léčbě, vyléčení ani prevenci žádného onemocnění. Nepotvrzuje ovulaci a není antikoncepcí. S otázkami ohledně zdraví, diagnózy nebo léčby se obrať na zdravotnického odborníka.
 
 ## Closed test release notes
 
