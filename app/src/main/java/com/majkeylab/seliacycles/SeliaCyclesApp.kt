@@ -196,6 +196,7 @@ import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.delay
 
 private const val PRIVACY_POLICY_URL = "https://majkey25.github.io/SeliaCycles/"
@@ -510,52 +511,70 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
     }
 
     selectedDay?.let { day ->
-        when (daySheetMode) {
-            DaySheetMode.OVERVIEW -> DayOverviewSheet(
-                day = day,
-                state = state,
-                onDismiss = { selectedDay = null },
-                onEditPeriod = { daySheetMode = DaySheetMode.PERIOD },
-                onEditDetails = { daySheetMode = DaySheetMode.DETAILS },
-                onStartPeriod = {
-                    viewModel.startPeriod(day)
-                    selectedDay = null
-                },
-                onEndPeriod = {
-                    viewModel.endPeriod(day, suggestedPeriodStart(state, day))
-                    selectedDay = null
-                },
-                onSelfCare = {
-                    selfCareDay = day
-                },
-            )
-            DaySheetMode.PERIOD -> PeriodEditorSheet(
-                day = day,
-                logs = state.backup.logs,
-                firstDayOfWeek = state.backup.settings.firstDayOfWeek,
-                periodColor = calendarPeriodRgb(
-                    state.backup.settings.palette,
-                    state.backup.settings.customPalette,
-                ).color(),
-                onDismiss = { daySheetMode = DaySheetMode.OVERVIEW },
-                onSave = {
-                    viewModel.savePeriodDays(day, it)
-                    selectedDay = null
-                    daySheetMode = DaySheetMode.OVERVIEW
-                },
-            )
-            DaySheetMode.DETAILS -> DayLogSheet(
-                day = day,
-                initial = state.logsByDay[day],
-                showFertility = state.showFertility,
-                mode = state.activeProfile.mode,
-                onDismiss = { daySheetMode = DaySheetMode.OVERVIEW },
-                onSave = {
-                    viewModel.saveLog(it)
-                    selectedDay = null
-                    daySheetMode = DaySheetMode.OVERVIEW
-                },
-            )
+        key(day.toEpochDay(), daySheetMode.name) {
+            var saving by rememberSaveable { mutableStateOf(false) }
+            var saveFailed by rememberSaveable { mutableStateOf(false) }
+            val isBusy = { saving || state.busy || state.loading }
+            LaunchedEffect(saving) {
+                if (saving) {
+                    val succeeded = viewModel.editorSaveResult?.await() == true
+                    saving = false
+                    if (succeeded) {
+                        selectedDay = null
+                        daySheetMode = DaySheetMode.OVERVIEW
+                    } else saveFailed = true
+                }
+            }
+            fun saveEditor(action: () -> Deferred<Boolean>) {
+                val current = viewModel.state.value
+                if (saving || current.busy || current.loading || current.loadFailed || current.activeProfile.id != state.activeProfile.id) return
+                saving = true
+                saveFailed = false
+                action()
+            }
+            when (daySheetMode) {
+                DaySheetMode.OVERVIEW -> DayOverviewSheet(
+                    day = day,
+                    state = state,
+                    onDismiss = { selectedDay = null },
+                    onEditPeriod = { daySheetMode = DaySheetMode.PERIOD },
+                    onEditDetails = { daySheetMode = DaySheetMode.DETAILS },
+                    onStartPeriod = {
+                        viewModel.startPeriod(day)
+                        selectedDay = null
+                    },
+                    onEndPeriod = {
+                        viewModel.endPeriod(day, suggestedPeriodStart(state, day))
+                        selectedDay = null
+                    },
+                    onSelfCare = { selfCareDay = day },
+                )
+                DaySheetMode.PERIOD -> PeriodEditorSheet(
+                    day = day,
+                    logs = state.backup.logs,
+                    firstDayOfWeek = state.backup.settings.firstDayOfWeek,
+                    periodColor = calendarPeriodRgb(
+                        state.backup.settings.palette,
+                        state.backup.settings.customPalette,
+                    ).color(),
+                    isBusy = isBusy,
+                    saveFailed = saveFailed,
+                    onRetryLoad = if (state.loadFailed) viewModel::retryLoad else null,
+                    onDismiss = { daySheetMode = DaySheetMode.OVERVIEW },
+                    onSave = { saveEditor { viewModel.savePeriodDays(day, it) } },
+                )
+                DaySheetMode.DETAILS -> DayLogSheet(
+                    day = day,
+                    initial = state.logsByDay[day],
+                    showFertility = state.showFertility,
+                    mode = state.activeProfile.mode,
+                    isBusy = isBusy,
+                    saveFailed = saveFailed,
+                    onRetryLoad = if (state.loadFailed) viewModel::retryLoad else null,
+                    onDismiss = { daySheetMode = DaySheetMode.OVERVIEW },
+                    onSave = { saveEditor { viewModel.saveLog(it) } },
+                )
+            }
         }
     }
     infoDialog?.let { dialog ->
@@ -2551,7 +2570,7 @@ private fun SectionLabel(icon: ImageVector, @StringRes text: Int, tint: Color = 
 }
 
 @Composable
-private fun SheetHeader(@StringRes title: Int, onDismiss: () -> Unit) {
+private fun SheetHeader(@StringRes title: Int, onDismiss: () -> Unit, enabled: Boolean = true) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             stringResource(title),
@@ -2559,7 +2578,7 @@ private fun SheetHeader(@StringRes title: Int, onDismiss: () -> Unit) {
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
-        IconButton(onClick = onDismiss) {
+        IconButton(onClick = onDismiss, enabled = enabled) {
             Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.close))
         }
     }
@@ -2629,6 +2648,7 @@ private fun <T> ChoiceRow(
     choices: List<ChoiceOption<T>>,
     selected: T?,
     icon: ImageVector? = null,
+    enabled: Boolean = true,
     onSelect: (T) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2641,6 +2661,7 @@ private fun <T> ChoiceRow(
                 FilterChip(
                     selected = choice.value == selected,
                     onClick = { onSelect(choice.value) },
+                    enabled = enabled,
                     label = { Text(stringResource(choice.label)) },
                     leadingIcon = choice.icon?.let { choiceIcon ->
                         { Icon(choiceIcon, contentDescription = null, modifier = Modifier.size(18.dp)) }
@@ -3161,16 +3182,23 @@ private fun PeriodEditorSheet(
     logs: List<DayLog>,
     firstDayOfWeek: DayOfWeek,
     periodColor: Color,
+    isBusy: () -> Boolean,
+    saveFailed: Boolean,
+    onRetryLoad: (() -> Unit)?,
     onDismiss: () -> Unit,
     onSave: (Set<LocalDate>) -> Unit,
 ) {
+    val busy = isBusy()
+    val editable = !busy && onRetryLoad == null
     val today = LocalDate.now()
     val locale = currentLocale()
     val initialDays = remember(day, logs) { PeriodActions.periodDays(day, logs) }
     var selectedDays by rememberSaveable(day, initialDays) { mutableStateOf(initialDays) }
     var confirmDiscard by rememberSaveable(day) { mutableStateOf(false) }
     val requestDismiss: () -> Unit = {
-        if (selectedDays != initialDays) confirmDiscard = true else onDismiss()
+        if (!isBusy()) {
+            if (selectedDays != initialDays) confirmDiscard = true else onDismiss()
+        }
     }
     var selectionError by rememberSaveable(day) { mutableStateOf(false) }
     val base = initialDays.minOrNull() ?: day
@@ -3180,7 +3208,7 @@ private fun PeriodEditorSheet(
     val selectedDescription = stringResource(R.string.period_day_selected)
     val notSelectedDescription = stringResource(R.string.period_day_not_selected)
     val onPeriodColor = periodColor.contrastColor()
-    val sheetState = rememberEditorSheetState({ selectedDays != initialDays }) { confirmDiscard = true }
+    val sheetState = rememberEditorSheetState({ selectedDays != initialDays }, isBusy) { confirmDiscard = true }
     ModalBottomSheet(
         onDismissRequest = requestDismiss,
         sheetState = sheetState,
@@ -3193,7 +3221,7 @@ private fun PeriodEditorSheet(
                     .padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                SheetHeader(R.string.edit_period, requestDismiss)
+                SheetHeader(R.string.edit_period, requestDismiss, enabled = !busy)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Text(
@@ -3220,7 +3248,7 @@ private fun PeriodEditorSheet(
                     Row(Modifier.fillMaxWidth()) {
                         week.forEach { date ->
                             val selected = date in selectedDays
-                            val enabled = date in DayLog.MIN_DATE..today
+                            val enabled = editable && date in DayLog.MIN_DATE..today
                             val description = "${date.format(dateFormat)}, ${if (selected) {
                                 selectedDescription
                             } else {
@@ -3238,6 +3266,7 @@ private fun PeriodEditorSheet(
                                             Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
                                         })
                                         .clickable(enabled = enabled) {
+                                            if (isBusy()) return@clickable
                                             val candidate = if (selected) selectedDays - date else selectedDays + date
                                             if (PeriodActions.isValidSelection(candidate, today)) {
                                                 selectedDays = candidate
@@ -3287,6 +3316,7 @@ private fun PeriodEditorSheet(
                 }
                 Spacer(Modifier.height(4.dp))
             }
+            EditorSaveFeedback(saveFailed, busy, onRetryLoad)
             HorizontalDivider()
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -3295,17 +3325,19 @@ private fun PeriodEditorSheet(
             ) {
                 if (initialDays.isNotEmpty() && selectedDays.isNotEmpty()) {
                     TextButton(onClick = {
-                        selectedDays = emptySet()
-                        selectionError = false
-                    }) {
+                        if (!isBusy()) {
+                            selectedDays = emptySet()
+                            selectionError = false
+                        }
+                    }, enabled = editable) {
                         Text(stringResource(R.string.clear_period), color = MaterialTheme.colorScheme.error)
                     }
                 }
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = requestDismiss) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = requestDismiss, enabled = !busy) { Text(stringResource(R.string.cancel)) }
                 Button(
                     onClick = { onSave(selectedDays) },
-                    enabled = PeriodActions.isValidSelection(selectedDays, today),
+                    enabled = editable && PeriodActions.isValidSelection(selectedDays, today),
                 ) { Text(stringResource(R.string.save)) }
             }
         }
@@ -3323,9 +3355,15 @@ private fun DayLogSheet(
     initial: DayLog?,
     showFertility: Boolean,
     mode: UiMode,
+    isBusy: () -> Boolean,
+    saveFailed: Boolean,
+    onRetryLoad: (() -> Unit)?,
     onDismiss: () -> Unit,
     onSave: (DayLog) -> Unit,
 ) {
+    val busy = isBusy()
+    val editable = !busy && onRetryLoad == null
+    fun edit(change: () -> Unit) { if (!isBusy() && onRetryLoad == null) change() }
     var flow by rememberSaveable(day, initial) { mutableStateOf(initial?.flow?.takeIf { initial.bleeding } ?: Flow.UNKNOWN) }
     var spotting by rememberSaveable(day, initial) { mutableStateOf(initial?.spotting == true) }
     var mood by rememberSaveable(day, initial) { mutableStateOf(initial?.mood) }
@@ -3384,11 +3422,13 @@ private fun DayLogSheet(
     }
     val saved = (initial ?: DayLog(day)).let { it.copy(note = it.note.trim()).preservePeriodFrom(initial) }
     val requestDismiss: () -> Unit = {
-        if (draftLog() != saved) confirmDiscard = true else onDismiss()
+        if (!isBusy()) {
+            if (draftLog() != saved) confirmDiscard = true else onDismiss()
+        }
     }
     val locale = currentLocale()
     val dateLabel = day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale))
-    val sheetState = rememberEditorSheetState({ draftLog() != saved }) { confirmDiscard = true }
+    val sheetState = rememberEditorSheetState({ draftLog() != saved }, isBusy) { confirmDiscard = true }
     ModalBottomSheet(
         onDismissRequest = requestDismiss,
         sheetState = sheetState,
@@ -3406,6 +3446,7 @@ private fun DayLogSheet(
                 SheetHeader(
                     if (initial?.hasCalendarMarker == true) R.string.edit_information else R.string.add_information,
                     requestDismiss,
+                    enabled = !busy,
                 )
                 Text(
                     dateLabel,
@@ -3422,7 +3463,8 @@ private fun DayLogSheet(
                         ),
                         selected = flow,
                         icon = Icons.Outlined.WaterDrop,
-                    ) { flow = it }
+                        enabled = editable,
+                    ) { edit { flow = it } }
                 }
                 ChoiceRow(
                     label = R.string.mood,
@@ -3435,7 +3477,8 @@ private fun DayLogSheet(
                     ),
                     selected = mood,
                     icon = Icons.Outlined.SentimentSatisfied,
-                ) { mood = if (mood == it) null else it }
+                    enabled = editable,
+                ) { edit { mood = if (mood == it) null else it } }
                 SectionLabel(Icons.Outlined.MonitorHeart, R.string.symptoms)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -3444,11 +3487,14 @@ private fun DayLogSheet(
                     symptomLabels.forEach { choice ->
                         FilterChip(
                             selected = choice.value in symptoms,
+                            enabled = editable,
                             onClick = {
-                                symptoms = if (choice.value in symptoms) {
-                                    symptoms - choice.value
-                                } else {
-                                    symptoms + choice.value
+                                edit {
+                                    symptoms = if (choice.value in symptoms) {
+                                        symptoms - choice.value
+                                    } else {
+                                        symptoms + choice.value
+                                    }
                                 }
                             },
                             label = { Text(stringResource(choice.label)) },
@@ -3460,7 +3506,8 @@ private fun DayLogSheet(
                 }
                 OutlinedTextField(
                     value = note,
-                    onValueChange = { if (it.length <= DayLog.MAX_NOTE_LENGTH) note = it },
+                    onValueChange = { edit { if (it.length <= DayLog.MAX_NOTE_LENGTH) note = it } },
+                    enabled = editable,
                     label = { Text(stringResource(R.string.note)) },
                     placeholder = { Text(stringResource(R.string.note_hint)) },
                     leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Notes, contentDescription = null) },
@@ -3473,7 +3520,7 @@ private fun DayLogSheet(
                     Text(stringResource(if (showMore) R.string.fewer_details else R.string.more_details))
                 }
                 if (showMore && mode != UiMode.SIMPLE) {
-                    SwitchRow(R.string.spotting, spotting, Icons.Outlined.WaterDrop) { spotting = it }
+                    SwitchRow(R.string.spotting, spotting, Icons.Outlined.WaterDrop, enabled = editable) { edit { spotting = it } }
                     if (showFertility) {
                         SectionLabel(Icons.Outlined.Spa, R.string.fertility_signs)
                         ChoiceRow(
@@ -3481,49 +3528,56 @@ private fun DayLogSheet(
                             choices = cervicalMucusLabels,
                             selected = cervicalMucus,
                             icon = Icons.Outlined.WaterDrop,
-                        ) { cervicalMucus = it.takeUnless { cervicalMucus == it } }
+                            enabled = editable,
+                        ) { edit { cervicalMucus = it.takeUnless { cervicalMucus == it } } }
                         ChoiceRow(
                             label = R.string.ovulation_test,
                             choices = testResultLabels,
                             selected = ovulationTest,
                             icon = Icons.Outlined.WbSunny,
-                        ) { ovulationTest = it.takeUnless { ovulationTest == it } }
+                            enabled = editable,
+                        ) { edit { ovulationTest = it.takeUnless { ovulationTest == it } } }
                         ChoiceRow(
                             label = R.string.pregnancy_test,
                             choices = testResultLabels,
                             selected = pregnancyTest,
                             icon = Icons.Outlined.PregnantWoman,
-                        ) { pregnancyTest = it.takeUnless { pregnancyTest == it } }
+                            enabled = editable,
+                        ) { edit { pregnancyTest = it.takeUnless { pregnancyTest == it } } }
                     }
                     SectionLabel(Icons.Outlined.MonitorHeart, R.string.wellbeing_trackers)
-                    PainRow(painLevel) { painLevel = it }
+                    PainRow(painLevel, enabled = editable) { edit { painLevel = it } }
                     ChoiceRow(
                         label = R.string.energy,
                         choices = wellbeingLevelLabels,
                         selected = energy,
                         icon = Icons.Outlined.Bolt,
-                    ) { energy = it.takeUnless { energy == it } }
+                        enabled = editable,
+                    ) { edit { energy = it.takeUnless { energy == it } } }
                     ChoiceRow(
                         label = R.string.stress,
                         choices = wellbeingLevelLabels,
                         selected = stress,
                         icon = Icons.Outlined.Psychology,
-                    ) { stress = it.takeUnless { stress == it } }
+                        enabled = editable,
+                    ) { edit { stress = it.takeUnless { stress == it } } }
                     ChoiceRow(
                         label = R.string.activity,
                         choices = activityLevelLabels,
                         selected = activity,
                         icon = Icons.AutoMirrored.Outlined.DirectionsWalk,
-                    ) { activity = it.takeUnless { activity == it } }
+                        enabled = editable,
+                    ) { edit { activity = it.takeUnless { activity == it } } }
                     ChoiceRow(
                         label = R.string.medication,
                         choices = medicationStatusLabels,
                         selected = medication,
                         icon = Icons.Outlined.Medication,
-                    ) { medication = it.takeUnless { medication == it } }
-                    MeasurementField(weight, { weight = it }, R.string.weight_kg, weightValid, Icons.Outlined.MonitorWeight)
-                    MeasurementField(temperature, { temperature = it }, R.string.temperature_c, temperatureValid, Icons.Outlined.Thermostat)
-                    MeasurementField(sleep, { sleep = it }, R.string.sleep_hours, sleepValid, Icons.Outlined.Bedtime)
+                        enabled = editable,
+                    ) { edit { medication = it.takeUnless { medication == it } } }
+                    MeasurementField(weight, { edit { weight = it } }, R.string.weight_kg, weightValid, Icons.Outlined.MonitorWeight, editable)
+                    MeasurementField(temperature, { edit { temperature = it } }, R.string.temperature_c, temperatureValid, Icons.Outlined.Thermostat, editable)
+                    MeasurementField(sleep, { edit { sleep = it } }, R.string.sleep_hours, sleepValid, Icons.Outlined.Bedtime, editable)
                     SectionLabel(Icons.Outlined.Favorite, R.string.intimacy)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(
@@ -3532,7 +3586,8 @@ private fun DayLogSheet(
                         ).forEach { choice ->
                             FilterChip(
                                 selected = intimacy == choice.value,
-                                onClick = { intimacy = choice.value.takeUnless { intimacy == choice.value } },
+                                enabled = editable,
+                                onClick = { edit { intimacy = choice.value.takeUnless { intimacy == choice.value } } },
                                 label = { Text(stringResource(choice.label)) },
                                 leadingIcon = {
                                     Icon(requireNotNull(choice.icon), contentDescription = null, modifier = Modifier.size(18.dp))
@@ -3549,6 +3604,7 @@ private fun DayLogSheet(
                 }
                 Spacer(Modifier.height(8.dp))
             }
+            EditorSaveFeedback(saveFailed, busy, onRetryLoad)
             HorizontalDivider()
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -3556,13 +3612,13 @@ private fun DayLogSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (initial?.hasCalendarMarker == true) {
-                    TextButton(onClick = { confirmDelete = true }) {
+                    TextButton(onClick = { if (!isBusy()) confirmDelete = true }, enabled = editable) {
                         Text(stringResource(R.string.delete_information))
                     }
                 }
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = requestDismiss) { Text(stringResource(R.string.cancel)) }
-                Button(onClick = { draftLog()?.let(onSave) }, enabled = canSave) { Text(stringResource(R.string.save)) }
+                TextButton(onClick = requestDismiss, enabled = !busy) { Text(stringResource(R.string.cancel)) }
+                Button(onClick = { draftLog()?.let(onSave) }, enabled = canSave && editable) { Text(stringResource(R.string.save)) }
             }
         }
     }
@@ -3578,13 +3634,14 @@ private fun DayLogSheet(
 }
 
 @Composable
-private fun PainRow(value: Int?, onChange: (Int?) -> Unit) {
+private fun PainRow(value: Int?, enabled: Boolean = true, onChange: (Int?) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SectionLabel(Icons.Outlined.Healing, R.string.pain_level)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             (0..10).forEach { level ->
                 FilterChip(
                     selected = value == level,
+                    enabled = enabled,
                     onClick = { onChange(level.takeUnless { value == level }) },
                     label = { Text(level.toString()) },
                 )
@@ -3600,9 +3657,11 @@ private fun MeasurementField(
     @StringRes label: Int,
     valid: Boolean,
     icon: ImageVector,
+    enabled: Boolean = true,
 ) {
     OutlinedTextField(
         value = value,
+        enabled = enabled,
         onValueChange = { input -> if (input.length <= 8) onValueChange(input.filter { it.isDigit() || it == '.' || it == ',' }) },
         label = { Text(stringResource(label)) },
         leadingIcon = { Icon(icon, contentDescription = null) },

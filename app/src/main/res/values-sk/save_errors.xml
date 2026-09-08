@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="save_failed_keep_draft">Zmenu sa nepodarilo dokončiť. Úpravy zostali v tomto editore.</string>
+</resources>

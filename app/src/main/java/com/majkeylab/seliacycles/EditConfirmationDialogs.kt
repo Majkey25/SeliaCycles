@@ -9,6 +9,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -20,12 +25,14 @@ import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun rememberEditorSheetState(hasChanges: () -> Boolean, onDiscardRequest: () -> Unit): SheetState {
+internal fun rememberEditorSheetState(hasChanges: () -> Boolean, isBusy: () -> Boolean = { false }, onDiscardRequest: () -> Unit): SheetState {
     val currentHasChanges by rememberUpdatedState(hasChanges)
+    val currentBusy by rememberUpdatedState(isBusy)
     val currentRequest by rememberUpdatedState(onDiscardRequest)
     val confirmChange = remember {
         { value: SheetValue ->
-            if (value == SheetValue.Hidden && currentHasChanges()) {
+            if (value == SheetValue.Hidden && currentBusy()) false
+            else if (value == SheetValue.Hidden && currentHasChanges()) {
                 currentRequest()
                 false
             } else true
@@ -33,6 +40,20 @@ internal fun rememberEditorSheetState(hasChanges: () -> Boolean, onDiscardReques
     }
     // Veto hiding before the sheet disappears, so Keep editing can return to it.
     return rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = confirmChange)
+}
+
+@Composable
+internal fun EditorSaveFeedback(failed: Boolean, busy: Boolean, onRetryLoad: (() -> Unit)?) {
+    if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+    if (failed || onRetryLoad != null) Text(
+        stringResource(R.string.save_failed_keep_draft),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodySmall,
+    )
+    if (onRetryLoad != null) TextButton(onClick = onRetryLoad, enabled = !busy) {
+        Text(stringResource(R.string.profile_retry_load))
+    }
 }
 
 @Composable

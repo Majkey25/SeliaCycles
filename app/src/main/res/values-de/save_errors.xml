@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="save_failed_keep_draft">Die Änderung konnte nicht abgeschlossen werden. Ihre Eingaben bleiben in diesem Editor erhalten.</string>
+</resources>
