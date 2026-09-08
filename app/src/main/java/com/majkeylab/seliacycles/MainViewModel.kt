@@ -7,7 +7,10 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,6 +76,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var storeRevision = 0L
     private val _state = MutableStateFlow(AppState(activeProfile = session.profile, profiles = localProfiles.profiles()))
     val state = _state.asStateFlow()
+    // Retain one editor operation across activity recreation.
+    var editorSaveResult: Deferred<Boolean>? = null
+        private set
 
     init {
         reload()
@@ -171,7 +177,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun saveLog(log: DayLog) = runStoreAction {
         store.saveLog(log)
-    }
+    }.also { editorSaveResult = it }
 
     fun startPeriod(day: java.time.LocalDate) = runStoreAction {
         val backup = store.load()
@@ -201,7 +207,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             else -> backup.settings.activePeriodStart
         }
         store.savePeriodState(logs, backup.settings.copy(activePeriodStart = active))
-    }
+    }.also { editorSaveResult = it }
 
     fun saveSettings(settings: AppSettings, expectedProfileId: String? = _state.value.activeProfile.id) {
         if (!acceptsProfile(expectedProfileId)) return
@@ -340,16 +346,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(message = null)
     }
 
-    private fun runStoreAction(@StringRes successMessage: Int? = null, action: suspend ProfileSession.() -> Unit) = viewModelScope.launch {
-        if (!acceptsProfile()) return@launch
+    private fun runStoreAction(@StringRes successMessage: Int? = null, action: suspend ProfileSession.() -> Unit) = viewModelScope.async {
+        if (!acceptsProfile()) return@async false
         val target = session
         val revision = ++storeRevision
         _state.value = _state.value.copy(busy = true, message = null)
         val result = runCatching { storeMutex.withLock {
             check(session === target)
             withContext(Dispatchers.IO) { action(target) }
-        } }
-        if (revision == storeRevision) reload(if (result.isFailure) R.string.operation_failed else successMessage, revision)
+        } }.onFailure { if (it is CancellationException) throw it }
+        if (revision != storeRevision) return@async false
+        reload(if (result.isFailure) R.string.operation_failed else successMessage, revision).join()
+        result.isSuccess && revision == storeRevision && session === target
     }
 
     private fun reload(@StringRes message: Int? = null, revision: Long = storeRevision) = viewModelScope.launch {
@@ -420,6 +428,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     override fun onCleared() {
+        editorSaveResult = null
         CoroutineScope(Dispatchers.IO).launch { storeMutex.withLock { session.store.close() } }
     }
 }
