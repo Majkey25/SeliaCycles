@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="terms_of_use">Condiciones de uso</string>
+    <string name="refund_policy">Política de reembolsos</string>
+    <string name="cookies_policy">Política de cookies</string>
+    <string name="source_code">Código fuente y licencias</string>
+</resources>

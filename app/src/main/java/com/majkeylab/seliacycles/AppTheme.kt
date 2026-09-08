@@ -207,7 +207,7 @@ private fun Color.withReadableWhite(): Color {
     return result
 }
 
-private fun Color.readableOn(background: Color): Color {
+internal fun Color.readableOn(background: Color): Color {
     val target = background.contrastColor()
     var result = this
     repeat(20) {
