@@ -34,13 +34,25 @@ class LauncherIconTest {
                     check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
                 }
                 var headerTop = size
+                var redCount = 0
+                var redX = 0
+                var redY = 0
                 for (y in 0 until size) for (x in 0 until size) {
                     val pixel = bitmap.getPixel(x, y)
                     if (Color.alpha(pixel) > 240 && Color.red(pixel) < 140 &&
                         Color.green(pixel) < 120 && Color.blue(pixel) < 160) headerTop = minOf(headerTop, y)
+                    if (Color.alpha(pixel) > 240 && Color.red(pixel) > 190 &&
+                        Color.green(pixel) < 160 && Color.blue(pixel) < 160) {
+                        redCount++
+                        redX += x
+                        redY += y
+                    }
                 }
                 assertTrue("Calendar header missing at $size px", headerTop < size)
                 assertTrue("Calendar tabs touch the launcher edge at $size px: $headerTop", headerTop >= size / 16)
+                assertTrue("Red day missing at $size px", redCount > 0)
+                assertTrue("Red day must be bottom-right", redX.toFloat() / redCount > size * 0.55f &&
+                    redY.toFloat() / redCount > size * 0.5f)
             } finally {
                 bitmap.recycle()
             }

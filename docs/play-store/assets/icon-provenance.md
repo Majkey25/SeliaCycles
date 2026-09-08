@@ -1,5 +1,9 @@
 # Calendar icon
 
+September 8, 2026 edit, built-in ImageGen: swap only the larger coral bottom-middle dot and the smaller lavender-gray bottom-right dot. Preserve the calendar, background, colors, dimensions, framing and padding. The same edit was applied to the feature graphic. The selected outputs were copied into this repository; FFmpeg Lanczos scaling produced the 512 × 512 store/Android bitmap and 1024 × 500 feature export. The Android 12% inset is unchanged. The native monochrome silhouette now has its larger day at bottom-right too.
+
+The prompts below describe the September 5 base artwork, before that two-dot swap.
+
 Generated with the built-in ImageGen tool on September 5, 2026. The source is `icon-master-imagegen.png`; `icon-512.png` is its 512-pixel store export. The Android foreground uses the same export with proportional 12% padding on an opaque pale background. Android supplies the launcher mask. The monochrome resource is a matching native calendar silhouette.
 
 Final icon prompt:

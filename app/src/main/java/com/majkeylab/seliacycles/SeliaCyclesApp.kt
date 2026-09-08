@@ -49,6 +49,7 @@ import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.Notes
+import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Add
@@ -66,6 +67,9 @@ import androidx.compose.material.icons.outlined.Cake
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChangeCircle
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Cookie
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.DeleteForever
@@ -157,6 +161,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
@@ -168,6 +173,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -1232,6 +1238,7 @@ private fun CalendarScreen(
     val periodColor = calendarPeriodRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
     val onPeriodColor = periodColor.contrastColor()
     val entryColor = calendarEntryRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
+        .readableOn(MaterialTheme.colorScheme.surface)
     LaunchedEffect(availableFilters) {
         selectedFilters = selectedFilters.intersect(availableFilters.toSet())
     }
@@ -1565,17 +1572,25 @@ private fun CalendarDay(
     modifier: Modifier,
 ) {
     val predictedPeriodColor = calendarPredictedPeriodColor(periodColor)
-    val fertileColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.20f)
-    val ovulationColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+    val decorationAlpha = if (inShownMonth) 1f else 0.42f
+    val surface = MaterialTheme.colorScheme.surface
+    val fertileBackground = when {
+        tracks.fertile -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.20f * decorationAlpha)
+        possibleFertile -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.08f * decorationAlpha)
+        else -> Color.Transparent
+    }
+    val ovulationColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f * decorationAlpha)
     val periodBackground = when (tracks.period) {
         CalendarPeriodLayer.RECORDED -> periodColor
         CalendarPeriodLayer.PREDICTED -> predictedPeriodColor
         CalendarPeriodLayer.NONE -> Color.Transparent
-    }
+    }.let { it.copy(alpha = it.alpha * decorationAlpha) }
+    val dayBackground = (if (tracks.ovulation) ovulationColor else Color.Transparent)
+        .compositeOver(periodBackground).compositeOver(fertileBackground).compositeOver(surface)
     val foreground = when (tracks.period) {
         CalendarPeriodLayer.RECORDED -> onPeriodColor
         CalendarPeriodLayer.PREDICTED, CalendarPeriodLayer.NONE -> MaterialTheme.colorScheme.onSurface
-    }
+    }.let { if (inShownMonth) it else MaterialTheme.colorScheme.onSurfaceVariant }.readableOn(dayBackground)
     val periodShape = RoundedCornerShape(
         topStartPercent = if (periodConnectPrevious) 0 else 50,
         bottomStartPercent = if (periodConnectPrevious) 0 else 50,
@@ -1604,14 +1619,14 @@ private fun CalendarDay(
     }
     val description = (listOf(dateDescription) + labels).joinToString(", ")
     Box(
-        modifier = modifier.alpha(if (inShownMonth) 1f else 0.42f),
+        modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
         if (tracks.fertile || possibleFertile) Box(
             Modifier.fillMaxWidth().height(42.dp).padding(
                 start = if (fertileConnectPrevious) 0.dp else 3.dp,
                 end = if (fertileConnectNext) 0.dp else 3.dp,
-            ).clip(fertileShape).background(if (tracks.fertile) fertileColor else fertileColor.copy(alpha = 0.08f)),
+            ).clip(fertileShape).background(fertileBackground),
         )
         if (tracks.period != CalendarPeriodLayer.NONE) Box(
             Modifier.fillMaxWidth().height(32.dp).padding(
@@ -1631,16 +1646,17 @@ private fun CalendarDay(
         ) {
             Text(
                 day.dayOfMonth.toString(),
+                modifier = Modifier.clearAndSetSemantics { },
                 color = foreground,
                 fontWeight = FontWeight.SemiBold,
             )
         }
         if (hasDetails) Box(
             Modifier.align(Alignment.BottomCenter).padding(bottom = 2.dp).width(18.dp).height(3.dp).clip(CircleShape)
-                .background(entryColor),
+                .background(entryColor.readableOn(fertileBackground.compositeOver(surface))),
         )
         Box(
-            Modifier.size(48.dp).clip(CircleShape).clickable(enabled = enabled, onClick = onClick)
+            Modifier.size(48.dp).clip(CircleShape).clickable(enabled = enabled, role = Role.Button, onClick = onClick)
                 .semantics { contentDescription = description },
         )
     }
@@ -2166,8 +2182,21 @@ private fun SettingsScreen(
                     }
                 }
                 SettingsPage.PRIVACY -> {
+                    val legalPage = if (currentLocale().language in listOf("cs", "sk")) "legal-cs.html" else "legal.html"
                     SettingsLink(Icons.Outlined.VerifiedUser, R.string.privacy_policy) {
                         context.startActivity(Intent(Intent.ACTION_VIEW, PRIVACY_POLICY_URL.toUri()))
+                    }
+                    SettingsLink(Icons.Outlined.Description, R.string.terms_of_use) {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, "$PRIVACY_POLICY_URL$legalPage#terms".toUri()))
+                    }
+                    SettingsLink(Icons.AutoMirrored.Outlined.ReceiptLong, R.string.refund_policy) {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, "$PRIVACY_POLICY_URL$legalPage#refunds".toUri()))
+                    }
+                    SettingsLink(Icons.Outlined.Cookie, R.string.cookies_policy) {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, "$PRIVACY_POLICY_URL$legalPage#cookies".toUri()))
+                    }
+                    SettingsLink(Icons.Outlined.Code, R.string.source_code) {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, "https://github.com/Majkey25/SeliaCycles".toUri()))
                     }
                     SettingsLink(Icons.Outlined.Security, R.string.privacy) { onInfo(InfoDialog.PRIVACY) }
                     SettingsLink(Icons.Outlined.MonitorHeart, R.string.about_cycle) { onInfo(InfoDialog.CYCLE) }
