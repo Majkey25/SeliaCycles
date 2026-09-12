@@ -34,7 +34,7 @@ object MyCalendarExportMapper {
     private const val NOTES_PER_FILE = (CycleBackup.MAX_LOGS + MAX_NOTE_FILES - 1) / MAX_NOTE_FILES
 
     fun periodRows(logs: List<DayLog>): List<MyCalendarPeriodRow> = logs.asSequence()
-        .filter(DayLog::bleeding)
+        .filter(DayLog::confirmedBleeding)
         .map(DayLog::day)
         .sorted()
         .fold(mutableListOf<MutableList<LocalDate>>()) { periods, day ->
@@ -75,14 +75,7 @@ class MyCalendarExporter(context: Context) {
 
     fun write(transfer: SeliaTransfer, output: OutputStream) {
         require(transfer.backup.logs.isNotEmpty())
-        val prediction = CyclePredictor.predict(
-            bleedingDays = transfer.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
-            defaultCycleLength = transfer.backup.settings.cycleLength,
-            defaultPeriodLength = transfer.backup.settings.periodLength,
-            cycleLengthOverride = transfer.backup.settings.cycleLengthOverride,
-            periodLengthOverride = transfer.backup.settings.periodLengthOverride,
-            activePeriodStart = transfer.backup.settings.activePeriodStart,
-        )
+        val prediction = CycleInsights.prediction(transfer.backup, LocalDate.now())
         val databaseFile = kotlin.io.path.createTempFile(cacheDirectory.toPath(), "selia-export-", ".db").toFile()
         try {
             SQLiteDatabase.openOrCreateDatabase(databaseFile, null).use { database ->
@@ -309,17 +302,18 @@ internal fun encryptedMyCalendarJson(json: String): ByteArray {
 
 object SeliaBackupCodec {
     private const val MAGIC = 0x53434C31
-    private const val VERSION = 1
+    private const val VERSION = 2
     const val MAX_BYTES = 5 * 1024 * 1024
 
     fun encode(transfer: SeliaTransfer): ByteArray {
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).use { output ->
+            val version = if (transfer.backup.logs.any(DayLog::automaticBleeding)) VERSION else 1
             output.writeInt(MAGIC)
-            output.writeInt(VERSION)
+            output.writeInt(version)
             output.writeSettings(transfer.backup.settings)
             output.writeInt(transfer.backup.logs.size)
-            transfer.backup.logs.sortedBy(DayLog::day).forEach { output.writeLog(it) }
+            transfer.backup.logs.sortedBy(DayLog::day).forEach { output.writeLog(it, version) }
             output.writeInt(transfer.snapshots.size)
             transfer.snapshots.sortedBy(ForecastSnapshot::month).forEach { output.writeSnapshot(it) }
         }
@@ -330,12 +324,14 @@ object SeliaBackupCodec {
         if (bytes.size > MAX_BYTES) throw MyCalendarFormatException("Selia backup is too large")
         return try {
             DataInputStream(ByteArrayInputStream(bytes)).use { input ->
-                if (input.readInt() != MAGIC || input.readInt() != VERSION) {
+                val magic = input.readInt()
+                val version = input.readInt()
+                if (magic != MAGIC || version !in 1..VERSION) {
                     throw MyCalendarFormatException("Unsupported Selia backup", failure = MyCalendarFailure.UNSUPPORTED)
                 }
                 val settings = input.readSettings()
                 val logCount = input.readCount(CycleBackup.MAX_LOGS)
-                val logs = List(logCount) { input.readLog() }
+                val logs = List(logCount) { input.readLog(version) }
                 val snapshotCount = input.readCount(CalendarPaging.pageCount)
                 val snapshots = List(snapshotCount) { input.readSnapshot() }
                 if (input.read() != -1) throw MyCalendarFormatException("Trailing Selia backup data")
@@ -405,7 +401,7 @@ object SeliaBackupCodec {
         simpleMode = readBoolean(),
     )
 
-    private fun DataOutputStream.writeLog(log: DayLog) {
+    private fun DataOutputStream.writeLog(log: DayLog, version: Int) {
         writeLong(log.day.toEpochDay())
         writeBoolean(log.bleeding)
         writeBoolean(log.spotting)
@@ -427,9 +423,10 @@ object SeliaBackupCodec {
         writeNullableEnum(log.activity)
         writeNullableEnum(log.medication)
         writeUTF(log.importedDetails)
+        if (version >= 2) writeBoolean(log.automaticBleeding)
     }
 
-    private fun DataInputStream.readLog(): DayLog {
+    private fun DataInputStream.readLog(version: Int): DayLog {
         val day = LocalDate.ofEpochDay(readLong())
         val bleeding = readBoolean()
         val spotting = readBoolean()
@@ -458,6 +455,7 @@ object SeliaBackupCodec {
             activity = readNullableEnum(ActivityLevel.entries.toTypedArray()),
             medication = readNullableEnum(MedicationStatus.entries.toTypedArray()),
             importedDetails = readUTF(),
+            automaticBleeding = version >= 2 && readBoolean(),
         )
     }
 

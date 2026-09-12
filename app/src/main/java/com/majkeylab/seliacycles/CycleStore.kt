@@ -41,7 +41,8 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
                 energy TEXT,
                 stress TEXT,
                 activity TEXT,
-                medication TEXT
+                medication TEXT,
+                automatic_bleeding INTEGER NOT NULL DEFAULT 0 CHECK (automatic_bleeding IN (0, 1))
             )
             """.trimIndent(),
         )
@@ -83,6 +84,9 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
     }
 
     override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 11) {
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN automatic_bleeding INTEGER NOT NULL DEFAULT 0 CHECK (automatic_bleeding IN (0, 1))")
+        }
         if (oldVersion < 2) {
             database.execSQL("ALTER TABLE day_logs ADD COLUMN weight_kg REAL")
             database.execSQL("ALTER TABLE day_logs ADD COLUMN temperature_c REAL")
@@ -141,6 +145,18 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
                 "UPDATE settings SET active_period_start = NULL WHERE active_period_start > ?",
                 arrayOf(today.toEpochDay()),
             )
+        }
+        if (oldVersion < 11) {
+            val settings = readSettings(database)
+            val today = LocalDate.now()
+            settings.activePeriodStart?.takeIf { it <= today && it >= today.minusDays(13) }?.let { start ->
+                val logs = readLogs(database)
+                if (PeriodActions.periodDays(start, logs) == setOf(start)) {
+                    val duration = CycleInsights.prediction(CycleBackup(logs, settings), today).averagePeriodLength
+                    val filled = PeriodActions.start(start, logs, duration)
+                    if (filled.size <= CycleBackup.MAX_LOGS) database.replaceDayLogs(filled, today)
+                }
+            }
         }
     }
 
@@ -333,6 +349,7 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
         stress = getString(17)?.let(WellbeingLevel::valueOf),
         activity = getString(18)?.let(ActivityLevel::valueOf),
         medication = getString(19)?.let(MedicationStatus::valueOf),
+        automaticBleeding = getInt(20) == 1,
     )
 
     private fun logValues(log: DayLog): ContentValues = ContentValues().apply {
@@ -356,6 +373,7 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
         put("stress", log.stress?.name)
         put("activity", log.activity?.name)
         put("medication", log.medication?.name)
+        put("automatic_bleeding", log.automaticBleeding)
     }
 
     private fun Cursor.getNullableDouble(index: Int): Double? = if (isNull(index)) null else getDouble(index)
@@ -435,7 +453,7 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
     }
 
     companion object {
-        private const val DATABASE_VERSION = 10
+        private const val DATABASE_VERSION = 11
         private val LOG_COLUMNS = arrayOf(
             "day",
             "bleeding",
@@ -457,6 +475,7 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
             "stress",
             "activity",
             "medication",
+            "automatic_bleeding",
         )
         private val SETTINGS_COLUMNS = arrayOf(
             "cycle_length",

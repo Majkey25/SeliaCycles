@@ -14,7 +14,7 @@ object PeriodActions {
     }
 
     fun removeFutureBleeding(logs: List<DayLog>, today: LocalDate): List<DayLog> = logs.mapNotNull { log ->
-        if (!log.day.isAfter(today) || !log.bleeding) return@mapNotNull log
+        if (!log.day.isAfter(today) || !log.bleeding || log.automaticBleeding) return@mapNotNull log
         log.copy(bleeding = false, flow = Flow.NONE).takeUnless(DayLog::isEmpty)
     }
 
@@ -25,9 +25,15 @@ object PeriodActions {
         else -> TodayPrimaryAction.START_PERIOD
     }
 
-    fun start(day: LocalDate, logs: List<DayLog>): List<DayLog> {
+    fun start(day: LocalDate, logs: List<DayLog>, periodLength: Int = 5): List<DayLog> {
+        require(periodLength in 1..MAX_PERIOD_DAYS)
         val byDay = logs.associateByTo(mutableMapOf(), DayLog::day)
         byDay[day] = (byDay[day] ?: DayLog(day)).withBleeding()
+        (1L until periodLength.toLong()).forEach { offset ->
+            val date = day.plusDays(offset)
+            val existing = byDay[date] ?: DayLog(date)
+            if (!existing.confirmedBleeding) byDay[date] = existing.withBleeding().copy(automaticBleeding = true)
+        }
         return byDay.values.sortedBy(DayLog::day)
     }
 
@@ -42,7 +48,7 @@ object PeriodActions {
         }
         period?.second?.takeIf { it.isAfter(day) }?.let { oldEnd ->
             generateSequence(day.plusDays(1)) { it.plusDays(1) }.takeWhile { !it.isAfter(oldEnd) }.forEach { date ->
-                byDay[date]?.copy(bleeding = false, flow = Flow.NONE)?.let { updated ->
+                byDay[date]?.copy(bleeding = false, flow = Flow.NONE, automaticBleeding = false)?.let { updated ->
                     if (updated.isEmpty) byDay.remove(date) else byDay[date] = updated
                 }
             }
@@ -58,14 +64,15 @@ object PeriodActions {
 
     fun suggestedDays(day: LocalDate, logs: List<DayLog>, periodLength: Int, today: LocalDate): Set<LocalDate> {
         require(periodLength in 1..MAX_PERIOD_DAYS)
-        require(day in DayLog.MIN_DATE..today)
+        require(day in DayLog.MIN_DATE..DayLog.MAX_DATE && (day <= today || logs.any { it.day == day && it.automaticBleeding }))
         return periodDays(day, logs).ifEmpty {
-            (0L until periodLength.toLong()).map(day::plusDays).takeWhile { it <= today }.toSet()
+            (0L until periodLength.toLong()).map(day::plusDays).toSet()
         }
     }
 
     fun isValidSelection(days: Set<LocalDate>, today: LocalDate): Boolean =
-        days.size <= MAX_PERIOD_DAYS && days.all { it in DayLog.MIN_DATE..today } &&
+        days.size <= MAX_PERIOD_DAYS && days.all { it in DayLog.MIN_DATE..minOf(today.plusDays(13), DayLog.MAX_DATE) } &&
+            (days.isEmpty() || days.min() <= today) &&
             (days.isEmpty() || ChronoUnit.DAYS.between(days.min(), days.max()) < MAX_PERIOD_DAYS)
 
     fun replace(
@@ -74,14 +81,14 @@ object PeriodActions {
         logs: List<DayLog>,
         today: LocalDate,
     ): List<DayLog> {
-        require(day in DayLog.MIN_DATE..today)
+        require(day in DayLog.MIN_DATE..DayLog.MAX_DATE && (day <= today || logs.any { it.day == day && it.automaticBleeding }))
         require(isValidSelection(selectedDays, today))
         val byDay = logs.associateByTo(mutableMapOf(), DayLog::day)
         (periodDays(day, logs) + selectedDays).forEach { date ->
             if (date in selectedDays) {
-                byDay[date] = (byDay[date] ?: DayLog(date)).withBleeding()
+                byDay[date] = (byDay[date] ?: DayLog(date)).withBleeding().copy(automaticBleeding = date > today)
             } else {
-                byDay[date]?.copy(bleeding = false, flow = Flow.NONE)?.let { updated ->
+                byDay[date]?.copy(bleeding = false, flow = Flow.NONE, automaticBleeding = false)?.let { updated ->
                     if (updated.isEmpty) byDay.remove(date) else byDay[date] = updated
                 }
             }
@@ -91,6 +98,7 @@ object PeriodActions {
 
     private fun DayLog.withBleeding(): DayLog = copy(
         bleeding = true,
+        automaticBleeding = false,
         flow = flow.takeUnless { it == Flow.NONE } ?: Flow.UNKNOWN,
     )
 

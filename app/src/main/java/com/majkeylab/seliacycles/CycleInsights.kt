@@ -104,7 +104,10 @@ object CycleInsights {
             backup.settings.canPredictPeriods && start <= referenceDate
         }?.let { start ->
             val prediction = prediction(backup, referenceDate)
-            val end = start.plusDays(prediction.averagePeriodLength.toLong())
+            val marked = PeriodActions.periodDays(start, backup.logs)
+            val end = if (backup.logs.any { it.day in marked && it.automaticBleeding }) {
+                marked.max().plusDays(1)
+            } else start.plusDays(prediction.averagePeriodLength.toLong())
             if (start == prediction.periodStarts.lastOrNull() && referenceDate < end) {
                 PeriodEstimate(start, end, start, start, EstimateOrigin.ONGOING)
             } else null
@@ -166,7 +169,7 @@ object CycleInsights {
             ?.takeIf { it <= date && date <= referenceDate && backup.settings.canPredictPeriods }
             ?.plusDays(prediction.averageCycleLength.toLong())
             ?.takeIf { it <= date }
-        val recordedBleeding = backup.logs.any { it.day == date && it.bleeding }
+        val recordedBleeding = backup.logs.any { it.day == date && it.confirmedBleeding }
         val elapsedCycle = !recordedBleeding && unconfirmedStart?.let { start ->
             date > start.plusDays(maxOf(prediction.averagePeriodLength - 1, prediction.uncertaintyDays).toLong())
         } == true
@@ -264,7 +267,7 @@ object CycleInsights {
         }
     }
 
-    private fun prediction(backup: CycleBackup, referenceDate: LocalDate): CyclePrediction = CyclePredictor.predict(
+    internal fun prediction(backup: CycleBackup, referenceDate: LocalDate): CyclePrediction = CyclePredictor.predict(
         bleedingDays = backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
         defaultCycleLength = backup.settings.cycleLength,
         defaultPeriodLength = backup.settings.periodLength,
@@ -272,6 +275,7 @@ object CycleInsights {
         cycleLengthOverride = backup.settings.cycleLengthOverride,
         periodLengthOverride = backup.settings.periodLengthOverride,
         activePeriodStart = backup.settings.activePeriodStart,
+        automaticBleedingDays = backup.logs.filter(DayLog::automaticBleeding).mapTo(mutableSetOf(), DayLog::day),
     )
 
     private data class MoodSample(val mood: Mood, val cycleStart: LocalDate)

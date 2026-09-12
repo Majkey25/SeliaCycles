@@ -553,7 +553,6 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                     day = day,
                     logs = state.backup.logs,
                     periodLength = state.prediction.averagePeriodLength,
-                    activeStart = state.backup.settings.activePeriodStart,
                     firstDayOfWeek = state.backup.settings.firstDayOfWeek,
                     periodColor = calendarPeriodRgb(
                         state.backup.settings.palette,
@@ -1471,6 +1470,7 @@ private fun CalendarMonthPage(
                         dateDescription = day.format(longDateFormat),
                         isToday = day == today,
                         tracks = tracks,
+                        automaticPeriod = state.logsByDay[day]?.automaticBleeding == true,
                         possibleFertile = dailyFertility[day] == DailyFertilityLevel.POSSIBLE,
                         selected = focusedDay == day,
                         hasDetails = state.logsByDay[day]?.let { log ->
@@ -1526,6 +1526,11 @@ private fun CalendarMonthPage(
                     stringResource(R.string.recorded_legend),
                     stringResource(R.string.recorded_legend_detail),
                 )
+                if (state.backup.logs.any(DayLog::automaticBleeding)) LegendItem(
+                    periodColor,
+                    stringResource(R.string.automatic_period),
+                    stringResource(R.string.automatic_period_body),
+                )
                 LegendItem(
                     calendarPredictedPeriodColor(periodColor),
                     stringResource(R.string.predicted_legend),
@@ -1577,6 +1582,7 @@ private fun CalendarDay(
     dateDescription: String,
     isToday: Boolean,
     tracks: CalendarDayTracks,
+    automaticPeriod: Boolean,
     possibleFertile: Boolean,
     selected: Boolean,
     hasDetails: Boolean,
@@ -1628,7 +1634,7 @@ private fun CalendarDay(
         if (isToday) add(stringResource(R.string.today_heading))
         if (selected) add(stringResource(R.string.calendar_selected))
         when (tracks.period) {
-            CalendarPeriodLayer.RECORDED -> add(stringResource(R.string.recorded_legend))
+            CalendarPeriodLayer.RECORDED -> add(stringResource(if (automaticPeriod) R.string.automatic_period else R.string.recorded_legend))
             CalendarPeriodLayer.PREDICTED -> add(stringResource(R.string.predicted_legend))
             CalendarPeriodLayer.NONE -> Unit
         }
@@ -1729,11 +1735,12 @@ private fun HistoryScreen(state: AppState) {
     val averagePeriod = remember(state.backup.logs, state.backup.settings.activePeriodStart) {
         CycleAnalysis.averageRecordedPeriodDays(pastStarts,
             state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
-            state.backup.settings.activePeriodStart)
+            state.backup.settings.activePeriodStart,
+            state.backup.logs.filter(DayLog::automaticBleeding).mapTo(mutableSetOf(), DayLog::day))
     }
     val cycleHistory = CycleAnalysis.recentHistory(
         periodStarts = pastStarts,
-        bleedingDays = state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
+        bleedingDays = state.backup.logs.filter(DayLog::confirmedBleeding).mapTo(mutableSetOf(), DayLog::day),
         lutealPhaseDays = state.backup.settings.lutealPhaseLength,
     )
     val predictionAccuracy = CycleAnalysis.predictionAccuracy(pastStarts, state.forecastSnapshots)
@@ -3022,11 +3029,11 @@ private fun DayOverviewSheet(
     val insight = CycleInsights.forDate(state.backup, state.forecastSnapshots, day, referenceDate = state.referenceDate)
     val comparison = DayOverview.compare(day, state.backup, state.forecastSnapshots)
     val today = LocalDate.now()
-    val canChangePeriod = !day.isAfter(today)
+    val canChangePeriod = !day.isAfter(today) || log?.automaticBleeding == true
     val showQuickPeriodEntry = DayOverview.showQuickPeriodEntry(day, today)
     val periodEstimate = state.periodEstimates.firstOrNull { day >= it.start && day < it.endExclusive }
     val statusLabels = buildList {
-        if (log?.bleeding == true) add(R.string.selected_day_recorded)
+        if (log?.bleeding == true) add(if (log.automaticBleeding) R.string.automatic_period else R.string.selected_day_recorded)
         if (periodEstimate != null) add(R.string.selected_day_estimated)
         when (insight.fertilityStatus.takeIf { state.showFertility }) {
             FertilityStatus.OVULATION -> add(R.string.selected_day_ovulation)
@@ -3050,6 +3057,10 @@ private fun DayOverviewSheet(
             ) {
                 SheetHeader(R.string.day_overview, onDismiss)
                 Text(day.format(dateFormat), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (log?.automaticBleeding == true) Text(
+                    stringResource(R.string.automatic_period_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
                 if (showQuickPeriodEntry) {
                     SectionLabel(Icons.Outlined.WaterDrop, R.string.quick_period)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -3183,7 +3194,6 @@ private fun PeriodEditorSheet(
     day: LocalDate,
     logs: List<DayLog>,
     periodLength: Int,
-    activeStart: LocalDate?,
     firstDayOfWeek: DayOfWeek,
     periodColor: Color,
     isBusy: () -> Boolean,
@@ -3200,8 +3210,7 @@ private fun PeriodEditorSheet(
     var selectedDays by rememberSaveable(day, initialDays) {
         mutableStateOf(PeriodActions.suggestedDays(day, logs, periodLength, today))
     }
-    val suggestedEnd = selectedDays.minOrNull()?.takeIf { initialDays.isEmpty() || activeStart in initialDays }
-        ?.plusDays(periodLength.toLong() - 1)
+    val suggestedEnd = selectedDays.maxOrNull()
     var confirmDiscard by rememberSaveable(day) { mutableStateOf(false) }
     val requestDismiss: () -> Unit = {
         if (!isBusy()) {
@@ -3256,7 +3265,7 @@ private fun PeriodEditorSheet(
                     Row(Modifier.fillMaxWidth()) {
                         week.forEach { date ->
                             val selected = date in selectedDays
-                            val enabled = editable && date in DayLog.MIN_DATE..today
+                            val enabled = editable && date in DayLog.MIN_DATE..minOf(today.plusDays(13), DayLog.MAX_DATE)
                             val description = "${date.format(dateFormat)}, ${if (selected) {
                                 selectedDescription
                             } else {

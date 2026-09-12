@@ -54,7 +54,7 @@ object CalendarMirrorPlanner {
         snapshots: Map<java.time.YearMonth, ForecastSnapshot>,
         referenceDate: LocalDate = LocalDate.now(),
     ): List<MirrorEvent> {
-        val bleedingDays = backup.logs.filter(DayLog::bleeding).map(DayLog::day).sorted()
+        val bleedingDays = backup.logs.filter(DayLog::confirmedBleeding).map(DayLog::day).sorted()
         val firstDay = bleedingDays.firstOrNull()?.withDayOfMonth(1) ?: referenceDate.withDayOfMonth(1)
         val lastDay = referenceDate.plusMonths(FORECAST_MONTHS).with(TemporalAdjusters.lastDayOfMonth())
         val periods = bleedingDays.fold(mutableListOf<MutableList<LocalDate>>()) { groups, day ->

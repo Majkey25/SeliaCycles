@@ -25,7 +25,7 @@ internal data class MonthlySummary(
         ): MonthlySummary {
             val monthLogs = logs.filter { YearMonth.from(it.day) == month }
             val observations = monthLogs.filter { it.day <= referenceDate }
-            val recorded = observations.filter(DayLog::bleeding).mapTo(sortedSetOf(), DayLog::day)
+            val recorded = observations.filter(DayLog::confirmedBleeding).mapTo(sortedSetOf(), DayLog::day)
             val runs = mutableListOf<ClosedRange<LocalDate>>()
             recorded.forEach { day ->
                 val last = runs.lastOrNull()

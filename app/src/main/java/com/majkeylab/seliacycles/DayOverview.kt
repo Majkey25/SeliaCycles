@@ -21,7 +21,7 @@ object DayOverview {
         backup: CycleBackup,
         snapshots: Map<YearMonth, ForecastSnapshot>,
     ): DayEstimateComparison? {
-        val starts = periodStarts(backup.logs)
+        val starts = CycleInsights.prediction(backup, day).periodStarts
         val recordedStartForDay = if (backup.logs.any { it.day == day && it.bleeding }) {
             starts.lastOrNull { start -> !start.isAfter(day) && ChronoUnit.DAYS.between(start, day) in 0..13 }
         } else null
@@ -47,13 +47,4 @@ object DayOverview {
         )
     }
 
-    private fun periodStarts(logs: List<DayLog>): List<LocalDate> = buildList {
-        var previous: LocalDate? = null
-        logs.asSequence().filter(DayLog::bleeding).map(DayLog::day).sorted().forEach { day ->
-            if (previous == null || ChronoUnit.DAYS.between(previous, day) > MAX_GAP_DAYS) add(day)
-            previous = day
-        }
-    }
-
-    private const val MAX_GAP_DAYS = 2L
 }

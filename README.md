@@ -16,9 +16,9 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - Daily fertility labels share the calendar calculation. Detailed mode also shows the uncertainty around estimated fertile days. These are not pregnancy probabilities or safe-day labels.
 - A full-width period-entry button below the month grid. Today has the stronger circle; the selected date has a quieter outline.
 
-- Calendar-first Material 3 UI with one-tap Period started / Period ended actions that record only confirmed days.
+- Calendar-first Material 3 UI. Period started fills the expected duration in one action; Period ended confirms the completed range and removes the remaining automatically filled days.
 - Direct period-day editing can add, remove, shorten, extend, split, or clear exact bleeding days while preserving other daily information.
-- New period entries preselect the configured or learned duration. Existing entries retain their exact days. Future continuation stays an estimate until confirmed, so it does not train predictions as recorded bleeding.
+- New period entries use the configured or learned duration. Automatically filled days persist and use the period color, but remain separate from confirmed bleeding in duration learning and recorded statistics. Individual days, including automatically filled future days, remain editable.
 - Compact linked Today dashboard for the next period, fertile window, ovulation, phase guidance, History, and relief care.
 - Swipeable month calendar with connected tracks, muted adjacent-month dates, and adjacent-day navigation into the correct full month.
 - Calendar color key stays fully hidden below one explanation control until requested.
@@ -56,6 +56,8 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 Existing local records remain in the SQLite database across normal app updates. Selia Cycles has no Selia cloud or partner account. A selected `.pc` backup is read and merged locally. An exported `.pc` file is created only after the user chooses a destination and is not encrypted, so it should be stored securely. If calendar mirroring is enabled, short cycle labels are copied through Android to the selected provider; notes and raw health details are never mirrored.
 
 ## Build
+
+Backups containing automatically filled days require Selia Cycles beta.18 or newer for lossless restore. Earlier backups remain supported. The compatible external calendar records contain confirmed bleeding; the Selia payload also preserves automatically filled days.
 
 Requirements: JDK 17 and Android SDK 36.
 

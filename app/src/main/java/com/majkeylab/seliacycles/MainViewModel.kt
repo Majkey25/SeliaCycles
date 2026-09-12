@@ -26,15 +26,7 @@ data class CycleContent(
 ) {
     val logsByDay: Map<java.time.LocalDate, DayLog> = backup.logs.associateBy(DayLog::day)
 
-    val prediction: CyclePrediction = CyclePredictor.predict(
-        bleedingDays = backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
-        defaultCycleLength = backup.settings.cycleLength,
-        defaultPeriodLength = backup.settings.periodLength,
-        cycleLengthOverride = backup.settings.cycleLengthOverride,
-        periodLengthOverride = backup.settings.periodLengthOverride,
-        activePeriodStart = backup.settings.activePeriodStart,
-        referenceDate = referenceDate,
-    )
+    val prediction: CyclePrediction = CycleInsights.prediction(backup, referenceDate)
 
     val periodEstimates: List<PeriodEstimate> = CycleInsights.calendarPeriodEstimates(
         backup,
@@ -182,7 +174,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun startPeriod(day: java.time.LocalDate) = runStoreAction {
         val backup = store.load()
         store.savePeriodState(
-            PeriodActions.start(day, backup.logs),
+            PeriodActions.start(day, backup.logs, CycleInsights.prediction(backup, java.time.LocalDate.now()).averagePeriodLength),
             backup.settings.copy(activePeriodStart = day),
         )
     }
@@ -202,8 +194,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val originalDays = PeriodActions.periodDays(day, backup.logs)
         val logs = PeriodActions.replace(day, selectedDays, backup.logs, today)
         val active = when (backup.settings.activePeriodStart) {
-            in originalDays -> selectedDays.minOrNull()
-            null -> selectedDays.minOrNull()?.takeIf { selectedDays.maxOrNull() == today }
+            in originalDays, null -> selectedDays.minOrNull()?.takeIf { selectedDays.any { it > today } }
             else -> backup.settings.activePeriodStart
         }
         store.savePeriodState(logs, backup.settings.copy(activePeriodStart = active))

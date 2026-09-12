@@ -58,6 +58,7 @@ object ForecastSnapshotPlanner {
             cycleLengthOverride = backup.settings.cycleLengthOverride,
             periodLengthOverride = backup.settings.periodLengthOverride,
             activePeriodStart = backup.settings.activePeriodStart,
+            automaticBleedingDays = backup.logs.filter { it.automaticBleeding && it.day < firstDay }.mapTo(mutableSetOf(), DayLog::day),
         ).monthlyForecasts.first { it.month == month }
         if (forecast.status != ForecastStatus.ESTIMATED) return null
         return ForecastSnapshot(

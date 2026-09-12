@@ -28,11 +28,13 @@ object CycleAnalysis {
         periodStarts: List<LocalDate>,
         bleedingDays: Set<LocalDate>,
         activePeriodStart: LocalDate?,
+        automaticBleedingDays: Set<LocalDate> = emptySet(),
     ): Int? {
         val lengths = periodStarts.takeLast(6).mapNotNull { start ->
             val next = periodStarts.firstOrNull { it > start }
             val end = bleedingDays.filter { it >= start && (next == null || it < next) }.maxOrNull() ?: return@mapNotNull null
             if (activePeriodStart != null && activePeriodStart in start..end) return@mapNotNull null
+            if (automaticBleedingDays.any { it in start..end }) return@mapNotNull null
             (ChronoUnit.DAYS.between(start, end).toInt() + 1).takeIf { it in 1..14 }
         }
         return lengths.takeIf { it.isNotEmpty() }?.average()?.roundToInt()

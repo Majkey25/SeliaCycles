@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="automatic_period">Día del período añadido automáticamente</string>
+    <string name="automatic_period_body">Al registrar el inicio, se marca la duración prevista con el color del período. Confirma el final o modifica los días. Los días añadidos automáticamente no se usan para calcular la duración habitual.</string>
+</resources>

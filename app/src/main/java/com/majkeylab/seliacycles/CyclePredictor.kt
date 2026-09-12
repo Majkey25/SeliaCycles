@@ -55,6 +55,7 @@ object CyclePredictor {
         cycleLengthOverride: Int? = null,
         periodLengthOverride: Int? = null,
         activePeriodStart: LocalDate? = null,
+        automaticBleedingDays: Set<LocalDate> = emptySet(),
     ): CyclePrediction {
         require(defaultCycleLength in MIN_CYCLE_LENGTH..MAX_CYCLE_LENGTH)
         require(defaultPeriodLength in 1..14)
@@ -70,14 +71,15 @@ object CyclePredictor {
             }
             groups
         }
-        val starts = periods.map { it.first() }
+        val starts = periods.mapNotNull { period -> period.firstOrNull { it !in automaticBleedingDays } }
         val rawIntervals = starts.zipWithNext { first, second ->
             ChronoUnit.DAYS.between(first, second).toInt()
         }.filter { it in MIN_CYCLE_LENGTH..MAX_CYCLE_LENGTH }.takeLast(MAX_RECENT_CYCLES)
         val cycleLengths = robustCycleLengths(rawIntervals, defaultCycleLength)
         val cycleLength = cycleLengthOverride ?: cycleLengths.weightedAverageOr(defaultCycleLength)
         val learnedPeriodLength = periods.filterNot { period ->
-            activePeriodStart != null && activePeriodStart in period.first()..period.last()
+            period.any { it in automaticBleedingDays } ||
+                activePeriodStart != null && activePeriodStart in period.first()..period.last()
         }.map { period ->
             ChronoUnit.DAYS.between(period.first(), period.last()).toInt() + 1
         }.filter { it in 1..14 }.takeLast(MAX_RECENT_PERIODS).weightedAverageOr(defaultPeriodLength)
@@ -114,7 +116,8 @@ object CyclePredictor {
             latestPeriodStart = nextWindow?.second,
             estimatedPeriodStarts = relevantPredictions.map(PredictedStart::day),
             monthlyForecasts = months.map { month ->
-                monthlyForecast(month, periods, predictions, periodLength, uncertainty)
+                monthlyForecast(month, periods.map { period -> period.filterNot { it in automaticBleedingDays } }
+                    .filter { it.isNotEmpty() }, predictions, periodLength, uncertainty)
             },
         )
     }

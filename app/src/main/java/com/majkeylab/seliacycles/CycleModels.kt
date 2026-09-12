@@ -98,6 +98,7 @@ data class DayLog(
     val activity: ActivityLevel? = null,
     val medication: MedicationStatus? = null,
     val importedDetails: String = "",
+    val automaticBleeding: Boolean = false,
 ) {
     init {
         require(day in MIN_DATE..MAX_DATE)
@@ -108,7 +109,10 @@ data class DayLog(
         require(sleepHours == null || sleepHours.isFinite() && sleepHours in 0.0..24.0)
         require(painLevel == null || painLevel in 0..10)
         require((bleeding && flow != Flow.NONE) || (!bleeding && flow == Flow.NONE))
+        require(!automaticBleeding || bleeding)
     }
+
+    val confirmedBleeding: Boolean get() = bleeding && !automaticBleeding
 
     val isEmpty: Boolean
         get() = !bleeding && !spotting && mood == null && symptoms.isEmpty() && note.isBlank() && weightKg == null &&
@@ -138,6 +142,7 @@ fun DayLog.preservePeriodFrom(existing: DayLog?, selectedFlow: Flow = existing?.
     val bleeding = existing?.bleeding == true
     return copy(
         bleeding = bleeding,
+        automaticBleeding = existing?.automaticBleeding == true,
         flow = if (bleeding) {
             selectedFlow.takeUnless { it == Flow.NONE } ?: requireNotNull(existing).flow
         } else {
@@ -151,6 +156,7 @@ fun mergeDayLogs(current: DayLog, incoming: DayLog): DayLog {
     val bleeding = current.bleeding || incoming.bleeding
     return current.copy(
         bleeding = bleeding,
+        automaticBleeding = bleeding && !current.confirmedBleeding && !incoming.confirmedBleeding,
         spotting = current.spotting || incoming.spotting,
         flow = when {
             !bleeding -> Flow.NONE

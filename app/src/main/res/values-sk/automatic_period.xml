@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="automatic_period">Automaticky doplnený deň menštruácie</string>
+    <string name="automatic_period_body">Po zadaní začiatku sa očakávaná dĺžka vyplní farbou menštruácie. Potvrď koniec alebo uprav jednotlivé dni. Automaticky doplnené dni sa nepoužívajú na výpočet obvyklej dĺžky.</string>
+</resources>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="automatic_period">Automatisch eingetragener Periodentag</string>
+    <string name="automatic_period_body">Beim Eintragen des Beginns wird die erwartete Dauer in der Periodenfarbe markiert. Bestätige das Ende oder ändere einzelne Tage. Automatisch ergänzte Tage fließen nicht in die Berechnung der üblichen Dauer ein.</string>
+</resources>
