@@ -9,10 +9,15 @@ import kotlin.test.assertTrue
 class PeriodActionsTest {
     private val start = LocalDate.of(2026, 8, 10)
 
+    @Test fun `start fills the whole default duration in one action`() {
+        assertEquals((0L..4L).map(start::plusDays),
+            PeriodActions.start(start, emptyList()).filter(DayLog::bleeding).map(DayLog::day))
+    }
+
     @Test fun `new period preselects duration while existing days remain unchanged`() {
         assertEquals((0L..4L).map(start::plusDays).toSet(),
             PeriodActions.suggestedDays(start, emptyList(), 5, start.plusDays(10)))
-        assertEquals(setOf(start), PeriodActions.suggestedDays(start, emptyList(), 5, start))
+        assertEquals((0L..4L).map(start::plusDays).toSet(), PeriodActions.suggestedDays(start, emptyList(), 5, start))
         val existing = listOf(DayLog(start, bleeding = true, flow = Flow.UNKNOWN))
         assertEquals(setOf(start), PeriodActions.suggestedDays(start, existing, 5, start.plusDays(10)))
         assertFailsWith<IllegalArgumentException> { PeriodActions.suggestedDays(start, emptyList(), 0, start) }
@@ -25,7 +30,8 @@ class PeriodActionsTest {
 
         val result = PeriodActions.start(start, listOf(moodDay))
 
-        assertEquals(listOf(start), result.filter(DayLog::bleeding).map(DayLog::day))
+        assertEquals(listOf(start), result.filter(DayLog::confirmedBleeding).map(DayLog::day))
+        assertEquals((1L..4L).map(start::plusDays), result.filter(DayLog::automaticBleeding).map(DayLog::day))
         assertEquals(Mood.GOOD, result.first { it.day == moodDay.day }.mood)
         assertTrue(result.filter(DayLog::bleeding).all { it.flow == Flow.UNKNOWN })
     }

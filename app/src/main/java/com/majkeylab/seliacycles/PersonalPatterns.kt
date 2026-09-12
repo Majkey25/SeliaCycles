@@ -12,13 +12,7 @@ data class SymptomPattern(
 
 object PersonalPatterns {
     fun symptomPatterns(backup: CycleBackup): List<SymptomPattern> {
-        val starts = CyclePredictor.predict(
-            bleedingDays = backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
-            defaultCycleLength = backup.settings.cycleLength,
-            defaultPeriodLength = backup.settings.periodLength,
-            cycleLengthOverride = backup.settings.cycleLengthOverride,
-            periodLengthOverride = backup.settings.periodLengthOverride,
-        ).periodStarts
+        val starts = CycleInsights.prediction(backup, LocalDate.now()).periodStarts
         val cycles = starts.zipWithNext().takeLast(MAX_CYCLES)
         val observations = cycles.flatMap { (start, next) ->
             backup.logs.asSequence().filter { it.day >= start && it.day < next && it.symptoms.isNotEmpty() }
@@ -41,7 +35,7 @@ object PersonalPatterns {
     }
 
     private fun phaseFor(log: DayLog, cycleStart: LocalDate, nextPeriod: LocalDate, lutealPhaseDays: Int): CyclePhase? {
-        if (log.bleeding) return CyclePhase.MENSTRUAL
+        if (log.confirmedBleeding) return CyclePhase.MENSTRUAL
         if (ChronoUnit.DAYS.between(cycleStart, nextPeriod) <= lutealPhaseDays) return null
         val fertility = CycleInsights.fertilityForPeriod(nextPeriod, lutealPhaseDays)
         return when {

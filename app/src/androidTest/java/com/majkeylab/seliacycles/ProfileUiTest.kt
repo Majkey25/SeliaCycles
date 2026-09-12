@@ -157,7 +157,8 @@ class ProfileUiTest {
                 format(editorDays.first(), FormatStyle.MEDIUM),
                 format(editorDays.last(), FormatStyle.MEDIUM),
             )).assertIsDisplayed()
-            compose.onNodeWithContentDescription("${format(today, FormatStyle.MEDIUM)}, ${text(R.string.period_day_selected)}")
+            compose.onNodeWithText(text(R.string.clear_period)).performClick()
+            compose.onNodeWithContentDescription("${format(focused, FormatStyle.MEDIUM)}, ${text(R.string.period_day_not_selected)}")
                 .performScrollTo().performClick()
             compose.onNodeWithContentDescription("${format(focused, FormatStyle.MEDIUM)}, ${text(R.string.period_day_selected)}")
                 .assertIsDisplayed()

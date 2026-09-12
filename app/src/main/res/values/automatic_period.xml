@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="automatic_period">Automatically filled period day</string>
+    <string name="automatic_period_body">Starting a period fills its expected duration in the period color. Confirm the end or edit individual days. Automatically filled days do not train the duration estimate.</string>
+</resources>
