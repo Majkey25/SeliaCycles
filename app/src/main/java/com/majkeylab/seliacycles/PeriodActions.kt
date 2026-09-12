@@ -56,6 +56,14 @@ object PeriodActions {
             .mapTo(mutableSetOf(), DayLog::day)
     }
 
+    fun suggestedDays(day: LocalDate, logs: List<DayLog>, periodLength: Int, today: LocalDate): Set<LocalDate> {
+        require(periodLength in 1..MAX_PERIOD_DAYS)
+        require(day in DayLog.MIN_DATE..today)
+        return periodDays(day, logs).ifEmpty {
+            (0L until periodLength.toLong()).map(day::plusDays).takeWhile { it <= today }.toSet()
+        }
+    }
+
     fun isValidSelection(days: Set<LocalDate>, today: LocalDate): Boolean =
         days.size <= MAX_PERIOD_DAYS && days.all { it in DayLog.MIN_DATE..today } &&
             (days.isEmpty() || ChronoUnit.DAYS.between(days.min(), days.max()) < MAX_PERIOD_DAYS)

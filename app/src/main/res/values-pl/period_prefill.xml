@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="period_continuation">Szacowane dalsze dni miesiączki</string>
+    <string name="period_prefill_hint">Sugerowany czas trwania: %1$s, na podstawie ustawień lub historii. Możesz zmienić wybrane dni przed zapisaniem.</string>
+    <string name="period_prefill_end">Szacowany koniec: %1$s. Przyszłe dni pozostają szacunkowe, dopóki nie potwierdzisz końca miesiączki.</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="period_continuation">Odhad pokračovania menštruácie</string>
+    <string name="period_prefill_hint">Navrhnutá dĺžka: %1$s podľa nastavení alebo histórie. Vybrané dni môžeš pred uložením upraviť.</string>
+    <string name="period_prefill_end">Odhad konca: %1$s. Budúce dni zostávajú odhadom, kým ich nepotvrdíš tlačidlom Menštruácia skončila.</string>
+</resources>

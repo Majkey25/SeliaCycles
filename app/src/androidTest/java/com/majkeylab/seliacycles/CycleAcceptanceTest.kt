@@ -163,7 +163,7 @@ class CycleAcceptanceTest {
                 compose.waitUntil(5_000) { CycleStore(context).use { store -> store.load().settings.cycleLengthOverride == length } }
             }
             CycleStore(context).use { store ->
-                val future = CycleInsights.calendarPeriodEstimates(store.load(), emptyMap(), today).first()
+                val future = CycleInsights.calendarPeriodEstimates(store.load(), emptyMap(), today).first { it.start > today }
                 assertEquals(today.plusDays(35), future.start)
                 assertEquals(6L, java.time.temporal.ChronoUnit.DAYS.between(future.start, future.endExclusive))
                 assertEquals(snapshot, store.loadForecastSnapshots().first { it.month == snapshot.month })
