@@ -9,6 +9,16 @@ import kotlin.test.assertTrue
 class PeriodActionsTest {
     private val start = LocalDate.of(2026, 8, 10)
 
+    @Test fun `new period preselects duration while existing days remain unchanged`() {
+        assertEquals((0L..4L).map(start::plusDays).toSet(),
+            PeriodActions.suggestedDays(start, emptyList(), 5, start.plusDays(10)))
+        assertEquals(setOf(start), PeriodActions.suggestedDays(start, emptyList(), 5, start))
+        val existing = listOf(DayLog(start, bleeding = true, flow = Flow.UNKNOWN))
+        assertEquals(setOf(start), PeriodActions.suggestedDays(start, existing, 5, start.plusDays(10)))
+        assertFailsWith<IllegalArgumentException> { PeriodActions.suggestedDays(start, emptyList(), 0, start) }
+        assertFailsWith<IllegalArgumentException> { PeriodActions.suggestedDays(start.plusDays(1), emptyList(), 5, start) }
+    }
+
     @Test
     fun `start records only the real first day and preserves existing details`() {
         val moodDay = DayLog(start.plusDays(1), mood = Mood.GOOD)

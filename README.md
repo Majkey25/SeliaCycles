@@ -18,6 +18,7 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 
 - Calendar-first Material 3 UI with one-tap Period started / Period ended actions that record only confirmed days.
 - Direct period-day editing can add, remove, shorten, extend, split, or clear exact bleeding days while preserving other daily information.
+- New period entries preselect the configured or learned duration. Existing entries retain their exact days. Future continuation stays an estimate until confirmed, so it does not train predictions as recorded bleeding.
 - Compact linked Today dashboard for the next period, fertile window, ovulation, phase guidance, History, and relief care.
 - Swipeable month calendar with connected tracks, muted adjacent-month dates, and adjacent-day navigation into the correct full month.
 - Calendar color key stays fully hidden below one explanation control until requested.

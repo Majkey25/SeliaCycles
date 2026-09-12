@@ -552,6 +552,8 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                 DaySheetMode.PERIOD -> PeriodEditorSheet(
                     day = day,
                     logs = state.backup.logs,
+                    periodLength = state.prediction.averagePeriodLength,
+                    activeStart = state.backup.settings.activePeriodStart,
                     firstDayOfWeek = state.backup.settings.firstDayOfWeek,
                     periodColor = calendarPeriodRgb(
                         state.backup.settings.palette,
@@ -3180,6 +3182,8 @@ private fun suggestedPeriodStart(state: AppState, day: LocalDate): LocalDate? =
 private fun PeriodEditorSheet(
     day: LocalDate,
     logs: List<DayLog>,
+    periodLength: Int,
+    activeStart: LocalDate?,
     firstDayOfWeek: DayOfWeek,
     periodColor: Color,
     isBusy: () -> Boolean,
@@ -3193,7 +3197,11 @@ private fun PeriodEditorSheet(
     val today = LocalDate.now()
     val locale = currentLocale()
     val initialDays = remember(day, logs) { PeriodActions.periodDays(day, logs) }
-    var selectedDays by rememberSaveable(day, initialDays) { mutableStateOf(initialDays) }
+    var selectedDays by rememberSaveable(day, initialDays) {
+        mutableStateOf(PeriodActions.suggestedDays(day, logs, periodLength, today))
+    }
+    val suggestedEnd = selectedDays.minOrNull()?.takeIf { initialDays.isEmpty() || activeStart in initialDays }
+        ?.plusDays(periodLength.toLong() - 1)
     var confirmDiscard by rememberSaveable(day) { mutableStateOf(false) }
     val requestDismiss: () -> Unit = {
         if (!isBusy()) {
@@ -3296,6 +3304,16 @@ private fun PeriodEditorSheet(
                         modifier = Modifier.weight(1f),
                     )
                 }
+                if (initialDays.isEmpty() || suggestedEnd?.isAfter(today) == true) {
+                    Text(
+                        stringResource(R.string.period_prefill_hint, pluralStringResource(R.plurals.days_value, periodLength, periodLength)),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    suggestedEnd?.takeIf { it.isAfter(today) }?.let { end ->
+                        Text(stringResource(R.string.period_prefill_end, end.format(dateFormat)),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Outlined.WaterDrop, contentDescription = null, tint = periodColor)
                     Text(
@@ -3323,7 +3341,7 @@ private fun PeriodEditorSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (initialDays.isNotEmpty() && selectedDays.isNotEmpty()) {
+                if (selectedDays.isNotEmpty()) {
                     TextButton(onClick = {
                         if (!isBusy()) {
                             selectedDays = emptySet()

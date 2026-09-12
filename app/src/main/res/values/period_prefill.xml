@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="period_continuation">Estimated period continuation</string>
+    <string name="period_prefill_hint">Suggested duration: %1$s, based on your settings or history. Adjust the selected days before saving.</string>
+    <string name="period_prefill_end">Estimated end: %1$s. Future days stay estimates until you confirm them with Period ended.</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="period_continuation">Geschätzte Fortsetzung der Periode</string>
+    <string name="period_prefill_hint">Vorgeschlagene Dauer: %1$s, basierend auf deinen Einstellungen oder bisherigen Einträgen. Du kannst die ausgewählten Tage vor dem Speichern ändern.</string>
+    <string name="period_prefill_end">Geschätztes Ende: %1$s. Zukünftige Tage bleiben Schätzungen, bis du das Ende der Periode bestätigst.</string>
+</resources>

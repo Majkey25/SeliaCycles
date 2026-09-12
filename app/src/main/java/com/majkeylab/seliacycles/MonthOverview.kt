@@ -107,8 +107,11 @@ internal fun MonthOverview(state: AppState, month: YearMonth, locale: Locale, on
             MonthDateRow(Icons.Outlined.WaterDrop, stringResource(R.string.recorded_legend),
                 dateRange(run.start, run.endInclusive, format), onClick = { onDayClick(run.start) })
         }
-        summary.estimates.filterNot { it.origin != EstimateOrigin.CURRENT && it.start == saved?.periodStart }.forEach { estimate ->
+        summary.estimates.filterNot {
+            it.origin in setOf(EstimateOrigin.SAVED, EstimateOrigin.RECONSTRUCTED) && it.start == saved?.periodStart
+        }.forEach { estimate ->
             val origin = when (estimate.origin) {
+                EstimateOrigin.ONGOING -> R.string.period_continuation
                 EstimateOrigin.CURRENT -> R.string.predicted_legend
                 EstimateOrigin.SAVED -> R.string.month_saved_prediction
                 EstimateOrigin.RECONSTRUCTED -> R.string.month_reconstructed_prediction
