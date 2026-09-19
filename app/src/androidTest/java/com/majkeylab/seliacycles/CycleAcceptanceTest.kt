@@ -6,6 +6,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -208,7 +210,12 @@ class CycleAcceptanceTest {
     private fun text(id: Int) = context.getString(id)
 
     private fun awaitNavigation() {
-        compose.waitUntil(10_000) { compose.onAllNodesWithText(text(R.string.nav_calendar)).fetchSemanticsNodes().isNotEmpty() }
+        // Navigation is present while the profile database is still loading.
+        compose.waitUntil(10_000) {
+            compose.onAllNodesWithText(text(R.string.nav_calendar)).fetchSemanticsNodes().isNotEmpty() &&
+                compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
+                    .fetchSemanticsNodes().isEmpty()
+        }
         compose.waitForIdle()
     }
 }

@@ -3500,16 +3500,18 @@ private fun DayLogSheet(
         Column(
             modifier = Modifier.fillMaxWidth().imePadding(),
         ) {
-            Column(
-                modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp),
-            ) {
+            Box(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
                 SheetHeader(
                     if (initial?.hasCalendarMarker == true) R.string.edit_information else R.string.add_information,
                     requestDismiss,
                     enabled = !busy,
                 )
+            }
+            Column(
+                modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
                 Text(
                     dateLabel,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
