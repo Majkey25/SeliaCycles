@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="luteal_phase_help">Ovulation is estimated this many days before the next period start. This is a calendar estimate, not a measurement or a reliable method of contraception.</string>
+    <string name="menstrual_day_context">Bleeding day %1$d · %2$s</string>
+    <string name="menstrual_stage_early">First days</string>
+    <string name="menstrual_stage_middle">Middle days</string>
+    <string name="menstrual_stage_later">Later days</string>
+    <string name="menstrual_early_body">Cramps may be strongest near the start, sometimes spreading to the back. Flow and tiredness can vary from one day to the next.</string>
+    <string name="menstrual_middle_body">Bleeding may continue while cramps begin to ease. This is not a deadline: symptoms do not follow the same timetable for everyone.</string>
+    <string name="menstrual_later_body">Flow may become lighter near your usual end. Persistent pain, unusually heavy bleeding or bleeding longer than usual deserves medical advice.</string>
+    <string name="menstrual_early_feelings">Pain or poor sleep may leave you more sensitive or less patient. You may also feel your usual self. Tell others whether you want quiet, help or company.</string>
+    <string name="menstrual_middle_feelings">Premenstrual irritability may start to lift, but stress and sleep also affect mood. Notice your own pattern rather than expecting a particular emotion.</string>
+    <string name="menstrual_later_feelings">Energy or interest in company may return, or you may still need rest. Neither response says anything about your personality or how you should behave.</string>
+    <string name="menstrual_early_care">Comfortably warm, wrapped heat and gentle movement may help. Stop any activity that worsens pain. Severe or worsening pain needs assessment.</string>
+    <string name="menstrual_middle_care">Keep regular meals, fluids and sleep. Choose activity by comfort. Do not start supplements just because of a cycle day; ask about persistent fatigue or heavy bleeding.</string>
+    <string name="menstrual_later_care">Return to your usual activity at your own pace. Record the actual end of bleeding and what helped, so the next cycle can be compared with your experience.</string>
+    <string name="source_period_pain">Period pain and relief · NHS</string>
+    <string name="source_mood_evidence">Mood research · 2026 study</string>
+</resources>

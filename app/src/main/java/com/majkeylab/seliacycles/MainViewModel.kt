@@ -122,13 +122,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun createProfile(name: String, mode: UiMode) = viewModelScope.launch {
+    fun createProfile(name: String, mode: UiMode, icon: ProfileIcon = ProfileIcon.PERSON) = viewModelScope.launch {
         if (!acceptsProfile()) return@launch
         val revision = ++storeRevision
         _state.value = _state.value.copy(busy = true, message = null)
         val result = runCatching {
             storeMutex.withLock { withContext(Dispatchers.IO) {
-                localProfiles.create(name, mode) to localProfiles.profiles()
+                localProfiles.create(name, mode, icon) to localProfiles.profiles()
             } }
         }
         if (revision != storeRevision) return@launch
@@ -138,8 +138,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }, onFailure = { reload(R.string.operation_failed, revision) })
     }
 
-    fun updateProfile(name: String, mode: UiMode) = runStoreAction {
-        localProfiles.update(profile.id, name, mode)
+    fun updateProfile(name: String, mode: UiMode, icon: ProfileIcon? = null) = runStoreAction {
+        localProfiles.update(profile.id, name, mode, icon)
     }
 
     fun deleteProfile() = viewModelScope.launch {

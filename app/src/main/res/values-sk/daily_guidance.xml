@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="luteal_phase_help">Ovuláciu odhadujeme toľko dní pred začiatkom ďalšej menštruácie. Ide o kalendárny odhad, nie o meranie ani spoľahlivú metódu antikoncepcie.</string>
+    <string name="menstrual_day_context">Deň krvácania %1$d · %2$s</string>
+    <string name="menstrual_stage_early">Prvé dni</string>
+    <string name="menstrual_stage_middle">Prostredné dni</string>
+    <string name="menstrual_stage_later">Neskoršie dni</string>
+    <string name="menstrual_early_body">Kŕče môžu byť najsilnejšie na začiatku a niekedy vystreľujú do chrbta. Sila krvácania aj únava sa môžu denne meniť.</string>
+    <string name="menstrual_middle_body">Krvácanie môže pokračovať, zatiaľ čo kŕče slabnú. Nie je to pevný termín: priebeh nie je u každého rovnaký.</string>
+    <string name="menstrual_later_body">Ku koncu obvyklej dĺžky môže krvácanie slabnúť. Pretrvávajúcu bolesť, nezvyčajne silné alebo dlhšie krvácanie preber s lekárom.</string>
+    <string name="menstrual_early_feelings">Bolesť či zlý spánok môžu zvýšiť citlivosť alebo znížiť trpezlivosť. Môžeš sa cítiť aj celkom bežne. Povedz blízkym, či chceš pokoj, pomoc alebo spoločnosť.</string>
+    <string name="menstrual_middle_feelings">Predmenštruačná podráždenosť môže ustupovať, náladu však ovplyvňujú aj stres a spánok. Sleduj vlastný priebeh bez očakávania konkrétnej emócie.</string>
+    <string name="menstrual_later_feelings">Energia alebo chuť byť s ľuďmi sa môžu vracať, alebo môžeš ďalej potrebovať oddych. Ani jedno neurčuje tvoju osobnosť či správanie.</string>
+    <string name="menstrual_early_care">Príjemné teplo cez látku a jemný pohyb môžu uľaviť. Prestaň s činnosťou, ktorá bolesť zhoršuje. Silná alebo zhoršujúca sa bolesť potrebuje vyšetrenie.</string>
+    <string name="menstrual_middle_care">Jedz pravidelne, pi a dopraj si spánok. Pohyb prispôsob pohodliu. Doplnky nezačínaj užívať len podľa dňa cyklu; únavu alebo silné krvácanie preber s lekárom.</string>
+    <string name="menstrual_later_care">K bežnej aktivite sa vracaj vlastným tempom. Zaznamenaj skutočný koniec krvácania a čo ti pomohlo, aby si nabudúce porovnala vlastnú skúsenosť.</string>
+    <string name="source_period_pain">Bolesť a úľava · NHS</string>
+    <string name="source_mood_evidence">Výskum nálady · štúdia 2026</string>
+</resources>

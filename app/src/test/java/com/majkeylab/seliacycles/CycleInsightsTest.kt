@@ -51,7 +51,7 @@ class CycleInsightsTest {
     }
 
     @Test
-    fun `historical day detail uses the same saved fertility baseline as its calendar`() {
+    fun `historical day detail and calendar correct fertility from the recorded next period`() {
         val backup = CycleBackup(logs = listOf(
             LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 29), LocalDate.of(2026, 9, 26),
         ).flatMap { period(it) })
@@ -59,7 +59,7 @@ class CycleInsightsTest {
         val snapshot = ForecastSnapshot(java.time.YearMonth.from(start), start, start.minusDays(2), start.plusDays(2), 3, false)
         val snapshots = mapOf(snapshot.month to snapshot)
         val reference = LocalDate.of(2026, 10, 1)
-        val selected = LocalDate.of(2026, 9, 11)
+        val selected = LocalDate.of(2026, 9, 12)
         val calendar = CycleInsights.fertilityEstimates(backup, snapshots, reference).single { it.ovulation == selected }
 
         val insight = CycleInsights.forDate(backup, snapshots, selected, referenceDate = reference)

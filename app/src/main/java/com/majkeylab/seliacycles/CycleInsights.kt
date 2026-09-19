@@ -10,6 +10,17 @@ enum class FertilityStatus { UNAVAILABLE, OUTSIDE, FERTILE, OVULATION }
 
 enum class EstimateOrigin { SAVED, RECONSTRUCTED, CURRENT, ONGOING }
 
+enum class MenstrualStage { EARLY, MIDDLE, LATER }
+
+internal fun menstrualStage(day: Int, duration: Int): MenstrualStage {
+    require(day in 1..14 && duration in 1..14)
+    return when {
+        day <= 2 -> MenstrualStage.EARLY
+        day >= maxOf(3, duration - 1) -> MenstrualStage.LATER
+        else -> MenstrualStage.MIDDLE
+    }
+}
+
 data class PeriodEstimate(
     val start: LocalDate,
     val endExclusive: LocalDate,
@@ -37,6 +48,8 @@ data class DailyCycleInsight(
     val fertility: FertilityEstimate?,
     val fertilityStatus: FertilityStatus,
     val moodTrend: PersonalMoodTrend?,
+    val menstrualDay: Int? = null,
+    val menstrualStage: MenstrualStage? = null,
 )
 
 object CycleInsights {
@@ -122,7 +135,7 @@ object CycleInsights {
     ): List<FertilityEstimate> {
         if (!backup.settings.canEstimateFertility) return emptyList()
         return fertilityEstimates(
-            backup, prediction(backup, referenceDate), calendarPeriodEstimates(backup, snapshots, referenceDate), referenceDate,
+            backup, prediction(backup, referenceDate), calendarPeriodEstimates(backup, snapshots, referenceDate),
         )
     }
 
@@ -130,16 +143,16 @@ object CycleInsights {
         backup: CycleBackup,
         prediction: CyclePrediction,
         estimates: List<PeriodEstimate>,
-        referenceDate: LocalDate,
     ): List<FertilityEstimate> {
         if (!canEstimateFertility(backup, prediction)) return emptyList()
-        val futureRecorded = prediction.periodStarts.filter { it.isAfter(referenceDate) }
-        val recordedMonths = futureRecorded.mapTo(mutableSetOf(), YearMonth::from)
+        val recorded = prediction.periodStarts
+        val recordedSet = recorded.toSet()
+        val previousByStart = recorded.zipWithNext().associate { (previous, next) -> next to previous }
         val estimated = estimates.filterNot { it.origin == EstimateOrigin.ONGOING }.map(PeriodEstimate::start)
-            .filterNot { YearMonth.from(it) in recordedMonths }
-        return (estimated + futureRecorded).distinct().sorted().mapNotNull { start ->
-            if (start in futureRecorded) {
-                val previous = prediction.periodStarts.lastOrNull { it < start }
+            .filterNot { CycleAnalysis.closestRecordedStart(it, recorded) != null }
+        return (estimated + recorded).distinct().sorted().mapNotNull { start ->
+            if (start in recordedSet) {
+                val previous = previousByStart[start]
                 if (previous != null && ChronoUnit.DAYS.between(previous, start) <= backup.settings.lutealPhaseLength) {
                     return@mapNotNull null
                 }
@@ -183,11 +196,17 @@ object CycleInsights {
         }
         val displayedPeriod = unconfirmedStart ?: overduePrediction ?: unresolvedEstimate?.start ?: futurePeriod
         val activeStart = prediction.periodStarts.lastOrNull { !it.isAfter(date) }
-        val fertilityEstimates = fertilityEstimates(backup, prediction, estimates, referenceDate)
+        val markedDays = activeStart?.let { PeriodActions.periodDays(it, backup.logs) }.orEmpty()
+        val guidanceDuration = if (markedDays.isNotEmpty() &&
+            (backup.settings.activePeriodStart !in markedDays || backup.logs.any { it.day in markedDays && it.automaticBleeding })) {
+            (ChronoUnit.DAYS.between(markedDays.min(), markedDays.max()).toInt() + 1).coerceIn(1, 14)
+        } else prediction.averagePeriodLength
+        val fertilityEstimates = fertilityEstimates(backup, prediction, estimates)
         val fertility = fertilityEstimates.firstOrNull { it.ovulation == date }
             ?: fertilityEstimates.firstOrNull { date in it.fertileStart..it.fertileEnd }
             ?: fertilityEstimates.firstOrNull { it.periodStart == futurePeriod }
         val phase = when {
+            !backup.settings.canPredictPeriods -> null
             recordedBleeding || ongoing -> CyclePhase.MENSTRUAL
             elapsedCycle -> null
             overduePrediction != null && unresolvedEstimate?.origin != EstimateOrigin.CURRENT -> null
@@ -197,10 +216,13 @@ object CycleInsights {
                 day = date,
                 cycleStart = activeStart,
                 nextPeriodStart = fertility.periodStart,
-                periodLength = prediction.averagePeriodLength,
+                periodLength = guidanceDuration,
                 lutealPhaseDays = backup.settings.lutealPhaseLength,
             )
         }
+        val menstrualStart = if (recordedBleeding || ongoing) activeStart else unresolvedEstimate?.start
+        val menstrualDay = menstrualStart?.takeIf { phase == CyclePhase.MENSTRUAL }
+            ?.let { ChronoUnit.DAYS.between(it, date).toInt() + 1 }?.takeIf { it in 1..14 }
         return DailyCycleInsight(
             nextPeriodStart = displayedPeriod,
             phase = phase,
@@ -212,7 +234,11 @@ object CycleInsights {
                 date in fertility.fertileStart..fertility.fertileEnd -> FertilityStatus.FERTILE
                 else -> FertilityStatus.OUTSIDE
             },
-            moodTrend = phase?.let { moodTrend(backup, prediction, it) },
+            moodTrend = phase?.let { moodTrend(backup, prediction, it, menstrualDay) },
+            menstrualDay = menstrualDay,
+            menstrualStage = menstrualDay?.let {
+                menstrualStage(it, if (recordedBleeding || ongoing) guidanceDuration else prediction.averagePeriodLength)
+            },
         )
     }
 
@@ -220,13 +246,15 @@ object CycleInsights {
         backup: CycleBackup,
         prediction: CyclePrediction,
         targetPhase: CyclePhase,
+        menstrualDay: Int?,
     ): PersonalMoodTrend? {
         val cycles = prediction.periodStarts.zipWithNext().takeLast(MAX_MOOD_CYCLES)
         val samples = cycles.flatMap { (start, next) ->
             backup.logs.asSequence()
                 .filter { it.mood != null && it.day >= start && it.day < next }
+                .filter { menstrualDay == null || it.confirmedBleeding && kotlin.math.abs(ChronoUnit.DAYS.between(start, it.day) + 1 - menstrualDay) <= 1 }
                 .filter {
-                    phaseFor(
+                    if (targetPhase == CyclePhase.MENSTRUAL) it.confirmedBleeding else !it.bleeding && phaseFor(
                         it.day,
                         start,
                         next,

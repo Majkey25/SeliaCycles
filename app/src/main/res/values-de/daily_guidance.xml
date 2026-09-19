@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="luteal_phase_help">Der Eisprung wird so viele Tage vor Beginn der nächsten Periode geschätzt. Dies ist eine Kalenderschätzung, keine Messung und keine zuverlässige Verhütungsmethode.</string>
+    <string name="menstrual_day_context">Blutungstag %1$d · %2$s</string>
+    <string name="menstrual_stage_early">Erste Tage</string>
+    <string name="menstrual_stage_middle">Mittlere Tage</string>
+    <string name="menstrual_stage_later">Spätere Tage</string>
+    <string name="menstrual_early_body">Krämpfe können am Anfang stärker sein und in den Rücken ausstrahlen. Blutungsstärke und Müdigkeit können sich täglich ändern.</string>
+    <string name="menstrual_middle_body">Die Blutung kann anhalten, während Krämpfe nachlassen. Das ist keine feste Frist: Beschwerden verlaufen nicht bei allen gleich.</string>
+    <string name="menstrual_later_body">Gegen dein übliches Ende kann die Blutung leichter werden. Anhaltende Schmerzen oder ungewöhnlich starke oder lange Blutungen sollten ärztlich abgeklärt werden.</string>
+    <string name="menstrual_early_feelings">Schmerzen oder schlechter Schlaf können dich empfindlicher oder ungeduldiger machen. Du kannst dich auch wie sonst fühlen. Sage anderen, ob du Ruhe, Hilfe oder Gesellschaft möchtest.</string>
+    <string name="menstrual_middle_feelings">Prämenstruelle Reizbarkeit kann nachlassen; Stress und Schlaf beeinflussen die Stimmung ebenfalls. Beobachte dein eigenes Muster, statt ein bestimmtes Gefühl zu erwarten.</string>
+    <string name="menstrual_later_feelings">Energie oder Lust auf Gesellschaft können zurückkehren, oder du brauchst weiter Ruhe. Beides bestimmt weder deine Persönlichkeit noch dein Verhalten.</string>
+    <string name="menstrual_early_care">Angenehme Wärme durch ein Tuch und sanfte Bewegung können helfen. Höre auf, wenn Schmerzen zunehmen. Starke oder zunehmende Schmerzen brauchen ärztliche Abklärung.</string>
+    <string name="menstrual_middle_care">Achte auf regelmäßige Mahlzeiten, Flüssigkeit und Schlaf. Bewege dich nach Wohlbefinden. Nimm keine Ergänzungsmittel nur wegen eines Zyklustags; sprich anhaltende Müdigkeit oder starke Blutungen ärztlich an.</string>
+    <string name="menstrual_later_care">Kehre in deinem Tempo zu gewohnten Aktivitäten zurück. Notiere das tatsächliche Blutungsende und hilfreiche Maßnahmen, um deine Erfahrungen vergleichen zu können.</string>
+    <string name="source_period_pain">Periodenschmerzen · NHS</string>
+    <string name="source_mood_evidence">Stimmungsforschung · Studie 2026</string>
+</resources>

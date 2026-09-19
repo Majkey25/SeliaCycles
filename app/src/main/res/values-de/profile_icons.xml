@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_icon">Profilsymbol</string>
+    <string name="profile_icon_person">Person</string>
+    <string name="profile_icon_flower">Blume</string>
+    <string name="profile_icon_star">Stern</string>
+    <string name="profile_icon_heart">Herz</string>
+    <string name="profile_icon_sun">Sonne</string>
+</resources>

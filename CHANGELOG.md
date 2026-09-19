@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.0-beta.19 - 2026-09-19
+
+### Fixed
+
+- Ovulation estimates follow corrected period dates in past months without overwriting saved period forecasts.
+- Phase guidance respects a recorded shorter period. Personal menstrual mood summaries compare nearby bleeding days instead of pooling the whole phase.
+
+### Added
+
+- Early, middle, and later bleeding-day guidance with care options and source links in all six languages.
+- Named local profiles have selectable icons and a direct Add profile action. Profile editors wait for successful saving.
+- The luteal setting explains how its days are counted and why the result is still an estimate.
+
 ## 0.9.0-beta.12 - 2026-09-05
 
 ### Added

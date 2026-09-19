@@ -20,9 +20,9 @@ object DailyFertility {
 
         val validEstimates = estimates.filter { isValid(it, prediction) }
         val estimatesByStart = validEstimates.associateBy(PeriodEstimate::start)
-        val recorded = prediction.periodStarts.filterTo(mutableSetOf()) { it > referenceDate }
+        val recorded = prediction.periodStarts.toSet()
         val day = date.toEpochDay()
-        return CycleInsights.fertilityEstimates(backup, prediction, validEstimates, referenceDate).map { central ->
+        return CycleInsights.fertilityEstimates(backup, prediction, validEstimates).map { central ->
             val estimate = estimatesByStart[central.periodStart].takeUnless { central.periodStart in recorded }
             val start = central.periodStart.toEpochDay()
             val earliest = estimate?.earliestStart?.toEpochDay() ?: start

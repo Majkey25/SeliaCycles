@@ -118,6 +118,33 @@ class ProfileUiTest {
         }
     }
 
+    @Test fun directProfileCreationKeepsNameIconAndSeparateCalendar() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            lateinit var model: MainViewModel
+            scenario.onActivity { model = ViewModelProvider(it)[MainViewModel::class.java] }
+            awaitProfile(model, LocalProfiles.DEFAULT_ID, UiMode.STANDARD)
+            compose.onNodeWithText(text(R.string.profile_default_name)).performClick()
+            compose.onNodeWithText(text(R.string.profile_create)).performClick()
+            compose.onNodeWithText(text(R.string.profile_name)).performTextInput(profileName)
+            compose.onNodeWithText(text(R.string.profile_icon_star)).performScrollTo().performClick()
+            compose.onNodeWithText(text(R.string.ui_mode_simple)).performScrollTo().performClick()
+            compose.onNode(hasText(text(R.string.profile_create)) and hasClickAction()).performScrollTo().performClick()
+            compose.waitUntil(10_000) { !model.state.value.busy && model.state.value.activeProfile.name == profileName }
+            val id = model.state.value.activeProfile.id
+            awaitProfile(model, id, UiMode.SIMPLE)
+            assertEquals(ProfileIcon.STAR, model.state.value.activeProfile.icon)
+            scenario.recreate()
+            manageProfile(profileName)
+            compose.onNodeWithText(text(R.string.profile_icon_flower)).performScrollTo().performClick()
+            compose.onNodeWithText(text(R.string.save)).performScrollTo().performClick()
+            compose.waitUntil(10_000) { !model.state.value.busy && model.state.value.activeProfile.icon == ProfileIcon.FLOWER }
+            compose.waitForIdle()
+            capture("profile-icons.png")
+            assertEquals(emptyList<DayLog>(), model.state.value.backup.logs)
+            CycleStore(context).use { assertEquals(originalLogs, it.load().logs) }
+        }
+    }
+
     @Test
     fun calendarButtonBelowGridEditsFocusedDayAndKeepsTodayDistinct() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
