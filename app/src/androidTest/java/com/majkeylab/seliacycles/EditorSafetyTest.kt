@@ -66,6 +66,8 @@ class EditorSafetyTest {
             openInformation()
             compose.onNodeWithText(text(R.string.note)).performScrollTo().performTextReplacement("Unsaved QA note")
             compose.onNodeWithContentDescription(text(R.string.close)).performScrollTo().performClick()
+            // Native dialog layout can finish after the Compose test clock is idle.
+            compose.waitUntil(5_000) { compose.onNodeWithText(text(R.string.unsaved_changes_title)).isDisplayed() }
             compose.onNodeWithText(text(R.string.unsaved_changes_title)).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.keep_editing)).performClick()
             compose.onNodeWithText("Unsaved QA note").performScrollTo().assertIsDisplayed()

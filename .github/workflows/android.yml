@@ -54,9 +54,11 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
-          script: |
-            ./gradlew connectedQaAndroidTest --console=plain
-            adb -s emulator-5554 pull /sdcard/Android/data/com.majkeylab.seliacycles.qa/files app/build/qa-captures
+          script: >-
+            ./gradlew connectedQaAndroidTest --console=plain;
+            test_status=$?;
+            adb -s emulator-5554 pull /sdcard/Android/data/com.majkeylab.seliacycles.qa/files app/build/qa-captures;
+            exit "$test_status"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
