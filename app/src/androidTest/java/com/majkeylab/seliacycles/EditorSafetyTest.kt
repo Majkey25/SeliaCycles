@@ -67,7 +67,7 @@ class EditorSafetyTest {
         repeat(5) { attempt -> ActivityScenario.launch(MainActivity::class.java).use {
             openInformation()
             compose.onNodeWithText(text(R.string.note)).performScrollTo().performTextReplacement("Unsaved QA note")
-            compose.onNodeWithContentDescription(text(R.string.close)).performScrollTo().performClick()
+            compose.onNodeWithContentDescription(text(R.string.close)).assertIsDisplayed().performClick()
             // Native dialog layout can finish after the Compose test clock is idle.
             try {
                 compose.waitUntil(5_000) { compose.onNodeWithText(text(R.string.unsaved_changes_title)).isDisplayed() }

@@ -11,7 +11,7 @@ Version `0.9.0-beta.19`. Runtime verification uses an API 29 emulator because th
 - Leap-year, month-boundary, and year-boundary date checks passed. Bleeding-duration changes alone do not shift the ovulation estimate.
 - `lintDebug`: zero errors and eight existing warnings.
 - Debug, QA, instrumentation, signed release APK, and signed AAB builds passed.
-- All 43 Android tests passed on the GitHub-hosted API 29 Pixel 6 emulator in [run 35440419880](https://github.com/Majkey25/SeliaCycles/actions/runs/35440419880), with no skipped tests. The first run exposed a native discard-dialog layout race in an existing test. A bounded visibility wait fixed the synchronization without removing any assertions.
+- All 43 Android tests passed on the GitHub-hosted API 29 Pixel 6 emulator in [run 35440419880](https://github.com/Majkey25/SeliaCycles/actions/runs/35440419880), with no skipped tests. A bounded visibility wait passed two PR runs, but the closing test failed again after merge in [run 35441300526](https://github.com/Majkey25/SeliaCycles/actions/runs/35441300526). The wait was not a sufficient fix. Code 27 was withdrawn from Play review and its GitHub prerelease returned to draft.
 - APK verification reports the existing upload certificate SHA-256 `a4f07e70cc0de4224411fdcdeb81e3e11d5b4ba949230cf108f3763a39fd4a1e`. AAB signature verification passed with self-signed-certificate and ZIP-stream-layout warnings from `jarsigner`.
 
 ## Physical verification blocked

@@ -58,7 +58,7 @@ class StoreScreenshotsTest {
             capture("04-day-overview.png")
             compose.onNodeWithText(text(R.string.edit_information)).performScrollTo().performClick()
             capture("06-information.png")
-            compose.onNodeWithContentDescription(text(R.string.close)).performScrollTo().performClick()
+            compose.onNodeWithContentDescription(text(R.string.close)).assertIsDisplayed().performClick()
             compose.onNodeWithText(text(R.string.close)).performClick()
             navigate(R.string.nav_history)
             capture("05-history.png")

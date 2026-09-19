@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.20 - 2026-09-19
+
+### Fixed
+
+- The daily information editor keeps its title and close button above the scrolling form, including when the keyboard is open.
+- Repeated editor tests retain screenshots and verify closing without first scrolling back to the header.
+
+Beta.19 was withdrawn before Play review after an intermittent editor check failed. Beta.20 includes its fertility, guidance, and profile changes.
+
 ## 0.9.0-beta.19 - 2026-09-19
 
 ### Fixed
