@@ -1,6 +1,7 @@
 package com.majkeylab.seliacycles
 
 import android.view.KeyEvent
+import android.graphics.Bitmap
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.isDisplayed
@@ -15,6 +16,7 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import java.time.LocalDate
+import java.io.File
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import org.junit.Assert.assertEquals
@@ -62,12 +64,21 @@ class EditorSafetyTest {
     }
 
     @Test fun closingChangedInformationKeepsDraftUntilDiscarded() {
-        ActivityScenario.launch(MainActivity::class.java).use {
+        repeat(5) { attempt -> ActivityScenario.launch(MainActivity::class.java).use {
             openInformation()
             compose.onNodeWithText(text(R.string.note)).performScrollTo().performTextReplacement("Unsaved QA note")
             compose.onNodeWithContentDescription(text(R.string.close)).performScrollTo().performClick()
             // Native dialog layout can finish after the Compose test clock is idle.
-            compose.waitUntil(5_000) { compose.onNodeWithText(text(R.string.unsaved_changes_title)).isDisplayed() }
+            try {
+                compose.waitUntil(5_000) { compose.onNodeWithText(text(R.string.unsaved_changes_title)).isDisplayed() }
+            } finally {
+                val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
+                try {
+                    File(context.getExternalFilesDir(null), "discard-dialog-$attempt.png").outputStream().use { output ->
+                        check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output))
+                    }
+                } finally { bitmap.recycle() }
+            }
             compose.onNodeWithText(text(R.string.unsaved_changes_title)).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.keep_editing)).performClick()
             compose.onNodeWithText("Unsaved QA note").performScrollTo().assertIsDisplayed()
@@ -77,7 +88,7 @@ class EditorSafetyTest {
             compose.onNodeWithText(text(R.string.edit_information)).performScrollTo().performClick()
             compose.onNodeWithContentDescription(text(R.string.close)).performClick()
             compose.onNodeWithText(text(R.string.unsaved_changes_title)).assertDoesNotExist()
-        }
+        } }
     }
 
     @Test fun periodSelectionRequiresDiscardButRevertedChangesDoNot() {
