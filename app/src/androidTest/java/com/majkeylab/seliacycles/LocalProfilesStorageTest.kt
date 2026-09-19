@@ -51,6 +51,18 @@ class LocalProfilesStorageTest {
         assertThrows(IllegalArgumentException::class.java) { profiles.select(daughter.id) }
     }
 
+    @Test fun profileIconPersistsAndSurvivesAnUpdateWithoutAnIconArgument() {
+        val profile = profiles.create("Family QA", UiMode.SIMPLE, ProfileIcon.STAR)
+        created += profile.id
+        profiles.select(profile.id)
+        assertEquals(ProfileIcon.STAR, LocalProfiles(context).selected().icon)
+        profiles.update(profile.id, "Renamed QA", UiMode.DETAILED)
+        assertEquals(ProfileIcon.STAR, LocalProfiles(context).selected().icon)
+        profiles.update(profile.id, "Renamed QA", UiMode.DETAILED, ProfileIcon.FLOWER)
+        assertEquals(ProfileIcon.FLOWER, LocalProfiles(context).selected().icon)
+        assertEquals(ProfileIcon.PERSON, profiles.profiles().first { it.id == LocalProfiles.DEFAULT_ID }.icon)
+    }
+
     @Test
     fun separateDatabasesKeepOriginalAndOtherProfileDataUntouched() {
         val original = CycleStore(context).use { it.load() }

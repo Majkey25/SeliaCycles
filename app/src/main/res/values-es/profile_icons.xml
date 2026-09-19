@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_icon">Icono del perfil</string>
+    <string name="profile_icon_person">Persona</string>
+    <string name="profile_icon_flower">Flor</string>
+    <string name="profile_icon_star">Estrella</string>
+    <string name="profile_icon_heart">Corazón</string>
+    <string name="profile_icon_sun">Sol</string>
+</resources>

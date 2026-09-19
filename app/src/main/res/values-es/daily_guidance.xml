@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="luteal_phase_help">La ovulación se estima este número de días antes del inicio de la siguiente menstruación. Es una estimación del calendario, no una medición ni un método anticonceptivo fiable.</string>
+    <string name="menstrual_day_context">Día de sangrado %1$d · %2$s</string>
+    <string name="menstrual_stage_early">Primeros días</string>
+    <string name="menstrual_stage_middle">Días intermedios</string>
+    <string name="menstrual_stage_later">Días posteriores</string>
+    <string name="menstrual_early_body">Los cólicos pueden ser más intensos al inicio y extenderse a la espalda. El sangrado y el cansancio pueden cambiar cada día.</string>
+    <string name="menstrual_middle_body">El sangrado puede continuar mientras los cólicos disminuyen. No hay un plazo fijo: los síntomas no siguen el mismo ritmo en todas las personas.</string>
+    <string name="menstrual_later_body">Cerca de tu final habitual, el sangrado puede disminuir. Consulta por dolor persistente o sangrado inusualmente abundante o prolongado.</string>
+    <string name="menstrual_early_feelings">El dolor o dormir mal pueden aumentar la sensibilidad o reducir la paciencia. También puedes sentirte como siempre. Explica si prefieres tranquilidad, ayuda o compañía.</string>
+    <string name="menstrual_middle_feelings">La irritabilidad premenstrual puede disminuir, pero el estrés y el sueño también influyen. Observa tu propio patrón sin esperar una emoción concreta.</string>
+    <string name="menstrual_later_feelings">Puede volver la energía o el interés por socializar, o puedes seguir necesitando descanso. Ninguna respuesta define tu personalidad ni cómo debes actuar.</string>
+    <string name="menstrual_early_care">El calor suave envuelto en tela y el movimiento suave pueden aliviar. Detén lo que aumente el dolor. El dolor intenso o que empeora necesita valoración.</string>
+    <string name="menstrual_middle_care">Mantén comidas regulares, líquidos y sueño. Ajusta la actividad a tu comodidad. No tomes suplementos solo por el día del ciclo; consulta por cansancio persistente o sangrado abundante.</string>
+    <string name="menstrual_later_care">Retoma tus actividades a tu ritmo. Anota el final real del sangrado y qué te ayudó para comparar tu experiencia en el próximo ciclo.</string>
+    <string name="source_period_pain">Dolor menstrual y alivio · NHS</string>
+    <string name="source_mood_evidence">Investigación del ánimo · estudio 2026</string>
+</resources>

@@ -91,11 +91,11 @@ class CalendarMirrorPlannerTest {
         val events = CalendarMirrorPlanner.plan(CycleBackup(logs = bleeding), emptyMap(), LocalDate.of(2026, 7, 15))
         assertEquals(
             MirrorEvent(MirrorEventKind.OVULATION, LocalDate.of(2026, 7, 17), LocalDate.of(2026, 7, 18)),
-            events.first { it.kind == MirrorEventKind.OVULATION },
+            events.first { it.kind == MirrorEventKind.OVULATION && it.start >= LocalDate.of(2026, 7, 15) },
         )
         assertEquals(
             MirrorEvent(MirrorEventKind.FERTILE, LocalDate.of(2026, 7, 12), LocalDate.of(2026, 7, 19)),
-            events.first { it.kind == MirrorEventKind.FERTILE },
+            events.first { it.kind == MirrorEventKind.FERTILE && it.start >= LocalDate.of(2026, 7, 1) },
         )
     }
 

@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.imePadding
@@ -15,6 +17,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.outlined.PersonOutline
+import androidx.compose.material.icons.outlined.LocalFlorist
+import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.WbSunny
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -44,12 +53,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ProfileSwitcher(state: AppState, onSelect: (String) -> Unit, onManage: () -> Unit) {
+fun ProfileSwitcher(state: AppState, onSelect: (String) -> Unit, onManage: () -> Unit, onCreate: () -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val enabled = !state.busy && !state.loading && !state.loadFailed
     Box {
         TextButton(onClick = { expanded = true }, enabled = enabled) {
-            Icon(Icons.Outlined.PersonOutline, contentDescription = stringResource(R.string.profiles_title))
+            Icon(profileIconVector(state.activeProfile.icon), contentDescription = stringResource(R.string.profiles_title))
             Text(
                 state.activeProfile.name.ifBlank { stringResource(R.string.profile_default_name) },
                 modifier = Modifier.widthIn(max = 180.dp),
@@ -62,6 +71,10 @@ fun ProfileSwitcher(state: AppState, onSelect: (String) -> Unit, onManage: () ->
             state.profiles.forEach { profile ->
                 DropdownMenuItem(
                     text = { Text(profile.name.ifBlank { stringResource(R.string.profile_default_name) }) },
+                    leadingIcon = { Icon(profileIconVector(profile.icon), contentDescription = null) },
+                    trailingIcon = if (profile.id == state.activeProfile.id) {
+                        { Icon(Icons.Outlined.Check, contentDescription = null) }
+                    } else null,
                     modifier = Modifier.semantics { selected = profile.id == state.activeProfile.id },
                     onClick = {
                         expanded = false
@@ -71,6 +84,12 @@ fun ProfileSwitcher(state: AppState, onSelect: (String) -> Unit, onManage: () ->
             }
             HorizontalDivider()
             DropdownMenuItem(
+                text = { Text(stringResource(R.string.profile_create)) },
+                leadingIcon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+                enabled = state.profiles.size < LocalProfiles.MAX_PROFILES,
+                onClick = { expanded = false; onCreate() },
+            )
+            DropdownMenuItem(
                 text = { Text(stringResource(R.string.profile_manage)) },
                 onClick = { expanded = false; onManage() },
             )
@@ -78,19 +97,21 @@ fun ProfileSwitcher(state: AppState, onSelect: (String) -> Unit, onManage: () ->
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ProfilesSheet(
     state: AppState,
     onDismiss: () -> Unit,
-    onCreate: (String, UiMode) -> Unit,
-    onUpdate: (String, UiMode) -> Unit,
+    onCreate: (String, UiMode, ProfileIcon) -> Unit,
+    onUpdate: (String, UiMode, ProfileIcon) -> Unit,
     onDelete: () -> Unit,
+    startCreating: Boolean = false,
 ) {
     val profile = state.activeProfile
-    var creating by rememberSaveable(profile.id) { mutableStateOf(false) }
+    var creating by rememberSaveable(profile.id, startCreating) { mutableStateOf(startCreating) }
     var name by rememberSaveable(profile, creating) { mutableStateOf(if (creating) "" else profile.name) }
     var mode by rememberSaveable(profile, creating) { mutableStateOf(if (creating) UiMode.STANDARD else profile.mode) }
+    var icon by rememberSaveable(profile, creating) { mutableStateOf(if (creating) ProfileIcon.PERSON else profile.icon) }
     var confirmDelete by rememberSaveable(profile.id) { mutableStateOf(false) }
     val enabled = !state.busy && !state.loading
     val trimmedName = name.trim()
@@ -137,6 +158,18 @@ fun ProfilesSheet(
                     ))
                 },
             )
+            Text(stringResource(R.string.profile_icon), style = MaterialTheme.typography.titleMedium)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ProfileIcon.entries.forEach { option ->
+                    FilterChip(
+                        selected = icon == option,
+                        enabled = enabled,
+                        onClick = { icon = option },
+                        label = { Text(stringResource(profileIconLabel(option))) },
+                        leadingIcon = { Icon(profileIconVector(option), contentDescription = null) },
+                    )
+                }
+            }
             Text(stringResource(R.string.ui_mode_label), style = MaterialTheme.typography.titleMedium)
             Column(Modifier.selectableGroup()) {
                 UiMode.entries.forEach { option ->
@@ -173,7 +206,7 @@ fun ProfilesSheet(
                 }
             }
             Button(
-                onClick = { if (creating) onCreate(trimmedName, mode) else onUpdate(trimmedName, mode) },
+                onClick = { if (creating) onCreate(trimmedName, mode, icon) else onUpdate(trimmedName, mode, icon) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = enabled && validName && (!creating || state.profiles.size < LocalProfiles.MAX_PROFILES),
             ) {
@@ -213,4 +246,20 @@ fun ProfilesSheet(
             },
         )
     }
+}
+
+private fun profileIconVector(icon: ProfileIcon) = when (icon) {
+    ProfileIcon.PERSON -> Icons.Outlined.PersonOutline
+    ProfileIcon.FLOWER -> Icons.Outlined.LocalFlorist
+    ProfileIcon.STAR -> Icons.Outlined.StarBorder
+    ProfileIcon.HEART -> Icons.Outlined.FavoriteBorder
+    ProfileIcon.SUN -> Icons.Outlined.WbSunny
+}
+
+private fun profileIconLabel(icon: ProfileIcon) = when (icon) {
+    ProfileIcon.PERSON -> R.string.profile_icon_person
+    ProfileIcon.FLOWER -> R.string.profile_icon_flower
+    ProfileIcon.STAR -> R.string.profile_icon_star
+    ProfileIcon.HEART -> R.string.profile_icon_heart
+    ProfileIcon.SUN -> R.string.profile_icon_sun
 }

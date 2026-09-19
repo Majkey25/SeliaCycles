@@ -270,7 +270,8 @@ internal enum class SelfCareActivity(
     ),
 }
 
-internal fun recommendedSelfCareActivities(phase: CyclePhase?): List<SelfCareActivity> = when (phase) {
+internal fun recommendedSelfCareActivities(phase: CyclePhase?, stage: MenstrualStage? = null): List<SelfCareActivity> {
+    val activities = when (phase) {
     CyclePhase.MENSTRUAL -> listOf(
         SelfCareActivity.HEAT,
         SelfCareActivity.MOVEMENT,
@@ -301,6 +302,10 @@ internal fun recommendedSelfCareActivities(phase: CyclePhase?): List<SelfCareAct
         SelfCareActivity.MASSAGE,
     )
     null -> SelfCareActivity.entries.toList()
+    }
+    return if (phase == CyclePhase.MENSTRUAL && stage == MenstrualStage.LATER) {
+        listOf(SelfCareActivity.WALK) + activities
+    } else activities
 }
 
 private enum class SettingsPage(
@@ -341,8 +346,10 @@ private fun dailyFertilityLabel(level: DailyFertilityLevel): Int = when (level) 
 
 @Composable
 private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
+    val profileScope = rememberCoroutineScope()
     var screen by rememberSaveable { mutableStateOf(Screen.TODAY) }
     var showProfiles by rememberSaveable { mutableStateOf(false) }
+    var startCreatingProfile by rememberSaveable { mutableStateOf(false) }
     var documentProfileId by rememberSaveable { mutableStateOf<String?>(null) }
     var reminderProfileId by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
@@ -394,7 +401,9 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
         topBar = {
             Box(Modifier.fillMaxWidth().statusBarsPadding(), contentAlignment = Alignment.Center) {
                 Box(Modifier.widthIn(max = 600.dp).fillMaxWidth()) {
-                    ProfileSwitcher(state, viewModel::selectProfile, onManage = { showProfiles = true })
+                    ProfileSwitcher(state, viewModel::selectProfile,
+                        onManage = { startCreatingProfile = false; showProfiles = true },
+                        onCreate = { startCreatingProfile = true; showProfiles = true })
                 }
             }
         },
@@ -621,9 +630,12 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
     if (showProfiles) ProfilesSheet(
         state = state,
         onDismiss = { showProfiles = false },
-        onCreate = { name, mode -> viewModel.createProfile(name, mode); showProfiles = false },
-        onUpdate = { name, mode -> viewModel.updateProfile(name, mode); showProfiles = false },
+        onCreate = { name, mode, icon -> viewModel.createProfile(name, mode, icon) },
+        onUpdate = { name, mode, icon -> profileScope.launch {
+            if (viewModel.updateProfile(name, mode, icon).await()) showProfiles = false
+        } },
         onDelete = { viewModel.deleteProfile(); showProfiles = false },
+        startCreating = startCreatingProfile,
     )
 }
 
@@ -784,6 +796,9 @@ private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Uni
         else -> Icons.Outlined.Timelapse
     }
     val body = when {
+        insight.menstrualStage == MenstrualStage.EARLY -> R.string.menstrual_early_body
+        insight.menstrualStage == MenstrualStage.MIDDLE -> R.string.menstrual_middle_body
+        insight.menstrualStage == MenstrualStage.LATER -> R.string.menstrual_later_body
         ovulation -> R.string.phase_guidance_ovulation
         phase == CyclePhase.MENSTRUAL -> R.string.phase_guidance_menstrual
         phase == CyclePhase.FOLLICULAR -> R.string.phase_guidance_follicular
@@ -791,6 +806,9 @@ private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Uni
         else -> R.string.phase_guidance_luteal
     }
     val feelings = when {
+        insight.menstrualStage == MenstrualStage.EARLY -> R.string.menstrual_early_feelings
+        insight.menstrualStage == MenstrualStage.MIDDLE -> R.string.menstrual_middle_feelings
+        insight.menstrualStage == MenstrualStage.LATER -> R.string.menstrual_later_feelings
         ovulation -> R.string.phase_feelings_ovulation
         phase == CyclePhase.MENSTRUAL -> R.string.phase_feelings_menstrual
         phase == CyclePhase.FOLLICULAR -> R.string.phase_feelings_follicular
@@ -804,7 +822,7 @@ private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Uni
         phase == CyclePhase.FERTILE -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.primary
     }
-    var expanded by remember(phase, ovulation) { mutableStateOf(false) }
+    var expanded by remember(phase, ovulation, insight.menstrualStage) { mutableStateOf(false) }
     Column(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
@@ -825,6 +843,13 @@ private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Uni
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
+        }
+        insight.menstrualDay?.let { day ->
+            Text(stringResource(R.string.menstrual_day_context, day, stringResource(when (insight.menstrualStage) {
+                MenstrualStage.EARLY -> R.string.menstrual_stage_early
+                MenstrualStage.MIDDLE -> R.string.menstrual_stage_middle
+                else -> R.string.menstrual_stage_later
+            })), style = MaterialTheme.typography.labelLarge)
         }
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionLabel(Icons.Outlined.MonitorHeart, R.string.phase_guidance_title, phaseColor)
@@ -853,7 +878,7 @@ private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Uni
             )
             SectionLabel(Icons.Outlined.Restaurant, R.string.phase_care_title, phaseColor)
             Text(
-                stringResource(phaseCareDetailLabel(phase, ovulation)),
+                stringResource(phaseCareDetailLabel(insight)),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             SectionLabel(Icons.Outlined.Insights, R.string.phase_personal_pattern_title, phaseColor)
@@ -866,6 +891,9 @@ private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Uni
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
             )
+            SourceLink(R.string.medical_sources, "https://womenshealth.gov/menstrual-cycle/your-menstrual-cycle-and-your-health")
+            SourceLink(R.string.source_period_pain, "https://www.nhs.uk/symptoms/period-pain/")
+            SourceLink(R.string.source_mood_evidence, "https://www.nature.com/articles/s44294-026-00140-z")
         }
         if (onSelfCare != null) {
             OutlinedButton(onClick = onSelfCare, modifier = Modifier.fillMaxWidth()) {
@@ -893,6 +921,14 @@ private fun phaseCareDetailLabel(phase: CyclePhase, ovulation: Boolean): Int = w
     phase == CyclePhase.FOLLICULAR -> R.string.phase_care_follicular
     phase == CyclePhase.FERTILE -> R.string.phase_care_fertile
     else -> R.string.phase_care_luteal
+}
+
+@StringRes
+private fun phaseCareDetailLabel(insight: DailyCycleInsight): Int = when (insight.menstrualStage) {
+    MenstrualStage.EARLY -> R.string.menstrual_early_care
+    MenstrualStage.MIDDLE -> R.string.menstrual_middle_care
+    MenstrualStage.LATER -> R.string.menstrual_later_care
+    null -> phaseCareDetailLabel(requireNotNull(insight.phase), insight.fertilityStatus == FertilityStatus.OVULATION)
 }
 
 @Composable
@@ -994,16 +1030,13 @@ private fun SelfCareSheet(insight: DailyCycleInsight, onDismiss: () -> Unit) {
                     SectionLabel(Icons.Outlined.Restaurant, R.string.self_care_for_phase)
                     Text(
                         stringResource(
-                            phaseCareDetailLabel(
-                                phase,
-                                insight.fertilityStatus == FertilityStatus.OVULATION,
-                            ),
+                            phaseCareDetailLabel(insight),
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 SectionLabel(Icons.Outlined.FitnessCenter, R.string.self_care_activities)
-                recommendedSelfCareActivities(insight.phase).forEach { activity ->
+                recommendedSelfCareActivities(insight.phase, insight.menstrualStage).forEach { activity ->
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant).padding(14.dp),
@@ -2382,6 +2415,8 @@ private fun ProfileSettings(settings: AppSettings, onSave: (AppSettings) -> Unit
         7..19,
         Icons.Outlined.Timelapse,
     ) { onSave(settings.copy(lutealPhaseLength = it)) }
+    Text(stringResource(R.string.luteal_phase_help), style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant)
     InfoBlock(R.string.settings_profile, R.string.profile_context_notice, Icons.Outlined.VerifiedUser)
     Text(
         stringResource(profileNotice(profile.lifeSituation)),

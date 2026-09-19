@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="luteal_phase_help">Owulację szacujemy tyle dni przed początkiem następnej miesiączki. To szacunek kalendarzowy, a nie pomiar ani niezawodna metoda antykoncepcji.</string>
+    <string name="menstrual_day_context">Dzień krwawienia %1$d · %2$s</string>
+    <string name="menstrual_stage_early">Pierwsze dni</string>
+    <string name="menstrual_stage_middle">Środkowe dni</string>
+    <string name="menstrual_stage_later">Późniejsze dni</string>
+    <string name="menstrual_early_body">Skurcze mogą być najsilniejsze na początku i promieniować do pleców. Nasilenie krwawienia i zmęczenie mogą zmieniać się z dnia na dzień.</string>
+    <string name="menstrual_middle_body">Krwawienie może trwać, gdy skurcze zaczynają słabnąć. To nie jest sztywny termin: objawy nie przebiegają u wszystkich jednakowo.</string>
+    <string name="menstrual_later_body">Pod koniec zwykłego czasu trwania krwawienie może słabnąć. Utrzymujący się ból albo nietypowo silne lub długie krwawienie omów z lekarzem.</string>
+    <string name="menstrual_early_feelings">Ból lub słaby sen mogą zwiększać wrażliwość i zmniejszać cierpliwość. Możesz też czuć się jak zwykle. Powiedz bliskim, czy chcesz spokoju, pomocy czy towarzystwa.</string>
+    <string name="menstrual_middle_feelings">Rozdrażnienie przedmiesiączkowe może ustępować, ale stres i sen też wpływają na nastrój. Obserwuj własny wzorzec zamiast oczekiwać określonych emocji.</string>
+    <string name="menstrual_later_feelings">Energia lub ochota na kontakty mogą wracać, albo nadal potrzebujesz odpoczynku. Żadna z tych reakcji nie określa twojej osobowości ani zachowania.</string>
+    <string name="menstrual_early_care">Łagodne ciepło przez tkaninę i delikatny ruch mogą pomóc. Przerwij czynność nasilającą ból. Silny lub narastający ból wymaga oceny lekarskiej.</string>
+    <string name="menstrual_middle_care">Dbaj o regularne posiłki, płyny i sen. Dopasuj ruch do samopoczucia. Nie zaczynaj suplementów tylko z powodu dnia cyklu; omów zmęczenie lub silne krwawienie z lekarzem.</string>
+    <string name="menstrual_later_care">Wracaj do zwykłych aktywności we własnym tempie. Zapisz rzeczywisty koniec krwawienia i to, co pomogło, aby porównać kolejne cykle.</string>
+    <string name="source_period_pain">Ból miesiączkowy i ulga · NHS</string>
+    <string name="source_mood_evidence">Badania nastroju · badanie 2026</string>
+</resources>

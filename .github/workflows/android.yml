@@ -31,3 +31,40 @@ jobs:
             app/build/outputs/apk/debug/app-debug.apk
             app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
+
+  device-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Enable emulator acceleration
+        run: sudo chmod 666 /dev/kvm
+      - name: Run isolated QA tests
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          script: >-
+            ./gradlew connectedQaAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --console=plain;
+            test_status=$?;
+            adb -s emulator-5554 pull /sdcard/Android/data/com.majkeylab.seliacycles.qa/files app/build/qa-captures || exit 1;
+            exit "$test_status"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: SeliaCycles-device-tests
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+            app/build/qa-captures/
+          if-no-files-found: warn

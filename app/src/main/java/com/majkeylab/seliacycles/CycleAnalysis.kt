@@ -85,8 +85,11 @@ object CycleAnalysis {
     }
 
     internal fun closestRecordedStart(snapshot: ForecastSnapshot, periodStarts: List<LocalDate>): LocalDate? =
-        periodStarts.minByOrNull { abs(ChronoUnit.DAYS.between(snapshot.periodStart, it)) }
-            ?.takeIf { abs(ChronoUnit.DAYS.between(snapshot.periodStart, it)) <= MAX_ESTIMATE_MATCH_DAYS }
+        closestRecordedStart(snapshot.periodStart, periodStarts)
+
+    internal fun closestRecordedStart(estimate: LocalDate, periodStarts: List<LocalDate>): LocalDate? =
+        periodStarts.minByOrNull { abs(ChronoUnit.DAYS.between(estimate, it)) }
+            ?.takeIf { abs(ChronoUnit.DAYS.between(estimate, it)) <= MAX_ESTIMATE_MATCH_DAYS }
 
     internal fun closestSnapshot(actualStart: LocalDate, snapshots: Collection<ForecastSnapshot>): ForecastSnapshot? =
         snapshots.minByOrNull { abs(ChronoUnit.DAYS.between(it.periodStart, actualStart)) }

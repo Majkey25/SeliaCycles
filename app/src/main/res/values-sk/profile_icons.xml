@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_icon">Ikona profilu</string>
+    <string name="profile_icon_person">Osoba</string>
+    <string name="profile_icon_flower">Kvetina</string>
+    <string name="profile_icon_star">Hviezda</string>
+    <string name="profile_icon_heart">Srdce</string>
+    <string name="profile_icon_sun">Slnko</string>
+</resources>

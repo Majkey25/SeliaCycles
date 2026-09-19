@@ -5,8 +5,9 @@ import android.annotation.SuppressLint
 import java.util.UUID
 
 enum class UiMode { SIMPLE, STANDARD, DETAILED }
+enum class ProfileIcon { PERSON, FLOWER, STAR, HEART, SUN }
 
-data class LocalProfile(val id: String, val name: String, val mode: UiMode = UiMode.STANDARD) {
+data class LocalProfile(val id: String, val name: String, val mode: UiMode = UiMode.STANDARD, val icon: ProfileIcon = ProfileIcon.PERSON) {
     init {
         requireValidProfileId(id)
         require(name == name.trim() && name.length <= LocalProfiles.MAX_NAME_LENGTH)
@@ -40,22 +41,24 @@ class LocalProfiles(context: Context) {
         profiles.firstOrNull { it.id == preferences.getString("selected", DEFAULT_ID) } ?: profiles.first()
     }
 
-    fun create(name: String, mode: UiMode = UiMode.STANDARD): LocalProfile = synchronized(lock) {
+    fun create(name: String, mode: UiMode = UiMode.STANDARD, icon: ProfileIcon = ProfileIcon.PERSON): LocalProfile = synchronized(lock) {
         val profiles = readProfiles()
         require(profiles.size < MAX_PROFILES) { "Too many local profiles" }
-        val profile = LocalProfile(UUID.randomUUID().toString(), name.trim(), mode)
+        val profile = LocalProfile(UUID.randomUUID().toString(), name.trim(), mode, icon)
         check(preferences.edit()
             .putStringSet("ids", profiles.drop(1).mapTo(mutableSetOf()) { it.id }.apply { add(profile.id) })
             .putString("name_${profile.id}", profile.name)
             .putString("mode_${profile.id}", profile.mode.name)
+            .putString("icon_${profile.id}", profile.icon.name)
             .commit()) { "Could not save local profile" }
         profile
     }
 
-    fun update(id: String, name: String, mode: UiMode): LocalProfile = synchronized(lock) {
-        require(readProfiles().any { it.id == id }) { "Unknown local profile" }
-        val profile = LocalProfile(id, name.trim(), mode)
-        check(preferences.edit().putString("name_$id", profile.name).putString("mode_$id", mode.name).commit()) {
+    fun update(id: String, name: String, mode: UiMode, icon: ProfileIcon? = null): LocalProfile = synchronized(lock) {
+        val existing = requireNotNull(readProfiles().firstOrNull { it.id == id }) { "Unknown local profile" }
+        val profile = LocalProfile(id, name.trim(), mode, icon ?: existing.icon)
+        check(preferences.edit().putString("name_$id", profile.name).putString("mode_$id", mode.name)
+            .putString("icon_$id", profile.icon.name).commit()) {
             "Could not save local profile"
         }
         profile
@@ -76,6 +79,7 @@ class LocalProfiles(context: Context) {
             .putStringSet("ids", profiles.filter { it.id != id && it.id != DEFAULT_ID }.mapTo(mutableSetOf()) { it.id })
             .remove("name_$id")
             .remove("mode_$id")
+            .remove("icon_$id")
         if (preferences.getString("selected", DEFAULT_ID) == id) editor.putString("selected", DEFAULT_ID)
         check(editor.commit()) { "Could not remove local profile" }
     }
@@ -88,6 +92,7 @@ class LocalProfiles(context: Context) {
                 id = id,
                 name = preferences.getString("name_$id", "").orEmpty(),
                 mode = UiMode.valueOf(preferences.getString("mode_$id", UiMode.STANDARD.name)!!),
+                icon = ProfileIcon.entries.firstOrNull { it.name == preferences.getString("icon_$id", null) } ?: ProfileIcon.PERSON,
             )
         }
     }

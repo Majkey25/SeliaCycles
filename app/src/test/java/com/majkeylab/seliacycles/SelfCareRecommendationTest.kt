@@ -13,5 +13,8 @@ class SelfCareRecommendationTest {
         assertTrue(SelfCareActivity.REST in recommendations.getValue(CyclePhase.LUTEAL))
         assertEquals(recommendations.size, recommendations.values.distinct().size)
         assertTrue(recommendations.values.all { activities -> activities.size == activities.distinct().size })
+        val later = recommendedSelfCareActivities(CyclePhase.MENSTRUAL, MenstrualStage.LATER)
+        assertEquals(SelfCareActivity.WALK, later.first())
+        assertEquals(later.size, later.distinct().size)
     }
 }
