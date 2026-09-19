@@ -10,6 +10,7 @@ enum class FertilityStatus { UNAVAILABLE, OUTSIDE, FERTILE, OVULATION }
 
 enum class EstimateOrigin { SAVED, RECONSTRUCTED, CURRENT, ONGOING }
 
+// Reading groups for guidance, not measured hormonal subphases.
 enum class MenstrualStage { EARLY, MIDDLE, LATER }
 
 internal fun menstrualStage(day: Int, duration: Int): MenstrualStage {
@@ -252,7 +253,10 @@ object CycleInsights {
         val samples = cycles.flatMap { (start, next) ->
             backup.logs.asSequence()
                 .filter { it.mood != null && it.day >= start && it.day < next }
-                .filter { menstrualDay == null || it.confirmedBleeding && kotlin.math.abs(ChronoUnit.DAYS.between(start, it.day) + 1 - menstrualDay) <= 1 }
+                .filter {
+                    menstrualDay == null || it.confirmedBleeding &&
+                        kotlin.math.abs(ChronoUnit.DAYS.between(start, it.day) + 1 - menstrualDay) <= 1
+                }
                 .filter {
                     if (targetPhase == CyclePhase.MENSTRUAL) it.confirmedBleeding else !it.bleeding && phaseFor(
                         it.day,
