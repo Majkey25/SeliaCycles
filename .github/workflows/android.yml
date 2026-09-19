@@ -55,9 +55,9 @@ jobs:
           arch: x86_64
           profile: pixel_6
           script: >-
-            ./gradlew connectedQaAndroidTest --console=plain;
+            ./gradlew connectedQaAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --console=plain;
             test_status=$?;
-            adb -s emulator-5554 pull /sdcard/Android/data/com.majkeylab.seliacycles.qa/files app/build/qa-captures;
+            adb -s emulator-5554 pull /sdcard/Android/data/com.majkeylab.seliacycles.qa/files app/build/qa-captures || exit 1;
             exit "$test_status"
       - uses: actions/upload-artifact@v7
         if: always()
