@@ -22,6 +22,12 @@ class FertilityRecalculationTest {
         val insight = CycleInsights.forDate(backup, snapshots, LocalDate.of(2026, 8, 17), reference)
         assertEquals(FertilityStatus.OVULATION, insight.fertilityStatus)
         assertEquals(actual, insight.fertility?.periodStart)
+        val prediction = CycleInsights.prediction(backup, reference)
+        val estimates = CycleInsights.calendarPeriodEstimates(backup, snapshots, reference)
+        assertEquals(DailyFertilityLevel.ESTIMATED_OVULATION,
+            DailyFertility.forDate(LocalDate.of(2026, 8, 17), backup, prediction, estimates, reference))
+        assertEquals(DailyFertilityLevel.FERTILE_WINDOW,
+            DailyFertility.forDate(LocalDate.of(2026, 8, 15), backup, prediction, estimates, reference))
         assertEquals(oldStart, CycleInsights.periodEstimates(backup, snapshots, reference)
             .single { it.origin == EstimateOrigin.SAVED }.start)
     }
