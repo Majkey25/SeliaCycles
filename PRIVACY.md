@@ -1,6 +1,6 @@
 # Selia Cycles privacy policy
 
-Effective: September 5, 2026
+Effective: September 22, 2026
 
 Selia Cycles is published by MajkeyLab. Contact `majkeylab@gmail.com` about this policy.
 
@@ -11,6 +11,12 @@ Selia Cycles stores menstrual dates, spotting, flow, symptoms, mood, notes, cerv
 The app has no account, ads, analytics, telemetry, Selia cloud, or network permission. MajkeyLab does not receive cycle data.
 
 Each local profile has a separate calendar database. Profile names and display modes are stored on the device. Profiles are not password-protected accounts: anyone who can open the app can switch between them. Add another person's health data only with appropriate consent.
+
+## Local self-care suggestions
+
+The app selects self-care ideas from the chosen profile's dates, estimated phase, bleeding-day context, and optional symptom, pain, mood, energy, sleep and pregnancy entries. This processing stays on the device. No records are sent to an AI service, MajkeyLab or a food provider. Using the app does not automatically consent to sharing health information.
+
+Food ideas and activities are educational suggestions, not a diagnosis or treatment plan. No relief or other outcome is guaranteed. Read the [self-care terms and sources](https://majkey25.github.io/SeliaCycles/legal.html#self-care).
 
 ## Optional `.pc` import and export
 

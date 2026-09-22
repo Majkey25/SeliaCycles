@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="care_estimated_day">Día estimado de menstruación %1$d</string>
+    <string name="care_from_general">Cuidados cotidianos para elegir según cómo te sientas.</string>
+    <string name="care_for_you">Para este día</string>
+    <string name="care_from_entries">Tus síntomas, ánimo y energía registrados tienen prioridad.</string>
+    <string name="care_from_day">Ideas para esta parte del ciclo, con una opción de comida cotidiana diferente cada día.</string>
+    <string name="care_bleeding_day">Día de sangrado %1$d</string>
+    <string name="care_everyday_tip">Comida o cuidado cotidiano</string>
+    <string name="care_read">Abrir</string>
+    <string name="care_more">Más opciones</string>
+    <string name="care_fewer">Menos opciones</string>
+    <string name="care_back">Volver a las sugerencias</string>
+    <string name="care_about">Sobre los cuidados y las fuentes</string>
+    <string name="care_banana_oats">Plátano con avena</string>
+    <string name="care_banana_oats_steps">Prueba plátano cortado con gachas de avena como comida o tentempié sencillo. El plátano y la avena aportan magnesio; las semillas y los frutos secos son otras fuentes. Elige ingredientes que toleres y evita tus alérgenos. Come a tu ritmo.</string>
+    <string name="care_iron_meal">Una comida con hierro</string>
+    <string name="care_iron_meal_steps">Prueba lentejas, judías, tofu o carne magra con verduras como comida habitual. Acompaña el hierro vegetal con pimiento, tomate o fruta con vitamina C. Elige alimentos que toleres. El cansancio persistente con sangrado abundante necesita una valoración, no solo un cambio de menú.</string>
+    <string name="care_calcium_snack">Yogur o una alternativa enriquecida</string>
+    <string name="care_calcium_snack_steps">Prueba yogur natural con fruta o una alternativa enriquecida con calcio que toleres. Revisa la etiqueta: no todas las alternativas vegetales contienen calcio. Inclúyelo en comidas regulares en lugar de saltarte comidas cuando tengas antojos.</string>
+    <string name="care_small_meal">Una comida pequeña y regular</string>
+    <string name="care_small_meal_steps">Si sientes el estómago lleno, prueba una porción menor de una comida conocida y come despacio. Avena cocida, arroz o sopa son opciones. Bebe agua sin gas y evita los alimentos que te causan molestias. Una gran porción de legumbres puede aumentar los gases. Consulta por hinchazón repetida o persistente.</string>
+    <string name="care_screen_break">Descanso para ojos y hombros</string>
+    <string name="care_screen_break_steps">Aparta la pantalla, relaja la mandíbula y los hombros y siéntate cómodamente. Mantén comidas y líquidos regulares. Busca ayuda urgente ante dolor de cabeza repentino y extremo, debilidad, confusión, problemas para hablar o pérdida de visión. Consulta si el dolor se repite o empeora.</string>
+    <string name="care_sleep_routine">Espacio para dormir</string>
+    <string name="care_sleep_routine_steps">Mantén tus horarios habituales para acostarte y levantarte. Reserva un rato tranquilo por la noche y deja las tareas exigentes. Anota mañana si te sientes descansada; no fuerces más horas de sueño solo por la fase del ciclo.</string>
+    <string name="care_skin">Cuidado suave de la piel</string>
+    <string name="care_skin_steps">Usa agua tibia y un limpiador suave, como máximo dos veces al día. No aprietes los granos ni frotes con fuerza. Puedes elegir productos no comedogénicos. Los granos profundos dolorosos, las cicatrices o el malestar persistente merecen ayuda profesional.</string>
+    <string name="care_breast">Comodidad para pechos sensibles</string>
+    <string name="care_breast_steps">Prueba un sujetador cómodo, de tu talla y con buen soporte, y evita la presión de ropa ajustada. Consulta por dolor persistente. Busca atención pronta ante enrojecimiento, calor, hinchazón, fiebre, un bulto duro nuevo o secreción sanguinolenta del pezón.</string>
+    <string name="care_alert_pain">Has registrado dolor fuerte. Consulta, especialmente si es nuevo, empeora o limita tu vida diaria. El dolor repentino extremo, el desmayo o el sangrado intenso necesitan ayuda urgente. No fuerces el ejercicio con dolor.</string>
+    <string name="care_alert_pregnancy">Con embarazo o una prueba positiva, consulta pronto con un profesional de maternidad por sangrado, dolor o un dolor de cabeza preocupante. El dolor intenso, el sangrado abundante, el desmayo o los cambios de visión necesitan ayuda urgente. No son cuidados menstruales habituales.</string>
+    <string name="care_alert_menopause">El sangrado o manchado después de la menopausia necesita valoración médica, aunque ocurra una sola vez. Pide una cita; el dolor intenso o el sangrado abundante necesitan ayuda urgente.</string>
+</resources>

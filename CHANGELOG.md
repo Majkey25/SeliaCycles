@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.0-beta.21 - 2026-09-22
+
+### Added
+
+- Self-care prioritizes the selected day's symptoms, mood, energy, sleep and cycle context, with food ideas and additional everyday care.
+- Food instructions open without a timer. Timed activities retain pause/resume and recreation recovery.
+- Four suggestions are shown first; other options expand on demand. Daily information can be edited directly from self-care.
+- Localized care content in all six languages and expanded self-care terms, evidence and privacy disclosures.
+
+### Changed
+
+- Repeated general disclaimers move to linked terms. Relevant activity precautions and serious-symptom guidance remain beside the advice.
+- Self-care remains accessible when no cycle phase can be estimated.
+
 ## 0.9.0-beta.20 - 2026-09-19
 
 ### Fixed

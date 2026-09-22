@@ -268,6 +268,14 @@ internal enum class SelfCareActivity(
         6,
         Icons.Outlined.Psychology,
     ),
+    BANANA_OATS(R.string.care_banana_oats, R.string.care_banana_oats_steps, 0, Icons.Outlined.Restaurant),
+    IRON_MEAL(R.string.care_iron_meal, R.string.care_iron_meal_steps, 0, Icons.Outlined.Restaurant),
+    CALCIUM_SNACK(R.string.care_calcium_snack, R.string.care_calcium_snack_steps, 0, Icons.Outlined.Restaurant),
+    SMALL_MEAL(R.string.care_small_meal, R.string.care_small_meal_steps, 0, Icons.Outlined.Restaurant),
+    SCREEN_BREAK(R.string.care_screen_break, R.string.care_screen_break_steps, 5, Icons.Outlined.Bedtime),
+    SLEEP_ROUTINE(R.string.care_sleep_routine, R.string.care_sleep_routine_steps, 0, Icons.Outlined.Bedtime),
+    SKIN_CARE(R.string.care_skin, R.string.care_skin_steps, 0, Icons.Outlined.FaceRetouchingNatural),
+    BREAST_COMFORT(R.string.care_breast, R.string.care_breast_steps, 0, Icons.Outlined.FavoriteBorder),
 }
 
 internal fun recommendedSelfCareActivities(phase: CyclePhase?, stage: MenstrualStage? = null): List<SelfCareActivity> {
@@ -617,7 +625,11 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
         val insight = remember(state.backup, state.forecastSnapshots, day, state.referenceDate) {
             CycleInsights.forDate(state.backup, state.forecastSnapshots, day, referenceDate = state.referenceDate)
         }
-        SelfCareSheet(insight = insight, onDismiss = { selfCareDay = null })
+        SelfCareSheet(insight = insight, day = day, log = state.logsByDay[day],
+            history = state.backup.logs,
+            situation = state.backup.settings.profile.lifeSituation,
+            onEditDay = { selectedDay = day; daySheetMode = DaySheetMode.DETAILS; selfCareDay = null },
+            onDismiss = { selfCareDay = null })
     }
     if (showPhaseDetails) PhaseDetailsSheet(
         insight = state.todayInsight,
@@ -886,11 +898,6 @@ private fun PhaseGuidanceCard(insight: DailyCycleInsight, onSelfCare: (() -> Uni
                 stringResource(R.string.phase_personal_pattern_body),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                stringResource(R.string.phase_education_disclaimer),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-            )
             SourceLink(R.string.medical_sources, "https://womenshealth.gov/menstrual-cycle/your-menstrual-cycle-and-your-health")
             SourceLink(R.string.source_period_pain, "https://www.nhs.uk/symptoms/period-pain/")
             SourceLink(R.string.source_mood_evidence, "https://www.nature.com/articles/s44294-026-00140-z")
@@ -995,11 +1002,23 @@ private fun PhaseDetailsSheet(insight: DailyCycleInsight, onSelfCare: () -> Unit
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun SelfCareSheet(insight: DailyCycleInsight, onDismiss: () -> Unit) {
-    var selected by rememberSaveable { mutableStateOf<SelfCareActivity?>(null) }
-    var remainingSeconds by rememberSaveable { mutableIntStateOf(0) }
-    var targetMillis by rememberSaveable { mutableStateOf<Long?>(null) }
+private fun SelfCareSheet(insight: DailyCycleInsight, day: LocalDate, log: DayLog?, history: List<DayLog>, situation: LifeSituation,
+    onEditDay: () -> Unit, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val locale = currentLocale()
+    val plan = remember(insight, log, day, situation, history) { selfCarePlan(insight, log, day, situation, history) }
+    var selected by rememberSaveable(day) { mutableStateOf<SelfCareActivity?>(null) }
+    var showAll by rememberSaveable(day) { mutableStateOf(false) }
+    var remainingSeconds by rememberSaveable(day) { mutableIntStateOf(0) }
+    var targetMillis by rememberSaveable(day) { mutableStateOf<Long?>(null) }
     val running = targetMillis != null && remainingSeconds > 0
+    LaunchedEffect(plan) {
+        if (selected != null && selected !in plan.activities) {
+            selected = null
+            targetMillis = null
+            remainingSeconds = 0
+        }
+    }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     LaunchedEffect(targetMillis) {
         val target = targetMillis ?: return@LaunchedEffect
@@ -1024,22 +1043,45 @@ private fun SelfCareSheet(insight: DailyCycleInsight, onDismiss: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             SheetHeader(R.string.self_care_title, onDismiss)
+            plan.alert?.let { alert ->
+                Text(stringResource(when (alert) {
+                    SelfCareAlert.SEVERE_PAIN -> R.string.care_alert_pain
+                    SelfCareAlert.PREGNANCY -> R.string.care_alert_pregnancy
+                    SelfCareAlert.MENOPAUSE -> R.string.care_alert_menopause
+                }), color = MaterialTheme.colorScheme.error)
+            }
             if (selected == null) {
-                Text(stringResource(R.string.self_care_intro), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                insight.phase?.let { phase ->
-                    SectionLabel(Icons.Outlined.Restaurant, R.string.self_care_for_phase)
-                    Text(
-                        stringResource(
-                            phaseCareDetailLabel(insight),
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                Text(day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)))
+                if (plan.showPhase) {
+                    insight.phase?.let { phase ->
+                        Text(stringResource(phaseHeadingLabel(phase)), style = MaterialTheme.typography.titleMedium)
+                    }
+                    insight.menstrualDay?.let {
+                        Text(stringResource(if (log?.confirmedBleeding == true) R.string.care_bleeding_day else R.string.care_estimated_day, it))
+                    }
                 }
-                SectionLabel(Icons.Outlined.FitnessCenter, R.string.self_care_activities)
-                recommendedSelfCareActivities(insight.phase, insight.menstrualStage).forEach { activity ->
+                Text(stringResource(when {
+                    plan.fromEntries -> R.string.care_from_entries
+                    plan.showPhase -> R.string.care_from_day
+                    else -> R.string.care_from_general
+                }),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                TextButton(onClick = onEditDay) {
+                    Icon(Icons.Outlined.Edit, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(if (log?.hasCalendarMarker == true) R.string.edit_information else R.string.add_information))
+                }
+                SectionLabel(Icons.Outlined.FavoriteBorder, R.string.care_for_you)
+                val visibleActivities = if (showAll) plan.activities else plan.activities.take(4)
+                visibleActivities.forEach { activity ->
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant).padding(14.dp),
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable(role = Role.Button) {
+                                selected = activity
+                                remainingSeconds = activity.minutes * 60
+                                targetMillis = if (activity.minutes > 0) SystemClock.elapsedRealtime() + remainingSeconds * 1_000L else null
+                            }.padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
@@ -1047,16 +1089,18 @@ private fun SelfCareSheet(insight: DailyCycleInsight, onDismiss: () -> Unit) {
                         Column(Modifier.weight(1f)) {
                             Text(stringResource(activity.title), fontWeight = FontWeight.SemiBold)
                             Text(
-                                stringResource(R.string.self_care_minutes, activity.minutes),
+                                if (activity.minutes > 0) stringResource(R.string.self_care_minutes, activity.minutes)
+                                else stringResource(R.string.care_everyday_tip),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        TextButton(onClick = {
-                            selected = activity
-                            remainingSeconds = activity.minutes * 60
-                            targetMillis = SystemClock.elapsedRealtime() + remainingSeconds * 1_000L
-                        }) { Text(stringResource(R.string.self_care_start)) }
+                        Text(stringResource(if (activity.minutes > 0) R.string.self_care_start else R.string.care_read),
+                            color = MaterialTheme.colorScheme.primary)
                     }
+                }
+                if (plan.activities.size > 4) TextButton(onClick = { showAll = !showAll }) {
+                    Icon(if (showAll) Icons.Outlined.Remove else Icons.Default.Add, contentDescription = null)
+                    Text(stringResource(if (showAll) R.string.care_fewer else R.string.care_more))
                 }
             } else {
                 val activity = requireNotNull(selected)
@@ -1065,45 +1109,51 @@ private fun SelfCareSheet(insight: DailyCycleInsight, onDismiss: () -> Unit) {
                     Text(stringResource(activity.title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 }
                 Text(stringResource(activity.instructions), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(
-                    String.format(Locale.ROOT, "%d:%02d", remainingSeconds / 60, remainingSeconds % 60),
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(
-                        onClick = {
-                            if (running) {
-                                remainingSeconds = SelfCareTimer.remainingSeconds(
-                                    requireNotNull(targetMillis),
-                                    SystemClock.elapsedRealtime(),
-                                )
+                if (activity.minutes > 0) {
+                    Text(
+                        String.format(Locale.ROOT, "%d:%02d", remainingSeconds / 60, remainingSeconds % 60),
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(
+                            onClick = {
+                                if (running) {
+                                    remainingSeconds = SelfCareTimer.remainingSeconds(
+                                        requireNotNull(targetMillis),
+                                        SystemClock.elapsedRealtime(),
+                                    )
+                                    targetMillis = null
+                                } else {
+                                    if (remainingSeconds == 0) remainingSeconds = activity.minutes * 60
+                                    targetMillis = SystemClock.elapsedRealtime() + remainingSeconds * 1_000L
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(stringResource(if (running) R.string.self_care_pause else R.string.self_care_resume))
+                        }
+                        OutlinedButton(
+                            onClick = {
                                 targetMillis = null
-                            } else {
-                                if (remainingSeconds == 0) remainingSeconds = activity.minutes * 60
-                                targetMillis = SystemClock.elapsedRealtime() + remainingSeconds * 1_000L
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(stringResource(if (running) R.string.self_care_pause else R.string.self_care_resume))
+                                selected = null
+                                remainingSeconds = 0
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) { Text(stringResource(R.string.self_care_stop)) }
                     }
-                    OutlinedButton(
-                        onClick = {
-                            targetMillis = null
-                            selected = null
-                            remainingSeconds = 0
-                        },
-                        modifier = Modifier.weight(1f),
-                    ) { Text(stringResource(R.string.self_care_stop)) }
-                }
+                } else TextButton(onClick = { selected = null }) { Text(stringResource(R.string.care_back)) }
             }
-            Text(
+            if (selected?.minutes?.let { it > 0 } == true) Text(
                 stringResource(R.string.self_care_safety),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
             )
+            TextButton(onClick = {
+                val legalPage = if (locale.language in setOf("cs", "sk")) "legal-cs.html" else "legal.html"
+                context.startActivity(Intent(Intent.ACTION_VIEW, "$PRIVACY_POLICY_URL$legalPage#self-care".toUri()))
+            }) { Text(stringResource(R.string.care_about)) }
             Spacer(Modifier.height(20.dp))
         }
     }
@@ -3154,6 +3204,9 @@ private fun DayOverviewSheet(
                     }
                 }
                 PhaseGuidanceCard(insight, onSelfCare)
+                if (insight.phase == null) DashboardLinkRow(
+                    Icons.Outlined.Healing, R.string.self_care_title, R.string.self_care_dashboard_body, onSelfCare,
+                )
                 if (state.showFertility) {
                     val fertilityLevel = remember(day, state.content) {
                         if (day <= state.referenceDate && insight.fertilityStatus == FertilityStatus.UNAVAILABLE) {

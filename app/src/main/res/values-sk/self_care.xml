@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="care_estimated_day">Odhadovaný %1$d. deň menštruácie</string>
+    <string name="care_from_general">Každodenná starostlivosť podľa toho, ako sa cítiš.</string>
+    <string name="care_for_you">Pre tento deň</string>
+    <string name="care_from_entries">Prednosť majú zapísané príznaky, nálada a energia.</string>
+    <string name="care_from_day">Tipy pre túto časť cyklu, každý deň s iným nápadom na bežné jedlo.</string>
+    <string name="care_bleeding_day">%1$d. deň krvácania</string>
+    <string name="care_everyday_tip">Jedlo alebo bežná starostlivosť</string>
+    <string name="care_read">Otvoriť</string>
+    <string name="care_more">Ďalšie možnosti</string>
+    <string name="care_fewer">Menej možností</string>
+    <string name="care_back">Späť na odporúčania</string>
+    <string name="care_about">O starostlivosti a zdrojoch</string>
+    <string name="care_banana_oats">Banán s vločkami</string>
+    <string name="care_banana_oats_steps">Skús nakrájaný banán s ovsenou kašou ako jednoduché jedlo alebo desiatu. Banán aj vločky obsahujú horčík; ďalšími zdrojmi sú semienka a orechy. Vyber suroviny, ktoré znášaš, a vynechaj svoje alergény. Jedz vlastným tempom.</string>
+    <string name="care_iron_meal">Jedlo so zdrojom železa</string>
+    <string name="care_iron_meal_steps">K bežnému jedlu skús šošovicu, fazuľu, tofu alebo chudé mäso so zeleninou. K rastlinným zdrojom železa pridaj papriku, paradajku alebo ovocie s vitamínom C. Vyber jedlo, ktoré znášaš. Dlhodobú únavu pri silnom krvácaní treba vyšetriť, nielen zmeniť jedálny lístok.</string>
+    <string name="care_calcium_snack">Jogurt alebo obohatená alternatíva</string>
+    <string name="care_calcium_snack_steps">Skús biely jogurt s ovocím alebo alternatívu obohatenú vápnikom, ktorú znášaš. Pozri obal: nie všetky rastlinné alternatívy obsahujú vápnik. Zaraď ju do pravidelného jedla namiesto vynechávania jedál pri chutiach.</string>
+    <string name="care_small_meal">Menšie pravidelné jedlo</string>
+    <string name="care_small_meal_steps">Pri plnom bruchu skús menšiu porciu známeho jedla a jedz pomaly. Možnosťou je kaša, ryža alebo polievka. Daj si neperlivú vodu a vynechaj jedlá, ktoré ti nerobia dobre. Pri nafukovaní môže veľká porcia fazule či šošovice zvýšiť plynatosť. Opakované alebo pretrvávajúce nafukovanie preber s lekárom.</string>
+    <string name="care_screen_break">Oddych pre oči a ramená</string>
+    <string name="care_screen_break_steps">Odlož obrazovku, uvoľni čeľusť aj ramená a pohodlne sa posaď. Nevynechávaj bežné jedlo a pitie. Pri náhlej extrémnej bolesti hlavy, slabosti, zmätenosti, problémoch s rečou alebo strate zraku vyhľadaj urgentnú pomoc. Opakovanú či zhoršujúcu sa bolesť preber s lekárom.</string>
+    <string name="care_sleep_routine">Priestor pre spánok</string>
+    <string name="care_sleep_routine_steps">Dodržuj obvyklý čas zaspávania a vstávania. Večer si nechaj chvíľu na upokojenie a odlož náročné úlohy. Zajtra zaznamenaj, ako oddýchnutá sa cítiš; nenúť sa spať dlhšie len pre fázu cyklu.</string>
+    <string name="care_skin">Šetrná starostlivosť o pleť</string>
+    <string name="care_skin_steps">Použi vlažnú vodu a jemný čistiaci prípravok, najviac dvakrát denne. Vyrážky nevytláčaj a pleť nedrhni. Pri kozmetike môžeš vyberať označenie nekomedogénna. Bolestivé hlboké vyrážky, jazvy alebo dlhodobé trápenie sú dôvodom vyhľadať odbornú pomoc.</string>
+    <string name="care_breast">Pohodlie pri citlivých prsníkoch</string>
+    <string name="care_breast_steps">Skús pohodlnú, dobre sediacu podprsenku s oporou a obmedz tlak tesného oblečenia. Pretrvávajúcu bolesť si daj skontrolovať. Začervenanie, horúcu kožu, opuch, horúčku, novú tvrdú hrčku alebo krvavý výtok z bradavky rieš s lekárom bez odkladu.</string>
+    <string name="care_alert_pain">Zapísala si silnú bolesť. Obráť sa na lekára, najmä ak je nová, zhoršuje sa alebo obmedzuje bežné činnosti. Náhla extrémna bolesť, mdloby či silné krvácanie vyžadujú urgentnú pomoc. Necvič cez bolesť.</string>
+    <string name="care_alert_pregnancy">V tehotenstve alebo pri pozitívnom teste preber krvácanie, bolesť či znepokojujúcu bolesť hlavy bez odkladu s gynekológom alebo pôrodnou asistentkou. Silná bolesť, silné krvácanie, mdloby či zmeny videnia vyžadujú urgentnú pomoc. Nejde o bežnú starostlivosť pri menštruácii.</string>
+    <string name="care_alert_menopause">Krvácanie alebo špinenie po menopauze vyžaduje vyšetrenie, aj keď sa objaví iba raz. Objednaj sa k lekárovi; pri silnej bolesti alebo silnom krvácaní vyhľadaj urgentnú pomoc.</string>
+</resources>
