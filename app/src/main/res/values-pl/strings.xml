@@ -223,7 +223,6 @@
     <string name="phase_care_title">Jedzenie, ruch i odpoczynek</string>
     <string name="phase_personal_pattern_title">Poznaj swój wzorzec</string>
     <string name="phase_personal_pattern_body">Ogólny opis fazy to tylko punkt wyjścia. Powtarzające się zapisy nastroju, energii, snu, bólu i stresu są bardziej przydatne niż stereotyp.</string>
-    <string name="phase_education_disclaimer">Fazy są szacunkowe. Nie przewidują osobowości, nie potwierdzają owulacji, nie rozpoznają PMS i nie zastępują opieki medycznej.</string>
     <string name="phase_social_menstrual">Możesz być bardziej wrażliwa, mniej cierpliwa albo potrzebować więcej prywatności. Powiedz bliskim, czy chcesz ciszy, praktycznej pomocy czy towarzystwa. Jeśli chcesz spotkać się z ludźmi, wybierz spokojniejszy plan. Potrzeba samotności też jest normalna.</string>
     <string name="phase_social_follicular">Energia i chęć kontaktu z ludźmi mogą rosnąć. Planowanie, rozpoczęcie rozmowy lub nowa aktywność mogą przychodzić łatwiej. Nie musisz tak się czuć. Ważniejsze są twoje własne zapisy energii i nastroju.</string>
     <string name="phase_social_fertile">Niektóre osoby czują większą pewność siebie, potrzebę bliskości lub zainteresowanie seksem, inne nic. Szacunek owulacji nie potwierdza tych odczuć. Mów wprost o granicach i potrzebach.</string>
@@ -235,9 +234,6 @@
     <string name="phase_care_ovulation">Wokół szacowanej owulacji nie potrzeba specjalnej diety ani aktywności. Jedz normalnie, dbaj o płyny i wybierz przyjemny ruch. Szacunek nie potwierdza owulacji ani nie zapobiega ciąży.</string>
     <string name="phase_care_luteal">Regularny ruch aerobowy, stały sen, pełne ziarna, fasola, soczewica i produkty bogate w wapń mogą pomóc przy części objawów PMS. Ogranicz sól, dodany cukier, kofeinę lub alkohol, jeśli twoje zapisy pokazują pogorszenie.</string>
     <string name="self_care_title">Chwila dla siebie</string>
-    <string name="self_care_intro">Opcjonalne pomysły dla większego komfortu. Nie zastępują leczenia.</string>
-    <string name="self_care_for_phase">Wsparcie w tej fazie</string>
-    <string name="self_care_activities">Polecane aktywności</string>
     <string name="self_care_breathing">Powolny oddech</string>
     <string name="self_care_breathing_steps">Usiądź wygodnie. Powoli wdychaj powietrze nosem i wydychaj trochę dłużej. Rozluźnij ramiona.</string>
     <string name="self_care_movement">Łagodny ruch</string>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="care_estimated_day">Szacowany dzień miesiączki %1$d</string>
+    <string name="care_from_general">Codzienne pomysły do wyboru według samopoczucia.</string>
+    <string name="care_for_you">Na ten dzień</string>
+    <string name="care_from_entries">Pierwszeństwo mają zapisane objawy, nastrój i energia.</string>
+    <string name="care_from_day">Pomysły na tę część cyklu, codziennie z inną propozycją zwykłego posiłku.</string>
+    <string name="care_bleeding_day">Dzień krwawienia %1$d</string>
+    <string name="care_everyday_tip">Jedzenie lub codzienna pielęgnacja</string>
+    <string name="care_read">Otwórz</string>
+    <string name="care_more">Więcej możliwości</string>
+    <string name="care_fewer">Mniej możliwości</string>
+    <string name="care_back">Wróć do propozycji</string>
+    <string name="care_about">O pielęgnacji i źródłach</string>
+    <string name="care_banana_oats">Banan z płatkami owsianymi</string>
+    <string name="care_banana_oats_steps">Spróbuj pokrojonego banana z owsianką jako prostego posiłku lub przekąski. Banan i owies dostarczają magnezu; inne źródła to nasiona i orzechy. Wybieraj składniki, które tolerujesz, i unikaj swoich alergenów. Jedz we własnym tempie.</string>
+    <string name="care_iron_meal">Posiłek ze źródłem żelaza</string>
+    <string name="care_iron_meal_steps">Na zwykły posiłek wybierz soczewicę, fasolę, tofu lub chude mięso z warzywami. Do roślinnych źródeł żelaza dodaj paprykę, pomidor lub owoce z witaminą C. Wybieraj tolerowane produkty. Utrzymujące się zmęczenie przy obfitym krwawieniu wymaga oceny przyczyny, nie tylko zmiany jadłospisu.</string>
+    <string name="care_calcium_snack">Jogurt lub wzbogacony zamiennik</string>
+    <string name="care_calcium_snack_steps">Spróbuj jogurtu naturalnego z owocami lub tolerowanego zamiennika wzbogaconego wapniem. Sprawdź etykietę: nie wszystkie roślinne zamienniki zawierają wapń. Włącz go do regularnych posiłków zamiast pomijać jedzenie przy zachciankach.</string>
+    <string name="care_small_meal">Mniejszy, regularny posiłek</string>
+    <string name="care_small_meal_steps">Przy uczuciu pełności spróbuj mniejszej porcji znanego posiłku i jedz powoli. Możesz wybrać owsiankę, ryż lub zupę. Pij wodę niegazowaną i unikaj produktów, które wywołują dolegliwości. Duża porcja fasoli lub soczewicy może nasilać gazy. Nawracające lub utrzymujące się wzdęcia omów z lekarzem.</string>
+    <string name="care_screen_break">Odpoczynek dla oczu i ramion</string>
+    <string name="care_screen_break_steps">Odłóż ekran, rozluźnij szczękę i ramiona, usiądź wygodnie. Jedz i pij regularnie. Przy nagłym, wyjątkowo silnym bólu głowy, osłabieniu, dezorientacji, problemach z mową lub utracie wzroku szukaj pilnej pomocy. Nawracający lub nasilający się ból omów z lekarzem.</string>
+    <string name="care_sleep_routine">Czas na sen</string>
+    <string name="care_sleep_routine_steps">Zachowaj zwykłe pory snu i wstawania. Wieczorem zostaw chwilę na wyciszenie i odłóż wymagające zadania. Jutro zapisz, czy czujesz się wypoczęta. Nie zmuszaj się do dłuższego snu tylko ze względu na fazę cyklu.</string>
+    <string name="care_skin">Łagodna pielęgnacja skóry</string>
+    <string name="care_skin_steps">Używaj letniej wody i łagodnego środka myjącego, najwyżej dwa razy dziennie. Nie wyciskaj zmian ani nie szoruj skóry. Możesz wybierać produkty niekomedogenne. Głębokie bolesne zmiany, blizny lub długotrwały dyskomfort są powodem do uzyskania profesjonalnej pomocy.</string>
+    <string name="care_breast">Komfort przy tkliwych piersiach</string>
+    <string name="care_breast_steps">Spróbuj wygodnego, dobrze dopasowanego stanika podtrzymującego i ogranicz ucisk ciasnych ubrań. Utrzymujący się ból wymaga sprawdzenia. Zaczerwienienie, gorąca skóra, obrzęk, gorączka, nowy twardy guzek lub krwisty wyciek z brodawki wymagają szybkiej konsultacji.</string>
+    <string name="care_alert_pain">Zapisałaś silny ból. Zasięgnij porady lekarskiej, zwłaszcza gdy jest nowy, narasta lub ogranicza codzienne czynności. Nagły skrajny ból, omdlenie lub silne krwawienie wymagają pilnej pomocy. Nie ćwicz przez ból.</string>
+    <string name="care_alert_pregnancy">W ciąży lub przy dodatnim teście pilnie omów krwawienie, ból lub niepokojący ból głowy z ginekologiem lub położną. Silny ból, obfite krwawienie, omdlenie lub zaburzenia widzenia wymagają pilnej pomocy. To nie jest zwykła pielęgnacja podczas miesiączki.</string>
+    <string name="care_alert_menopause">Krwawienie lub plamienie po menopauzie wymaga badania, nawet jeśli wystąpi tylko raz. Umów wizytę. Silny ból lub obfite krwawienie wymagają pilnej pomocy.</string>
+</resources>

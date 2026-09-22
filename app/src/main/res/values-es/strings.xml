@@ -223,7 +223,6 @@
     <string name="phase_care_title">Alimentación, movimiento y descanso</string>
     <string name="phase_personal_pattern_title">Conoce tu patrón</string>
     <string name="phase_personal_pattern_body">La descripción general de una fase es solo un punto de partida. Tus registros repetidos de ánimo, energía, sueño, dolor y estrés son más útiles que un estereotipo.</string>
-    <string name="phase_education_disclaimer">Las fases son estimaciones. No predicen tu personalidad, no confirman la ovulación, no diagnostican el SPM ni sustituyen la atención médica.</string>
     <string name="phase_social_menstrual">Puedes sentirte más sensible, con menos paciencia o necesitar más intimidad. Explica si quieres calma, ayuda práctica o compañía. Si quieres socializar, elige un plan tranquilo. Querer estar sola también es normal.</string>
     <string name="phase_social_follicular">La energía y las ganas de estar con otras personas pueden aumentar. Planificar, iniciar una conversación o probar algo nuevo puede resultar más fácil. No tienes que sentirte así. Tus propios registros de energía y ánimo importan más.</string>
     <string name="phase_social_fertile">Algunas personas notan más confianza, cercanía o interés sexual y otras nada. La estimación de ovulación no confirma estas sensaciones. Expresa tus límites y necesidades de forma directa.</string>
@@ -235,9 +234,6 @@
     <string name="phase_care_ovulation">No hace falta una dieta ni actividad especial alrededor de la ovulación estimada. Come con normalidad, hidrátate y elige un movimiento agradable. La estimación no confirma la ovulación ni evita el embarazo.</string>
     <string name="phase_care_luteal">El ejercicio aeróbico regular, un horario de sueño estable, cereales integrales, legumbres y alimentos ricos en calcio pueden ayudar con algunos síntomas del SPM. Reduce sal, azúcar añadido, cafeína o alcohol si tus registros muestran que empeoran.</string>
     <string name="self_care_title">Cuidado personal</string>
-    <string name="self_care_intro">Ideas opcionales para sentirte más cómoda. No sustituyen un tratamiento.</string>
-    <string name="self_care_for_phase">Cuidado para esta fase</string>
-    <string name="self_care_activities">Actividades recomendadas</string>
     <string name="self_care_breathing">Respiración lenta</string>
     <string name="self_care_breathing_steps">Siéntate cómodamente. Inhala despacio por la nariz y exhala un poco más lento. Mantén los hombros relajados.</string>
     <string name="self_care_movement">Movimiento suave</string>

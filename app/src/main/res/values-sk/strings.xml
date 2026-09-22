@@ -223,7 +223,6 @@
     <string name="phase_care_title">Jedlo, pohyb a odpočinok</string>
     <string name="phase_personal_pattern_title">Spoznaj svoj vzorec</string>
     <string name="phase_personal_pattern_body">Všeobecný opis fázy je iba začiatok. Opakované záznamy nálady, energie, spánku, bolesti a stresu sú užitočnejšie než stereotyp.</string>
-    <string name="phase_education_disclaimer">Fázy sú odhady. Nepredpovedajú osobnosť, nepotvrdzujú ovuláciu, neurčujú diagnózu PMS a nenahrádzajú lekársku starostlivosť.</string>
     <string name="phase_social_menstrual">Môžeš byť citlivejšia, mať menej trpezlivosti alebo chcieť viac súkromia. Povedz blízkym, či potrebuješ pokoj, praktickú pomoc alebo spoločnosť. Ak sa chceš socializovať, zvoľ pokojnejší plán. Potreba byť sama je tiež normálna.</string>
     <string name="phase_social_follicular">Energia a chuť byť medzi ľuďmi môžu rásť. Plánovanie, rozhovor alebo nová činnosť môžu pôsobiť ľahšie. Nemusíš sa tak cítiť. Dôležitejšie sú tvoje vlastné záznamy energie a nálady.</string>
     <string name="phase_social_fertile">Niektoré ženy vnímajú viac sebadôvery, blízkosti alebo sexuálneho záujmu, iné nič. Odhad ovulácie tieto pocity nepotvrdzuje. Svoje hranice a potreby povedz priamo.</string>
@@ -235,9 +234,6 @@
     <string name="phase_care_ovulation">Okolo odhadovanej ovulácie netreba osobitnú diétu ani aktivitu. Jedz bežne, dopĺňaj tekutiny a zvoľ príjemný pohyb. Odhad nepotvrdzuje ovuláciu ani nebráni tehotenstvu.</string>
     <string name="phase_care_luteal">Pravidelný aeróbny pohyb, stály spánok, celozrnné potraviny, fazuľa, šošovica a zdroje vápnika môžu zmierniť niektoré prejavy PMS. Soľ, pridaný cukor, kofeín alebo alkohol obmedz, ak podľa tvojich záznamov ťažkosti zhoršujú.</string>
     <string name="self_care_title">Starostlivosť pre úľavu</string>
-    <string name="self_care_intro">Voliteľné nápady pre väčšie pohodlie. Nejde o liečbu.</string>
-    <string name="self_care_for_phase">Starostlivosť pre túto fázu</string>
-    <string name="self_care_activities">Odporúčané aktivity</string>
     <string name="self_care_breathing">Pomalé dýchanie</string>
     <string name="self_care_breathing_steps">Pohodlne sa posaď. Pomaly sa nadýchni nosom a o niečo dlhšie vydychuj. Ramená nechaj uvoľnené.</string>
     <string name="self_care_movement">Jemný pohyb</string>

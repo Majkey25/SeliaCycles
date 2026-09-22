@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="care_estimated_day">Estimated period day %1$d</string>
+    <string name="care_from_general">Everyday care to choose according to how you feel.</string>
+    <string name="care_for_you">For this day</string>
+    <string name="care_from_entries">Your logged symptoms, mood and energy come first.</string>
+    <string name="care_from_day">Ideas for this part of your cycle, with a different everyday food option each day.</string>
+    <string name="care_bleeding_day">Bleeding day %1$d</string>
+    <string name="care_everyday_tip">Food or everyday care</string>
+    <string name="care_read">Open</string>
+    <string name="care_more">More options</string>
+    <string name="care_fewer">Fewer options</string>
+    <string name="care_back">Back to suggestions</string>
+    <string name="care_about">About self-care and sources</string>
+    <string name="care_banana_oats">Banana with oats</string>
+    <string name="care_banana_oats_steps">Try sliced banana with porridge for an easy meal or snack. Banana and oats provide magnesium; seeds and nuts are other food sources. Use ingredients you tolerate and avoid your allergens. Eat at your own pace.</string>
+    <string name="care_iron_meal">An iron-containing meal</string>
+    <string name="care_iron_meal_steps">For a regular meal, try lentils, beans, tofu or lean meat with vegetables. Add pepper, tomato or fruit containing vitamin C alongside plant sources of iron. Choose foods you tolerate. Ongoing tiredness with heavy bleeding needs a check for its cause, not just a change of menu.</string>
+    <string name="care_calcium_snack">Yogurt or a fortified alternative</string>
+    <string name="care_calcium_snack_steps">Try plain yogurt with fruit, or a calcium-fortified alternative you tolerate. Check the label: plant alternatives do not all contain calcium. Use this as part of regular meals rather than skipping food when cravings appear.</string>
+    <string name="care_small_meal">A smaller, regular meal</string>
+    <string name="care_small_meal_steps">If your stomach feels full, try a smaller portion of a familiar meal and eat slowly. Porridge, rice or soup are options. Drink still water and avoid foods you know cause discomfort. With bloating, a large serving of beans or lentils may add gas. Recurrent or persistent bloating deserves medical advice.</string>
+    <string name="care_screen_break">Rest your eyes and shoulders</string>
+    <string name="care_screen_break_steps">Put the screen down, relax your jaw and shoulders, and sit somewhere comfortable. Keep regular meals and fluids. Get urgent help for a sudden extremely painful headache, weakness, confusion, difficulty speaking or loss of vision. Repeated or worsening headaches need medical advice.</string>
+    <string name="care_sleep_routine">Make room for sleep</string>
+    <string name="care_sleep_routine_steps">Keep your usual bedtime and waking time. Set aside a quiet wind-down period and put demanding tasks aside for the evening. Record how rested you feel tomorrow; do not force extra sleep just because of a cycle phase.</string>
+    <string name="care_skin">Gentle skin care</string>
+    <string name="care_skin_steps">Use lukewarm water and a mild cleanser, no more than twice a day. Avoid squeezing spots or scrubbing. Choose products labelled non-comedogenic if you use them. Painful deep spots, scarring or persistent distress are reasons to seek professional help.</string>
+    <string name="care_breast">Comfort for tender breasts</string>
+    <string name="care_breast_steps">Try a comfortable, properly fitted supportive bra and reduce pressure from tight clothing. Have persistent pain checked. Seek prompt advice for redness, heat, swelling, fever, a new hard lump or bloody nipple discharge.</string>
+    <string name="care_alert_pain">You logged strong pain. Seek medical advice, especially if it is new, worsening or interrupts normal activities. Sudden extreme pain, fainting or severe bleeding needs urgent help. Do not push through exercise.</string>
+    <string name="care_alert_pregnancy">With pregnancy or a positive test, discuss bleeding, pain or a concerning headache promptly with a maternity professional. Severe pain, heavy bleeding, fainting or vision changes need urgent help. These are not ordinary period-care suggestions.</string>
+    <string name="care_alert_menopause">Bleeding or spotting after menopause needs a medical check, even if it happens only once. Arrange an appointment; severe pain or heavy bleeding needs urgent help.</string>
+</resources>

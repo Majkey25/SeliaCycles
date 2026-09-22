@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="care_estimated_day">Geschätzter Periodentag %1$d</string>
+    <string name="care_from_general">Alltagsideen, die du nach deinem Wohlbefinden auswählen kannst.</string>
+    <string name="care_for_you">Für diesen Tag</string>
+    <string name="care_from_entries">Deine eingetragenen Beschwerden, Stimmung und Energie haben Vorrang.</string>
+    <string name="care_from_day">Ideen für diesen Zyklusabschnitt, jeden Tag mit einer anderen Anregung fürs Essen.</string>
+    <string name="care_bleeding_day">Blutungstag %1$d</string>
+    <string name="care_everyday_tip">Essen oder Alltagspflege</string>
+    <string name="care_read">Öffnen</string>
+    <string name="care_more">Weitere Möglichkeiten</string>
+    <string name="care_fewer">Weniger Möglichkeiten</string>
+    <string name="care_back">Zurück zu den Vorschlägen</string>
+    <string name="care_about">Über Selbstfürsorge und Quellen</string>
+    <string name="care_banana_oats">Banane mit Haferflocken</string>
+    <string name="care_banana_oats_steps">Probiere geschnittene Banane mit Haferbrei als einfache Mahlzeit oder Zwischenmahlzeit. Bananen und Hafer enthalten Magnesium; weitere Quellen sind Samen und Nüsse. Wähle verträgliche Zutaten und vermeide deine Allergene. Iss in deinem Tempo.</string>
+    <string name="care_iron_meal">Eine Mahlzeit mit Eisen</string>
+    <string name="care_iron_meal_steps">Probiere Linsen, Bohnen, Tofu oder mageres Fleisch mit Gemüse als normale Mahlzeit. Kombiniere pflanzliche Eisenquellen mit Paprika, Tomaten oder Vitamin-C-haltigem Obst. Wähle verträgliche Lebensmittel. Anhaltende Müdigkeit bei starker Blutung braucht eine Untersuchung, nicht nur einen anderen Speiseplan.</string>
+    <string name="care_calcium_snack">Joghurt oder angereicherte Alternative</string>
+    <string name="care_calcium_snack_steps">Probiere Naturjoghurt mit Obst oder eine verträgliche, mit Kalzium angereicherte Alternative. Prüfe das Etikett: Nicht alle pflanzlichen Alternativen enthalten Kalzium. Plane regelmäßige Mahlzeiten, statt bei Heißhunger Essen auszulassen.</string>
+    <string name="care_small_meal">Kleine, regelmäßige Mahlzeit</string>
+    <string name="care_small_meal_steps">Bei Völlegefühl probiere eine kleinere Portion einer vertrauten Mahlzeit und iss langsam. Haferbrei, Reis oder Suppe sind Möglichkeiten. Trinke stilles Wasser und vermeide bekannte Auslöser. Große Portionen Bohnen oder Linsen können Blähungen verstärken. Häufige oder anhaltende Blähungen gehören ärztlich abgeklärt.</string>
+    <string name="care_screen_break">Pause für Augen und Schultern</string>
+    <string name="care_screen_break_steps">Lege den Bildschirm weg, entspanne Kiefer und Schultern und setze dich bequem hin. Iss und trinke regelmäßig. Bei plötzlich extremen Kopfschmerzen, Schwäche, Verwirrtheit, Sprachproblemen oder Sehverlust hole sofort medizinische Hilfe. Wiederkehrende oder zunehmende Kopfschmerzen gehören ärztlich abgeklärt.</string>
+    <string name="care_sleep_routine">Zeit für Schlaf</string>
+    <string name="care_sleep_routine_steps">Behalte deine üblichen Schlaf- und Aufstehzeiten bei. Plane abends eine ruhige Auszeit und lege anspruchsvolle Aufgaben beiseite. Notiere morgen, wie erholt du bist. Erzwinge keinen längeren Schlaf allein wegen einer Zyklusphase.</string>
+    <string name="care_skin">Sanfte Hautpflege</string>
+    <string name="care_skin_steps">Nutze lauwarmes Wasser und ein mildes Reinigungsmittel, höchstens zweimal täglich. Drücke Pickel nicht aus und schrubbe nicht. Wähle bei Bedarf nicht komedogene Produkte. Tiefe schmerzhafte Pickel, Narben oder anhaltende Belastung sind Gründe für professionelle Hilfe.</string>
+    <string name="care_breast">Komfort bei empfindlichen Brüsten</string>
+    <string name="care_breast_steps">Probiere einen bequemen, gut sitzenden stützenden BH und vermeide Druck durch enge Kleidung. Lass anhaltende Schmerzen untersuchen. Bei Rötung, Wärme, Schwellung, Fieber, einem neuen harten Knoten oder blutigem Brustwarzenausfluss hole zeitnah ärztlichen Rat.</string>
+    <string name="care_alert_pain">Du hast starke Schmerzen eingetragen. Hole ärztlichen Rat, besonders wenn sie neu sind, zunehmen oder den Alltag einschränken. Plötzlich extreme Schmerzen, Ohnmacht oder starke Blutungen brauchen sofort Hilfe. Trainiere nicht gegen den Schmerz an.</string>
+    <string name="care_alert_pregnancy">Bei Schwangerschaft oder positivem Test besprich Blutungen, Schmerzen oder beunruhigende Kopfschmerzen umgehend mit der gynäkologischen Praxis oder Hebamme. Starke Schmerzen, starke Blutungen, Ohnmacht oder Sehstörungen brauchen sofort Hilfe. Dies ist keine gewöhnliche Periodenpflege.</string>
+    <string name="care_alert_menopause">Blutungen oder Schmierblutungen nach der Menopause müssen untersucht werden, auch wenn sie nur einmal auftreten. Vereinbare einen Termin. Starke Schmerzen oder starke Blutungen brauchen sofort Hilfe.</string>
+</resources>

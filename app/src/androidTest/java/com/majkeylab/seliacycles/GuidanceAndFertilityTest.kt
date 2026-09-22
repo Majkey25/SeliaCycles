@@ -49,7 +49,8 @@ class GuidanceAndFertilityTest {
                     compose.onNodeWithText(text(R.string.menstrual_later_care)).performScrollTo().assertIsDisplayed()
                     capture("guidance-later.png")
                     compose.onNodeWithText(text(R.string.self_care_title)).performScrollTo().performClick()
-                    compose.onAllNodesWithText(text(R.string.menstrual_later_care)).onLast().performScrollTo().assertIsDisplayed()
+                    compose.onNodeWithText(context.getString(R.string.care_bleeding_day, 6)).performScrollTo().assertIsDisplayed()
+                    compose.onNodeWithText(text(R.string.self_care_walk)).performScrollTo().assertIsDisplayed()
                 } else compose.onNodeWithContentDescription(text(R.string.close)).performScrollTo().performClick()
             }
         }
@@ -69,6 +70,51 @@ class GuidanceAndFertilityTest {
             openDay(today)
             compose.onNodeWithText(text(R.string.selected_day_ovulation)).performScrollTo().assertIsDisplayed()
             capture("recalculated-ovulation.png")
+        }
+    }
+
+    @Test fun foodHasNoTimerAndSavedSymptomsRefreshCare() {
+        CycleStore(context).use { it.replace(CycleBackup(period(today.minusDays(1), 2))) }
+        launch().use { activity ->
+            calendar()
+            openDay(today)
+            compose.onNodeWithText(text(R.string.self_care_title)).performScrollTo().performClick()
+            compose.onNodeWithText(text(R.string.care_banana_oats)).performScrollTo().performClick()
+            compose.onNodeWithText(text(R.string.care_banana_oats_steps)).performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText("0:00").assertDoesNotExist()
+            compose.onNodeWithText(text(R.string.self_care_resume)).assertDoesNotExist()
+            activity.recreate()
+            compose.onNodeWithText(text(R.string.care_banana_oats_steps)).performScrollTo().assertIsDisplayed()
+            capture("care-food.png")
+            compose.onNodeWithText(text(R.string.care_back)).performScrollTo().performClick()
+            activity.onActivity { model.saveLog(model.state.value.logsByDay.getValue(today).copy(symptoms = setOf(Symptom.HEADACHE))) }
+            compose.waitUntil(10_000) { !model.state.value.busy && Symptom.HEADACHE in model.state.value.logsByDay.getValue(today).symptoms }
+            compose.onNodeWithText(text(R.string.care_from_entries)).performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.care_screen_break)).performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.care_banana_oats)).assertDoesNotExist()
+            capture("care-headache.png")
+            compose.onNodeWithText(text(R.string.care_screen_break)).performClick()
+            compose.onNodeWithText(text(R.string.self_care_pause)).performScrollTo().assertIsDisplayed()
+            activity.recreate()
+            compose.onNodeWithText(text(R.string.self_care_pause)).performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.self_care_stop)).performClick()
+            activity.onActivity { model.saveLog(model.state.value.logsByDay.getValue(today).copy(symptoms = emptySet())) }
+            compose.waitUntil(10_000) { !model.state.value.busy && model.state.value.logsByDay.getValue(today).symptoms.isEmpty() }
+            compose.onNodeWithText(text(R.string.care_banana_oats)).performScrollTo().assertIsDisplayed()
+            compose.onAllNodesWithText(text(R.string.add_information)).onLast().performScrollTo().performClick()
+            compose.onNodeWithText(text(R.string.note)).performScrollTo().assertIsDisplayed()
+        }
+    }
+
+    @Test fun strongPainShowsHelpBeforeActivitiesAndHidesExerciseLibrary() {
+        CycleStore(context).use { it.replace(CycleBackup(listOf(DayLog(today, painLevel = 8)))) }
+        launch().use {
+            calendar()
+            openDay(today)
+            compose.onNodeWithText(text(R.string.self_care_title)).performScrollTo().performClick()
+            compose.onNodeWithText(text(R.string.care_alert_pain)).performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.care_more)).assertDoesNotExist()
+            compose.onNodeWithText(text(R.string.self_care_movement)).assertDoesNotExist()
         }
     }
 
