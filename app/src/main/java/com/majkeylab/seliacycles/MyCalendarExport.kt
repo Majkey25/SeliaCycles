@@ -302,16 +302,21 @@ internal fun encryptedMyCalendarJson(json: String): ByteArray {
 
 object SeliaBackupCodec {
     private const val MAGIC = 0x53434C31
-    private const val VERSION = 2
+    private const val VERSION = 3
     const val MAX_BYTES = 5 * 1024 * 1024
 
     fun encode(transfer: SeliaTransfer): ByteArray {
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).use { output ->
-            val version = if (transfer.backup.logs.any(DayLog::automaticBleeding)) VERSION else 1
+            val version = when {
+                transfer.backup.logs.any { it.contraception != null } || transfer.backup.settings.contraceptionReminderEnabled ||
+                    transfer.backup.settings.contraceptionReminderMinute != AppSettings().contraceptionReminderMinute -> VERSION
+                transfer.backup.logs.any(DayLog::automaticBleeding) -> 2
+                else -> 1
+            }
             output.writeInt(MAGIC)
             output.writeInt(version)
-            output.writeSettings(transfer.backup.settings)
+            output.writeSettings(transfer.backup.settings, version)
             output.writeInt(transfer.backup.logs.size)
             transfer.backup.logs.sortedBy(DayLog::day).forEach { output.writeLog(it, version) }
             output.writeInt(transfer.snapshots.size)
@@ -329,7 +334,7 @@ object SeliaBackupCodec {
                 if (magic != MAGIC || version !in 1..VERSION) {
                     throw MyCalendarFormatException("Unsupported Selia backup", failure = MyCalendarFailure.UNSUPPORTED)
                 }
-                val settings = input.readSettings()
+                val settings = input.readSettings(version)
                 val logCount = input.readCount(CycleBackup.MAX_LOGS)
                 val logs = List(logCount) { input.readLog(version) }
                 val snapshotCount = input.readCount(CalendarPaging.pageCount)
@@ -344,7 +349,7 @@ object SeliaBackupCodec {
         }
     }
 
-    private fun DataOutputStream.writeSettings(settings: AppSettings) {
+    private fun DataOutputStream.writeSettings(settings: AppSettings, version: Int) {
         writeInt(settings.cycleLength)
         writeInt(settings.periodLength)
         writeNullableInt(settings.cycleLengthOverride)
@@ -371,9 +376,13 @@ object SeliaBackupCodec {
         writeBoolean(settings.showSelfCare)
         writeBoolean(settings.showCycleDetails)
         writeBoolean(settings.simpleMode)
+        if (version >= 3) {
+            writeBoolean(settings.contraceptionReminderEnabled)
+            writeInt(settings.contraceptionReminderMinute)
+        }
     }
 
-    private fun DataInputStream.readSettings(): AppSettings = AppSettings(
+    private fun DataInputStream.readSettings(version: Int): AppSettings = AppSettings(
         cycleLength = readInt(),
         periodLength = readInt(),
         cycleLengthOverride = readNullableInt(),
@@ -399,6 +408,8 @@ object SeliaBackupCodec {
         showSelfCare = readBoolean(),
         showCycleDetails = readBoolean(),
         simpleMode = readBoolean(),
+        contraceptionReminderEnabled = version >= 3 && readBoolean(),
+        contraceptionReminderMinute = if (version >= 3) readInt() else AppSettings().contraceptionReminderMinute,
     )
 
     private fun DataOutputStream.writeLog(log: DayLog, version: Int) {
@@ -424,6 +435,7 @@ object SeliaBackupCodec {
         writeNullableEnum(log.medication)
         writeUTF(log.importedDetails)
         if (version >= 2) writeBoolean(log.automaticBleeding)
+        if (version >= 3) writeNullableEnum(log.contraception)
     }
 
     private fun DataInputStream.readLog(version: Int): DayLog {
@@ -456,6 +468,7 @@ object SeliaBackupCodec {
             medication = readNullableEnum(MedicationStatus.entries.toTypedArray()),
             importedDetails = readUTF(),
             automaticBleeding = version >= 2 && readBoolean(),
+            contraception = if (version >= 3) readNullableEnum(ContraceptionStatus.entries.toTypedArray()) else null,
         )
     }
 

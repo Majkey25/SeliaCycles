@@ -43,6 +43,7 @@ data class AppState(
     val profiles: List<LocalProfile> = listOf(activeProfile),
     val calendarPermissionGranted: Boolean = false,
     val selectedCalendarId: Long? = null,
+    val calendarSyncEnabled: Boolean = false,
     val deviceCalendars: List<DeviceCalendar> = emptyList(),
     val loading: Boolean = true,
     val loadFailed: Boolean = false,
@@ -78,7 +79,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             runCatching { storeMutex.withLock {
                 withContext(Dispatchers.IO) {
                     localProfiles.profiles().forEach { profile ->
-                        CycleStore(application, profile.id).use { ReminderWorker.sync(application, it.load().settings, profile.id) }
+                        CycleStore(application, profile.id).use {
+                            val backup = it.load()
+                            ReminderWorker.sync(application, backup.settings, profile.id)
+                            ContraceptionReminder.sync(application, backup, profile.id)
+                        }
                     }
                 }
             } }.onFailure {
@@ -155,6 +160,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val next = withContext(Dispatchers.IO) {
                         if (target.calendarMirror.selectedCalendarId() != null) target.calendarMirror.disconnect()
                         ReminderWorker.cancel(getApplication(), target.profile.id)
+                        ContraceptionReminder.cancel(getApplication(), target.profile.id, clearHistory = true)
                         target.store.close()
                         check(getApplication<Application>().deleteDatabase(profileDatabaseName(target.profile.id)))
                         localProfiles.remove(target.profile.id)
@@ -220,6 +226,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val calendarConnected = target.calendarMirror.selectedCalendarId() != null
                     target.store.clearAll()
                     ReminderWorker.cancel(getApplication(), target.profile.id)
+                    ContraceptionReminder.cancel(getApplication(), target.profile.id, clearHistory = true)
                     calendarConnected && runCatching { target.calendarMirror.disconnect() }.isFailure
                 }
             }
@@ -255,9 +262,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun disconnectCalendar() = runStoreAction {
-        val settings = store.load().settings
-        if (settings.partnerViewEnabled) store.saveSettings(settings.copy(partnerViewEnabled = false))
-        calendarMirror.disconnect()
+        try {
+            calendarMirror.disconnect()
+        } finally {
+            val settings = store.load().settings
+            if (settings.partnerViewEnabled) store.saveSettings(settings.copy(partnerViewEnabled = false))
+        }
     }
 
     fun inspectMyCalendar(uri: Uri, expectedProfileId: String? = _state.value.activeProfile.id) = viewModelScope.launch {
@@ -347,7 +357,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             withContext(Dispatchers.IO) { action(target) }
         } }.onFailure { if (it is CancellationException) throw it }
         if (revision != storeRevision) return@async false
-        reload(if (result.isFailure) R.string.operation_failed else successMessage, revision).join()
+        reload(when (result.exceptionOrNull()) {
+            null -> successMessage
+            is CalendarCleanupException -> R.string.calendar_cleanup_pending
+            else -> R.string.operation_failed
+        }, revision).join()
         result.isSuccess && revision == storeRevision && session === target
     }
 
@@ -359,6 +373,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val target = session
                 withContext(Dispatchers.IO) {
                     val backup = target.store.load().also { ReminderWorker.sync(getApplication(), it.settings, target.profile.id) }
+                    ContraceptionReminder.sync(getApplication(), backup, target.profile.id)
                     val existingSnapshots = target.store.loadForecastSnapshots()
                     val missingSnapshots = ForecastSnapshotPlanner.missingSnapshots(
                         backup = backup,
@@ -375,6 +390,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             CalendarMirrorSnapshot(
                                 permissionGranted = target.calendarMirror.hasPermissions(),
                                 selectedCalendarId = target.calendarMirror.selectedCalendarId(),
+                                calendarSyncEnabled = target.calendarMirror.calendarSyncEnabled(),
                                 calendars = emptyList(),
                             )
                         },
@@ -392,6 +408,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     activeProfile = it.profiles.first { profile -> profile.id == session.profile.id },
                     calendarPermissionGranted = it.calendar.permissionGranted,
                     selectedCalendarId = it.calendar.selectedCalendarId,
+                    calendarSyncEnabled = it.calendar.calendarSyncEnabled,
                     deviceCalendars = it.calendar.calendars,
                     loading = false,
                     myCalendarPreview = _state.value.myCalendarPreview,

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_delete_copies">Smazat události Selia z kalendáře</string>
+    <string name="calendar_mirror_limits">Kopie zahrnují zapsanou historii a nejvýše dva měsíce dopředu. Vypnutí zastaví nové události ještě před mazáním. Synchronizaci spustíš výběrem kalendáře; staré připojení zůstane po této aktualizaci vypnuté.</string>
+</resources>

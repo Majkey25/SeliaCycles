@@ -2,7 +2,6 @@ package com.majkeylab.seliacycles
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalAdjusters
 
 enum class MirrorEventKind { RECORDED, ESTIMATED, FERTILE, OVULATION }
 
@@ -56,7 +55,7 @@ object CalendarMirrorPlanner {
     ): List<MirrorEvent> {
         val bleedingDays = backup.logs.filter(DayLog::confirmedBleeding).map(DayLog::day).sorted()
         val firstDay = bleedingDays.firstOrNull()?.withDayOfMonth(1) ?: referenceDate.withDayOfMonth(1)
-        val lastDay = referenceDate.plusMonths(FORECAST_MONTHS).with(TemporalAdjusters.lastDayOfMonth())
+        val lastDay = referenceDate.plusMonths(FORECAST_MONTHS)
         val periods = bleedingDays.fold(mutableListOf<MutableList<LocalDate>>()) { groups, day ->
             val current = groups.lastOrNull()
             if (current == null || ChronoUnit.DAYS.between(current.last(), day) > MAX_PERIOD_GAP_DAYS) {
@@ -82,9 +81,11 @@ object CalendarMirrorPlanner {
                 MirrorEvent(MirrorEventKind.OVULATION, value.ovulation, value.ovulation.plusDays(1)),
             )
         }.filter { it.endExclusive >= firstDay && it.start <= lastDay }
-        return (recorded + estimated + fertility).sortedWith(compareBy(MirrorEvent::start, MirrorEvent::kind))
+        return (recorded + estimated + fertility)
+            .map { it.copy(endExclusive = minOf(it.endExclusive, lastDay.plusDays(1))) }
+            .sortedWith(compareBy(MirrorEvent::start, MirrorEvent::kind))
     }
 
-    private const val FORECAST_MONTHS = 12L
+    private const val FORECAST_MONTHS = 2L
     private const val MAX_PERIOD_GAP_DAYS = 2L
 }

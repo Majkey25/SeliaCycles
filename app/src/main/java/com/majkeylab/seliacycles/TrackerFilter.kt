@@ -16,6 +16,7 @@ enum class TrackerFilter(private val symptom: Symptom? = null) {
     STRESS,
     INTIMACY,
     TESTS,
+    CONTRACEPTION,
     NOTES;
 
     fun matches(log: DayLog): Boolean = symptom?.let { it in log.symptoms } ?: when (this) {
@@ -26,6 +27,7 @@ enum class TrackerFilter(private val symptom: Symptom? = null) {
         STRESS -> log.stress != null
         INTIMACY -> log.intimacy != null
         TESTS -> log.ovulationTest != null || log.pregnancyTest != null
+        CONTRACEPTION -> log.contraception != null
         NOTES -> log.note.isNotBlank() || log.importedDetails.isNotBlank()
         else -> false
     }

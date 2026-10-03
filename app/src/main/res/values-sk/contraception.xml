@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="contraception_tracker">Antikoncepcia</string>
+    <string name="contraception_reminder">Denná pripomienka antikoncepcie</string>
+    <string name="contraception_reminder_body">Skontroluj svoj dnešný plán antikoncepcie.</string>
+    <string name="contraception_pause">Plánovaná prestávka</string>
+    <string name="contraception_time">Čas pripomienky: %1$s</string>
+    <string name="contraception_exact">Prístup k budíkom a pripomienkam</string>
+    <string name="contraception_delay_notice">Bez povolenia presných pripomienok môže Android oznámenia oneskoriť. Skontroluj oznámenia a úsporu batérie.</string>
+    <string name="contraception_schedule_hint">Pripomienky nastav podľa predpísaného režimu. Počas plánovanej prestávky ich vypni. Pri vynechaní dávky sa riaď príbalovým letákom alebo sa poraď s lekárnikom; aplikácia nepočíta ochranu pred otehotnením.</string>
+    <string name="contraception_summary">Antikoncepcia: %1$s</string>
+</resources>

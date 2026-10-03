@@ -1,6 +1,6 @@
 # Selia Cycles privacy policy
 
-Effective: September 22, 2026
+Effective: October 3, 2026
 
 Selia Cycles is published by MajkeyLab. Contact `majkeylab@gmail.com` about this policy.
 
@@ -11,6 +11,10 @@ Selia Cycles stores menstrual dates, spotting, flow, symptoms, mood, notes, cerv
 The app has no account, ads, analytics, telemetry, Selia cloud, or network permission. MajkeyLab does not receive cycle data.
 
 Each local profile has a separate calendar database. Profile names and display modes are stored on the device. Profiles are not password-protected accounts: anyone who can open the app can switch between them. Add another person's health data only with appropriate consent.
+
+## Contraception records and reminders
+
+Contraception records and optional reminder times stay in the selected profile. Android alarm and notification access is optional. Notifications use private visibility, but their appearance also depends on the device. Reminders never confirm a dose or calculate contraceptive protection. Contraception records are not included in external calendar copies.
 
 ## Local self-care suggestions
 
@@ -29,6 +33,8 @@ Import and export apply only to the selected profile. A `.pc` file does not cont
 When the user chooses an export destination, Selia Cycles creates a local `.pc` backup containing cycle records and app settings. The export is not uploaded by Selia Cycles and is not encrypted. Anyone with access to the file may be able to read health data, so the user should store or share it securely.
 
 ## Optional calendar mirror
+
+Calendar mirroring is explicitly enabled per local profile and never enabled by importing a backup. OFF is saved before cleanup, so a deletion error cannot resume synchronization. Copies include recorded history and at most two months ahead. The cleanup button stops sync and deletes only that profile's Selia-created events; after a provider error or revoked permission, restore access and retry cleanup. Ordinary calendar appointments are not interpreted as cycle records.
 
 If the user enables calendar mirroring, Selia Cycles requests Android calendar read/write permission, lists visible writable calendars, and copies short labels for recorded periods, period estimates, fertile windows, and estimated ovulation into the selected calendar. Notes, symptoms, measurements, spotting, cervical mucus, test results, medication, intimacy, and raw mood logs are never copied.
 

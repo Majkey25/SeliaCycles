@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="contraception_tracker">Anticoncepción</string>
+    <string name="contraception_reminder">Recordatorio diario de anticoncepción</string>
+    <string name="contraception_reminder_body">Revisa tu pauta anticonceptiva de hoy.</string>
+    <string name="contraception_pause">Pausa planificada</string>
+    <string name="contraception_time">Hora del recordatorio: %1$s</string>
+    <string name="contraception_exact">Acceso a alarmas y recordatorios</string>
+    <string name="contraception_delay_notice">Android puede retrasar los avisos sin acceso a alarmas exactas. Revisa los avisos y el ahorro de batería.</string>
+    <string name="contraception_schedule_hint">Configura los avisos según tu pauta prescrita. Desactívalos en las pausas planificadas. Si olvidas una dosis, sigue el prospecto o consulta al farmacéutico. La app no calcula la protección anticonceptiva.</string>
+    <string name="contraception_summary">Anticoncepción: %1$s</string>
+</resources>

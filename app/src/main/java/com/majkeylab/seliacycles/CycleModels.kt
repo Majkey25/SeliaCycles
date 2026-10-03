@@ -76,6 +76,7 @@ enum class WellbeingLevel { LOW, MEDIUM, HIGH }
 enum class ActivityLevel { LIGHT, MODERATE, INTENSE }
 
 enum class MedicationStatus { TAKEN, MISSED }
+enum class ContraceptionStatus { TAKEN, MISSED, PAUSE }
 
 data class DayLog(
     val day: LocalDate,
@@ -99,6 +100,7 @@ data class DayLog(
     val medication: MedicationStatus? = null,
     val importedDetails: String = "",
     val automaticBleeding: Boolean = false,
+    val contraception: ContraceptionStatus? = null,
 ) {
     init {
         require(day in MIN_DATE..MAX_DATE)
@@ -118,13 +120,13 @@ data class DayLog(
         get() = !bleeding && !spotting && mood == null && symptoms.isEmpty() && note.isBlank() && weightKg == null &&
             temperatureC == null && sleepHours == null && intimacy == null && cervicalMucus == null &&
             ovulationTest == null && pregnancyTest == null && painLevel == null && energy == null && stress == null &&
-            activity == null && medication == null && importedDetails.isBlank()
+            activity == null && medication == null && contraception == null && importedDetails.isBlank()
 
     val hasCalendarMarker: Boolean
         get() = spotting || mood != null || symptoms.isNotEmpty() || note.isNotBlank() || weightKg != null ||
             temperatureC != null || sleepHours != null || intimacy != null || cervicalMucus != null ||
             ovulationTest != null || pregnancyTest != null || painLevel != null || energy != null || stress != null ||
-            activity != null || medication != null || importedDetails.isNotBlank()
+            activity != null || medication != null || contraception != null || importedDetails.isNotBlank()
 
     companion object {
         const val MAX_NOTE_LENGTH = 1_000
@@ -179,6 +181,7 @@ fun mergeDayLogs(current: DayLog, incoming: DayLog): DayLog {
         stress = current.stress ?: incoming.stress,
         activity = current.activity ?: incoming.activity,
         medication = current.medication ?: incoming.medication,
+        contraception = current.contraception ?: incoming.contraception,
         importedDetails = current.importedDetails.takeIf(String::isNotBlank) ?: incoming.importedDetails,
     )
 }
@@ -203,6 +206,8 @@ data class AppSettings(
     val showSelfCare: Boolean = true,
     val showCycleDetails: Boolean = true,
     val simpleMode: Boolean = false,
+    val contraceptionReminderEnabled: Boolean = false,
+    val contraceptionReminderMinute: Int = 20 * 60,
 ) {
     init {
         require(cycleLength in 15..90)
@@ -213,6 +218,7 @@ data class AppSettings(
         require(firstDayOfWeek == DayOfWeek.MONDAY || firstDayOfWeek == DayOfWeek.SUNDAY)
         require(reminderDays in 0..14)
         require(lutealPhaseLength in 7..19)
+        require(contraceptionReminderMinute in 0 until 24 * 60)
     }
 
     val canPredictPeriods: Boolean

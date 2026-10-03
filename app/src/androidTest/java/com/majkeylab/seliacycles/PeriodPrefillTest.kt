@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.lifecycle.ViewModelProvider
@@ -125,7 +126,9 @@ class PeriodPrefillTest {
         if (YearMonth.from(day) != YearMonth.from(today)) compose.onNodeWithContentDescription(text(R.string.previous_month)).performClick()
         compose.onNodeWithContentDescription(format(day, FormatStyle.LONG), substring = true).performScrollTo().performClick()
         compose.onNodeWithText(text(R.string.close)).performClick()
-        compose.onNodeWithText(text(R.string.calendar_add_period)).performScrollTo().performClick()
+        val buttons = compose.onAllNodesWithText(text(R.string.calendar_add_period))
+        val visible = buttons.fetchSemanticsNodes().indices.single { buttons[it].isDisplayed() }
+        buttons[visible].performScrollTo().performClick()
     }
 
     private fun selected(day: LocalDate) = compose.onNodeWithContentDescription("${format(day, FormatStyle.MEDIUM)}, ${text(R.string.period_day_selected)}").performScrollTo()

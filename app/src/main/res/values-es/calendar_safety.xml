@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_delete_copies">Borrar eventos de Selia del calendario</string>
+    <string name="calendar_mirror_limits">Las copias incluyen el historial registrado y hasta dos meses futuros. Desactivar detiene eventos nuevos antes de borrar. Elige un calendario para iniciar; las conexiones antiguas quedan desactivadas tras esta actualización.</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="contraception_tracker">Antykoncepcja</string>
+    <string name="contraception_reminder">Codzienne przypomnienie o antykoncepcji</string>
+    <string name="contraception_reminder_body">Sprawdź swój dzisiejszy plan antykoncepcji.</string>
+    <string name="contraception_pause">Planowana przerwa</string>
+    <string name="contraception_time">Godzina przypomnienia: %1$s</string>
+    <string name="contraception_exact">Dostęp do alarmów i przypomnień</string>
+    <string name="contraception_delay_notice">Android może opóźniać powiadomienia bez dostępu do dokładnych alarmów. Sprawdź powiadomienia i oszczędzanie baterii.</string>
+    <string name="contraception_schedule_hint">Ustaw przypomnienia według zaleconego schematu. Wyłącz je podczas planowanych przerw. Przy pominięciu dawki postępuj zgodnie z ulotką lub zapytaj farmaceutę. Aplikacja nie oblicza ochrony antykoncepcyjnej.</string>
+    <string name="contraception_summary">Antykoncepcja: %1$s</string>
+</resources>

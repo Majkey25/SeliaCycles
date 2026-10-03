@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="contraception_tracker">Verhütung</string>
+    <string name="contraception_reminder">Tägliche Verhütungserinnerung</string>
+    <string name="contraception_reminder_body">Prüfe deinen heutigen Verhütungsplan.</string>
+    <string name="contraception_pause">Geplante Pause</string>
+    <string name="contraception_time">Erinnerungszeit: %1$s</string>
+    <string name="contraception_exact">Zugriff auf Wecker und Erinnerungen</string>
+    <string name="contraception_delay_notice">Ohne genaue Alarme kann Android Benachrichtigungen verzögern. Prüfe Benachrichtigungen und Energiespareinstellungen.</string>
+    <string name="contraception_schedule_hint">Richte Erinnerungen nach deinem verordneten Schema ein. Schalte sie bei geplanten Pausen aus. Bei einer vergessenen Einnahme beachte die Packungsbeilage oder frage in der Apotheke. Die App berechnet keinen Verhütungsschutz.</string>
+    <string name="contraception_summary">Verhütung: %1$s</string>
+</resources>

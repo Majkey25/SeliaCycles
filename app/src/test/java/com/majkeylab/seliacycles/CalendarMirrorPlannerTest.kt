@@ -6,6 +6,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class CalendarMirrorPlannerTest {
+    @Test fun `future events end within two months including long periods`() {
+        val today = LocalDate.of(2026, 10, 3)
+        val backup = CycleBackup(listOf(DayLog(today, bleeding = true, flow = Flow.LIGHT)),
+            AppSettings(periodLengthOverride = 14))
+        val events = CalendarMirrorPlanner.plan(backup, emptyMap(), today)
+        assertTrue(events.isNotEmpty())
+        assertTrue(events.all { it.endExclusive <= today.plusMonths(2).plusDays(1) })
+    }
+
     @Test
     fun `hormonal contraception omits fertility mirror events`() {
         val bleeding = listOf(LocalDate.of(2026, 6, 1), LocalDate.of(2026, 7, 1)).map {
