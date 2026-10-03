@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.0-beta.22 - 2026-10-03
+
+### Fixed
+
+- Calendar sync persists OFF before cleanup. Failed deletion or revoked permission cannot restart event creation after reload or restart.
+- Calendar copies stop at two months ahead. Cleanup removes only Selia events for the selected profile and can be retried independently.
+- Legacy calendar selections start disabled after this update. Select a calendar explicitly to reconnect.
+
+### Added
+
+- Separate contraception records, calendar filtering and optional daily reminders for profiles using hormonal contraception.
+- User-selected reminder time with Android precise-alarm access and an inexact fallback. Records never imply a confirmed dose without user input.
+- Database and local backup migration preserve contraception records and settings; importing a backup does not enable reminders.
+
 ## 0.9.0-beta.21 - 2026-09-22
 
 ### Added

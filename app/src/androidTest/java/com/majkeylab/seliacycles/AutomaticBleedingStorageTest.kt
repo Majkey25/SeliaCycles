@@ -37,12 +37,20 @@ class AutomaticBleedingStorageTest {
                     temperature_c,sleep_hours,intimacy,imported_details,spotting,cervical_mucus,
                     ovulation_test,pregnancy_test,pain_level,energy,stress,activity,medication FROM newer_logs""")
                 db.execSQL("DROP TABLE newer_logs")
+                db.execSQL("""CREATE TABLE old_settings AS SELECT id,cycle_length,period_length,first_day,predictions,
+                    reminder,reminder_days,theme,partner_view,palette,luteal_phase,custom_primary,custom_secondary,
+                    custom_tertiary,custom_entry,profile_age,profile_height,profile_weight,profile_goal,life_situation,
+                    show_phase_guidance,show_self_care,show_cycle_details,simple_mode,cycle_length_override,
+                    period_length_override,active_period_start FROM settings""")
+                db.execSQL("DROP TABLE settings")
+                db.execSQL("ALTER TABLE old_settings RENAME TO settings")
                 db.version = 10
             }
             CycleStore(context, id).use {
                 assertEquals(listOf(original), it.load().logs.filterNot(DayLog::automaticBleeding))
                 assertEquals(if (open) 6 else 1, it.load().logs.size)
-                assertEquals(11, it.readableDatabase.version)
+                assertEquals(12, it.readableDatabase.version)
+                assertEquals(false, it.load().settings.contraceptionReminderEnabled)
             }
         } finally { context.deleteDatabase(name) }
     }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_delete_copies">Selia-Termine aus Kalender löschen</string>
+    <string name="calendar_mirror_limits">Kopien umfassen erfasste Einträge und höchstens zwei Monate im Voraus. Ausschalten stoppt neue Termine vor dem Löschen. Wähle zum Start einen Kalender; alte Verbindungen bleiben nach diesem Update aus.</string>
+</resources>

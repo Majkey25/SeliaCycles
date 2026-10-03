@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.provider.BaseColumns
 import android.provider.CalendarContract
+import android.util.AtomicFile
 import androidx.core.content.ContextCompat
 import java.io.File
 import java.time.LocalDate
@@ -26,7 +27,10 @@ data class CalendarMirrorSnapshot(
     val permissionGranted: Boolean,
     val selectedCalendarId: Long?,
     val calendars: List<DeviceCalendar>,
+    val calendarSyncEnabled: Boolean = false,
 )
+
+class CalendarCleanupException(cause: Exception) : Exception("Calendar sync is off; cleanup failed", cause)
 
 internal fun calendarMirrorUriPrefix(profileId: String): String {
     requireValidProfileId(profileId)
@@ -43,36 +47,61 @@ class CalendarMirror(private val context: Context, profileId: String = LocalProf
     private val resolver: ContentResolver = context.contentResolver
     private val customUriPrefix = calendarMirrorUriPrefix(profileId)
     private val selectionFile = File(context.noBackupFilesDir, calendarMirrorSelectionFile(profileId))
+    private val enabledFile = AtomicFile(File(context.noBackupFilesDir, "${selectionFile.name}-enabled"))
 
-    fun snapshot(backup: CycleBackup, snapshots: Map<java.time.YearMonth, ForecastSnapshot>): CalendarMirrorSnapshot {
+    fun snapshot(backup: CycleBackup, snapshots: Map<java.time.YearMonth, ForecastSnapshot>): CalendarMirrorSnapshot = synchronized(lock) {
         val selectedId = selectedCalendarId()
-        if (!hasPermissions()) return CalendarMirrorSnapshot(false, selectedId, emptyList())
+        val enabled = calendarSyncEnabled()
+        if (!hasPermissions()) return@synchronized CalendarMirrorSnapshot(false, selectedId, emptyList(), enabled)
         val calendars = writableCalendars()
-        if (selectedId != null && calendars.any { it.id == selectedId }) replaceEvents(selectedId, backup, snapshots)
-        return CalendarMirrorSnapshot(true, selectedId, calendars)
+        if (enabled && selectedId != null && calendars.any { it.id == selectedId }) replaceEvents(selectedId, backup, snapshots)
+        CalendarMirrorSnapshot(true, selectedId, calendars, enabled)
     }
 
     fun connect(
         calendarId: Long,
         backup: CycleBackup,
         snapshots: Map<java.time.YearMonth, ForecastSnapshot>,
-    ) {
+    ) = synchronized(lock) {
         check(hasPermissions())
         require(writableCalendars().any { it.id == calendarId })
-        val previousId = selectedCalendarId()
+        saveSyncEnabled(false)
         saveSelectedCalendarId(calendarId)
         try {
+            saveSyncEnabled(true)
             replaceEvents(calendarId, backup, snapshots)
         } catch (failure: Exception) {
-            saveSelectedCalendarId(previousId)
+            saveSyncEnabled(false)
             throw failure
         }
     }
 
-    fun disconnect() {
-        check(hasPermissions())
-        replaceEvents(null, CycleBackup(), emptyMap())
-        saveSelectedCalendarId(null)
+    fun disconnect() = synchronized(lock) {
+        // Persist OFF before any permission check or provider operation. Never roll this back.
+        saveSyncEnabled(false)
+        try {
+            check(hasPermissions())
+            replaceEvents(null, CycleBackup(), emptyMap())
+            saveSelectedCalendarId(null)
+        } catch (failure: Exception) {
+            throw CalendarCleanupException(failure)
+        }
+    }
+
+    // Missing, unreadable and legacy state are OFF; an old calendar ID is not consent to resume.
+    fun calendarSyncEnabled(): Boolean = synchronized(lock) {
+        runCatching { enabledFile.openRead().bufferedReader().use { it.readText() } == "true" }.getOrDefault(false)
+    }
+
+    private fun saveSyncEnabled(enabled: Boolean) {
+        val output = enabledFile.startWrite()
+        try {
+            output.write(enabled.toString().toByteArray(Charsets.UTF_8))
+            enabledFile.finishWrite(output)
+        } catch (failure: Exception) {
+            enabledFile.failWrite(output)
+            throw failure
+        }
     }
 
     fun selectedCalendarId(): Long? = runCatching { selectionFile.readText().trim().toLong() }
@@ -110,6 +139,7 @@ class CalendarMirror(private val context: Context, profileId: String = LocalProf
         backup: CycleBackup,
         snapshots: Map<java.time.YearMonth, ForecastSnapshot>,
     ) {
+        check(calendarId == null || calendarSyncEnabled() && selectedCalendarId() == calendarId)
         val desired = calendarId?.let { CalendarMirrorPlanner.plan(backup, snapshots) }.orEmpty()
         val operations = ArrayList<ContentProviderOperation>()
         CalendarMirrorDiff.plan(
@@ -160,7 +190,7 @@ class CalendarMirror(private val context: Context, profileId: String = LocalProf
                     ))
                 }
             }
-        }.orEmpty()
+        } ?: error("Calendar provider returned no event cursor")
     }
 
     private fun Cursor.matches(values: ContentValues): Boolean =
@@ -213,12 +243,16 @@ class CalendarMirror(private val context: Context, profileId: String = LocalProf
     }
 
     private fun saveSelectedCalendarId(calendarId: Long?) {
-        if (calendarId == null) selectionFile.delete() else selectionFile.writeText(calendarId.toString())
+        if (calendarId == null) {
+            check(!selectionFile.exists() || selectionFile.delete())
+        } else selectionFile.writeText(calendarId.toString())
     }
 
     private fun LocalDate.utcMillis(): Long = atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
     companion object {
+        // ponytail: one process-wide lock prevents stale instances writing after OFF; split by profile only if contention matters.
+        private val lock = Any()
         val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
         private const val UTC = "UTC"
         private val CALENDAR_COLUMNS = arrayOf(

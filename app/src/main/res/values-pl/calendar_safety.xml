@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_delete_copies">Usuń wydarzenia Selia z kalendarza</string>
+    <string name="calendar_mirror_limits">Kopie obejmują zapisaną historię i najwyżej dwa miesiące naprzód. Wyłączenie zatrzymuje nowe wydarzenia przed usuwaniem. Wybierz kalendarz, aby rozpocząć; stare połączenia pozostają wyłączone po tej aktualizacji.</string>
+</resources>

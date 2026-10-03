@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="contraception_tracker">Contraception</string>
+    <string name="contraception_reminder">Daily contraception reminder</string>
+    <string name="contraception_reminder_body">Check your contraception schedule for today.</string>
+    <string name="contraception_pause">Planned break</string>
+    <string name="contraception_time">Reminder time: %1$s</string>
+    <string name="contraception_exact">Alarms and reminders access</string>
+    <string name="contraception_delay_notice">Android may delay notifications without precise alarm access. Check notification and battery settings.</string>
+    <string name="contraception_schedule_hint">Set reminders according to your prescribed schedule. Pause them during planned breaks. For a missed dose, follow your medicine leaflet or ask a pharmacist; this app does not calculate protection.</string>
+    <string name="contraception_summary">Contraception: %1$s</string>
+</resources>

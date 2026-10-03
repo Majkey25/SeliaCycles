@@ -14,7 +14,8 @@ internal fun hasLogCapacity(existingCount: Long, replacing: Boolean): Boolean =
     replacing || existingCount < CycleBackup.MAX_LOGS
 
 internal fun mergedTransferSettings(current: AppSettings, incoming: AppSettings): AppSettings =
-    incoming.copy(partnerViewEnabled = current.partnerViewEnabled)
+    incoming.copy(partnerViewEnabled = current.partnerViewEnabled,
+        contraceptionReminderEnabled = current.contraceptionReminderEnabled)
 
 class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID) :
     SQLiteOpenHelper(context, profileDatabaseName(profileId), null, DATABASE_VERSION) {
@@ -42,6 +43,7 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
                 stress TEXT,
                 activity TEXT,
                 medication TEXT,
+                contraception TEXT,
                 automatic_bleeding INTEGER NOT NULL DEFAULT 0 CHECK (automatic_bleeding IN (0, 1))
             )
             """.trimIndent(),
@@ -75,7 +77,9 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
                 simple_mode INTEGER NOT NULL CHECK (simple_mode IN (0, 1)),
                 cycle_length_override INTEGER,
                 period_length_override INTEGER,
-                active_period_start INTEGER
+                active_period_start INTEGER,
+                contraception_reminder INTEGER NOT NULL DEFAULT 0 CHECK (contraception_reminder IN (0, 1)),
+                contraception_minute INTEGER NOT NULL DEFAULT 1200 CHECK (contraception_minute BETWEEN 0 AND 1439)
             )
             """.trimIndent(),
         )
@@ -84,6 +88,11 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
     }
 
     override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 12) {
+            database.execSQL("ALTER TABLE day_logs ADD COLUMN contraception TEXT")
+            database.execSQL("ALTER TABLE settings ADD COLUMN contraception_reminder INTEGER NOT NULL DEFAULT 0 CHECK (contraception_reminder IN (0, 1))")
+            database.execSQL("ALTER TABLE settings ADD COLUMN contraception_minute INTEGER NOT NULL DEFAULT 1200 CHECK (contraception_minute BETWEEN 0 AND 1439)")
+        }
         if (oldVersion < 11) {
             database.execSQL("ALTER TABLE day_logs ADD COLUMN automatic_bleeding INTEGER NOT NULL DEFAULT 0 CHECK (automatic_bleeding IN (0, 1))")
         }
@@ -322,6 +331,8 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
             cycleLengthOverride = cursor.getNullableInt(23),
             periodLengthOverride = cursor.getNullableInt(24),
             activePeriodStart = cursor.getNullableLong(25)?.let(LocalDate::ofEpochDay),
+            contraceptionReminderEnabled = cursor.getInt(26) == 1,
+            contraceptionReminderMinute = cursor.getInt(27),
         )
     }
 
@@ -350,6 +361,7 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
         activity = getString(18)?.let(ActivityLevel::valueOf),
         medication = getString(19)?.let(MedicationStatus::valueOf),
         automaticBleeding = getInt(20) == 1,
+        contraception = getString(21)?.let(ContraceptionStatus::valueOf),
     )
 
     private fun logValues(log: DayLog): ContentValues = ContentValues().apply {
@@ -374,6 +386,7 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
         put("activity", log.activity?.name)
         put("medication", log.medication?.name)
         put("automatic_bleeding", log.automaticBleeding)
+        put("contraception", log.contraception?.name)
     }
 
     private fun Cursor.getNullableDouble(index: Int): Double? = if (isNull(index)) null else getDouble(index)
@@ -410,6 +423,8 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
         put("cycle_length_override", settings.cycleLengthOverride)
         put("period_length_override", settings.periodLengthOverride)
         put("active_period_start", settings.activePeriodStart?.toEpochDay())
+        put("contraception_reminder", settings.contraceptionReminderEnabled)
+        put("contraception_minute", settings.contraceptionReminderMinute)
     }
 
     private fun forecastValues(snapshot: ForecastSnapshot): ContentValues = ContentValues().apply {
@@ -453,7 +468,7 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
     }
 
     companion object {
-        private const val DATABASE_VERSION = 11
+        private const val DATABASE_VERSION = 12
         private val LOG_COLUMNS = arrayOf(
             "day",
             "bleeding",
@@ -476,6 +491,7 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
             "activity",
             "medication",
             "automatic_bleeding",
+            "contraception",
         )
         private val SETTINGS_COLUMNS = arrayOf(
             "cycle_length",
@@ -504,6 +520,8 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
             "cycle_length_override",
             "period_length_override",
             "active_period_start",
+            "contraception_reminder",
+            "contraception_minute",
         )
         private val FORECAST_COLUMNS = arrayOf(
             "month",

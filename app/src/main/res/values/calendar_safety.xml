@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_delete_copies">Delete Selia events from calendar</string>
+    <string name="calendar_mirror_limits">Copies include recorded history and at most the next two months. Turning sync off stops new events before cleanup. Select a calendar explicitly to start sync; old calendar selections stay off after this update.</string>
+</resources>

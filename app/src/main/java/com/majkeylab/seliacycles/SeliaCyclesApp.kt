@@ -360,6 +360,7 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
     var startCreatingProfile by rememberSaveable { mutableStateOf(false) }
     var documentProfileId by rememberSaveable { mutableStateOf<String?>(null) }
     var reminderProfileId by rememberSaveable { mutableStateOf<String?>(null) }
+    var contraceptionPermissionPending by rememberSaveable { mutableStateOf(false) }
     var selectedDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     var daySheetMode by rememberSaveable { mutableStateOf(DaySheetMode.OVERVIEW) }
     var infoDialog by remember { mutableStateOf<InfoDialog?>(null) }
@@ -385,10 +386,12 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
         if (granted && reminderProfileId == state.activeProfile.id) {
-            viewModel.saveSettings(state.backup.settings.copy(reminderEnabled = true), reminderProfileId)
+            viewModel.saveSettings(if (contraceptionPermissionPending) state.backup.settings.copy(contraceptionReminderEnabled = true)
+                else state.backup.settings.copy(reminderEnabled = true), reminderProfileId)
         }
         else viewModel.permissionDenied()
         reminderProfileId = null
+        contraceptionPermissionPending = false
     }
     val calendarPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -492,6 +495,7 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                             state = state,
                             onSave = { viewModel.saveSettings(it) },
                             onReminderChange = { enabled ->
+                                contraceptionPermissionPending = false
                                 if (enabled && Build.VERSION.SDK_INT >= 33 &&
                                     ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
                                     PackageManager.PERMISSION_GRANTED
@@ -501,6 +505,14 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                                 } else {
                                     viewModel.saveSettings(state.backup.settings.copy(reminderEnabled = enabled))
                                 }
+                            },
+                            onContraceptionReminderChange = { enabled ->
+                                if (enabled && Build.VERSION.SDK_INT >= 33 &&
+                                    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                                    reminderProfileId = state.activeProfile.id
+                                    contraceptionPermissionPending = true
+                                    notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else viewModel.saveSettings(state.backup.settings.copy(contraceptionReminderEnabled = enabled))
                             },
                             onInfo = { infoDialog = it },
                             onDeleteAll = { showDeleteConfirm = true },
@@ -586,6 +598,7 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                     initial = state.logsByDay[day],
                     showFertility = state.showFertility,
                     mode = state.activeProfile.mode,
+                    usesContraception = state.backup.settings.profile.lifeSituation == LifeSituation.HORMONAL_CONTRACEPTION,
                     isBusy = isBusy,
                     saveFailed = saveFailed,
                     onRetryLoad = if (state.loadFailed) viewModel::retryLoad else null,
@@ -1287,6 +1300,7 @@ private fun trackerFilterLabel(filter: TrackerFilter): Int = when (filter) {
     TrackerFilter.STRESS -> R.string.stress
     TrackerFilter.INTIMACY -> R.string.intimacy
     TrackerFilter.TESTS -> R.string.calendar_filter_tests
+    TrackerFilter.CONTRACEPTION -> R.string.contraception_tracker
     TrackerFilter.NOTES -> R.string.note
 }
 
@@ -2120,6 +2134,7 @@ private fun SettingsScreen(
     state: AppState,
     onSave: (AppSettings) -> Unit,
     onReminderChange: (Boolean) -> Unit,
+    onContraceptionReminderChange: (Boolean) -> Unit,
     onInfo: (InfoDialog) -> Unit,
     onDeleteAll: () -> Unit,
     onMyCalendarImport: () -> Unit,
@@ -2205,6 +2220,7 @@ private fun SettingsScreen(
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
                     SectionLabel(Icons.Outlined.PersonOutline, R.string.settings_profile)
                     ProfileSettings(settings, onSave)
+                    ContraceptionSettings(settings, onSave, onContraceptionReminderChange)
                 }
                 SettingsPage.HOME -> {
                     SwitchRow(
@@ -2242,6 +2258,7 @@ private fun SettingsScreen(
                     LanguageRow()
                 }
                 SettingsPage.REMINDERS -> {
+                    ContraceptionSettings(settings, onSave, onContraceptionReminderChange)
                     SwitchRow(
                         R.string.period_reminder,
                         settings.reminderEnabled,
@@ -2478,6 +2495,38 @@ private fun ProfileSettings(settings: AppSettings, onSave: (AppSettings) -> Unit
 }
 
 @Composable
+private fun ContraceptionSettings(settings: AppSettings, onSave: (AppSettings) -> Unit, onReminderChange: (Boolean) -> Unit) {
+    if (settings.profile.lifeSituation != LifeSituation.HORMONAL_CONTRACEPTION) return
+    val context = LocalContext.current
+    SectionLabel(Icons.Outlined.Medication, R.string.contraception_tracker)
+    SwitchRow(R.string.contraception_reminder, settings.contraceptionReminderEnabled,
+        Icons.Outlined.NotificationsNone, onChange = onReminderChange)
+    if (settings.contraceptionReminderEnabled) {
+        OutlinedButton(onClick = {
+            android.app.TimePickerDialog(context, { _, hour, minute ->
+                onSave(settings.copy(contraceptionReminderMinute = hour * 60 + minute))
+            }, settings.contraceptionReminderMinute / 60, settings.contraceptionReminderMinute % 60,
+                android.text.format.DateFormat.is24HourFormat(context)).show()
+        }) {
+            Icon(Icons.Outlined.Timelapse, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.contraception_time, contraceptionTime(settings)))
+        }
+        if (Build.VERSION.SDK_INT >= 31) {
+            TextButton(onClick = {
+                context.startActivity(Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                    "package:${context.packageName}".toUri()))
+            }) { Text(stringResource(R.string.contraception_exact)) }
+        }
+        Text(stringResource(R.string.contraception_delay_notice), style = MaterialTheme.typography.bodySmall)
+    }
+    Text(stringResource(R.string.contraception_schedule_hint), style = MaterialTheme.typography.bodySmall)
+}
+
+private fun contraceptionTime(settings: AppSettings): String =
+    String.format(Locale.ROOT, "%02d:%02d", settings.contraceptionReminderMinute / 60, settings.contraceptionReminderMinute % 60)
+
+@Composable
 private fun ProfileNumberField(
     value: String,
     onValueChange: (String) -> Unit,
@@ -2531,15 +2580,17 @@ private fun CalendarSyncSettings(
 ) {
     val selected = state.deviceCalendars.firstOrNull { it.id == state.selectedCalendarId }
     var choosingCalendar by remember { mutableStateOf(false) }
-    val syncEnabled = state.selectedCalendarId != null || choosingCalendar
+    val syncEnabled = state.calendarSyncEnabled
     InfoBlock(R.string.calendar_sync, R.string.calendar_sync_body, Icons.Outlined.EventRepeat)
     SwitchRow(
         R.string.calendar_sync_enabled,
         syncEnabled,
         Icons.Outlined.EventRepeat,
+        enabled = !state.busy,
     ) { enabled ->
         if (enabled) {
-            if (state.calendarPermissionGranted) choosingCalendar = true else onRequestPermission()
+            choosingCalendar = true
+            if (!state.calendarPermissionGranted) onRequestPermission()
         } else {
             choosingCalendar = false
             onDisconnect()
@@ -2549,7 +2600,7 @@ private fun CalendarSyncSettings(
         R.string.partner_view,
         state.backup.settings.partnerViewEnabled,
         Icons.Outlined.FavoriteBorder,
-        enabled = state.selectedCalendarId != null,
+        enabled = state.calendarSyncEnabled && !state.busy,
     ) { onSave(state.backup.settings.copy(partnerViewEnabled = it)) }
     Text(
         stringResource(R.string.partner_view_body),
@@ -2559,7 +2610,7 @@ private fun CalendarSyncSettings(
     HorizontalDivider(Modifier.padding(vertical = 8.dp))
     when {
         !state.calendarPermissionGranted -> Button(
-            onClick = onRequestPermission,
+            onClick = { choosingCalendar = true; onRequestPermission() },
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.busy,
         ) {
@@ -2572,7 +2623,7 @@ private fun CalendarSyncSettings(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         else -> {
-            if (state.selectedCalendarId != null) {
+            if (state.calendarSyncEnabled) {
                 Text(
                     selected?.let { stringResource(R.string.calendar_active, it.displayName) }
                         ?: stringResource(R.string.calendar_unavailable),
@@ -2580,21 +2631,23 @@ private fun CalendarSyncSettings(
                     fontWeight = FontWeight.SemiBold,
                 )
             }
-            state.deviceCalendars.forEach { calendar ->
+            if (choosingCalendar || state.calendarSyncEnabled) state.deviceCalendars.forEach { calendar ->
                 DeviceCalendarRow(
                     calendar = calendar,
-                    selected = calendar.id == state.selectedCalendarId,
+                    selected = state.calendarSyncEnabled && calendar.id == state.selectedCalendarId,
                     enabled = !state.busy,
-                    onClick = { onSelect(calendar.id) },
+                    onClick = { choosingCalendar = false; onSelect(calendar.id) },
                 )
-            }
-            if (state.selectedCalendarId != null) {
-                OutlinedButton(onClick = onDisconnect, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-                    Text(stringResource(R.string.calendar_disconnect))
-                }
             }
         }
     }
+    OutlinedButton(onClick = { choosingCalendar = false; onDisconnect() },
+        modifier = Modifier.fillMaxWidth(), enabled = !state.busy && state.calendarPermissionGranted) {
+        Icon(Icons.Outlined.DeleteForever, contentDescription = null)
+        Spacer(Modifier.width(8.dp))
+        Text(stringResource(if (state.calendarSyncEnabled) R.string.calendar_disconnect else R.string.calendar_delete_copies))
+    }
+    Text(stringResource(R.string.calendar_mirror_limits), style = MaterialTheme.typography.bodySmall)
     Text(
         stringResource(R.string.calendar_sync_notice),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -3142,6 +3195,16 @@ private fun DayOverviewSheet(
             ) {
                 SheetHeader(R.string.day_overview, onDismiss)
                 Text(day.format(dateFormat), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (log?.contraception != null || state.backup.settings.profile.lifeSituation == LifeSituation.HORMONAL_CONTRACEPTION) {
+                    SectionLabel(Icons.Outlined.Medication, R.string.contraception_tracker)
+                    log?.contraception?.let {
+                        Text(stringResource(R.string.contraception_summary, stringResource(contraceptionStatusLabels.first { choice -> choice.value == it }.label)))
+                    }
+                    if (state.backup.settings.contraceptionReminderEnabled && log?.contraception == null && day >= today &&
+                        state.backup.settings.profile.lifeSituation == LifeSituation.HORMONAL_CONTRACEPTION) {
+                        Text(stringResource(R.string.contraception_time, contraceptionTime(state.backup.settings)))
+                    }
+                }
                 if (log?.automaticBleeding == true) Text(
                     stringResource(R.string.automatic_period_body),
                     style = MaterialTheme.typography.bodyMedium,
@@ -3470,6 +3533,7 @@ private fun DayLogSheet(
     initial: DayLog?,
     showFertility: Boolean,
     mode: UiMode,
+    usesContraception: Boolean,
     isBusy: () -> Boolean,
     saveFailed: Boolean,
     onRetryLoad: (() -> Unit)?,
@@ -3497,6 +3561,7 @@ private fun DayLogSheet(
     var stress by rememberSaveable(day, initial) { mutableStateOf(initial?.stress) }
     var activity by rememberSaveable(day, initial) { mutableStateOf(initial?.activity) }
     var medication by rememberSaveable(day, initial) { mutableStateOf(initial?.medication) }
+    var contraception by rememberSaveable(day, initial) { mutableStateOf(initial?.contraception) }
     var confirmDelete by rememberSaveable(day) { mutableStateOf(false) }
     var confirmDiscard by rememberSaveable(day) { mutableStateOf(false) }
     val weightValue = parseDecimal(weight)
@@ -3532,6 +3597,7 @@ private fun DayLogSheet(
             stress = stress,
             activity = activity,
             medication = medication,
+            contraception = contraception,
             importedDetails = initial?.importedDetails.orEmpty(),
         ).preservePeriodFrom(initial, flow)
     }
@@ -3569,6 +3635,12 @@ private fun DayLogSheet(
                     dateLabel,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (usesContraception || contraception != null) {
+                    ChoiceRow(R.string.contraception_tracker, contraceptionStatusLabels, contraception,
+                        icon = Icons.Outlined.Medication, enabled = editable && day <= LocalDate.now()) {
+                        edit { contraception = it.takeUnless { contraception == it } }
+                    }
+                }
                 if (initial?.bleeding == true) {
                     ChoiceRow(
                         label = R.string.flow,
@@ -3833,6 +3905,12 @@ private val activityLevelLabels = listOf(
 private val medicationStatusLabels = listOf(
     ChoiceOption(MedicationStatus.TAKEN, R.string.medication_taken, Icons.Outlined.Medication),
     ChoiceOption(MedicationStatus.MISSED, R.string.medication_missed, Icons.Outlined.EventBusy),
+)
+
+private val contraceptionStatusLabels = listOf(
+    ChoiceOption(ContraceptionStatus.TAKEN, R.string.medication_taken, Icons.Outlined.CheckCircle),
+    ChoiceOption(ContraceptionStatus.MISSED, R.string.medication_missed, Icons.Outlined.EventBusy),
+    ChoiceOption(ContraceptionStatus.PAUSE, R.string.contraception_pause, Icons.Outlined.RemoveCircleOutline),
 )
 
 @StringRes
