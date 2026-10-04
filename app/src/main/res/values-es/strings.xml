@@ -181,7 +181,7 @@
     <string name="permission_denied">Permiso denegado. No cambió nada.</string>
     <string name="operation_failed">La operación falló. Los datos existentes no se sustituyeron.</string>
     <string name="calendar_sync_failed">La sincronización del calendario falló. Los datos privados del ciclo no cambiaron.</string>
-    <string name="calendar_cleanup_pending">La sincronización está desactivada. No se pudieron borrar algunas copias. Restaura el acceso y usa Borrar eventos de Selia del calendario.</string>
+    <string name="calendar_cleanup_pending">La sincronización está desactivada. La limpieza no se completó. Revisa el acceso al calendario y vuelve a cargar la lista.</string>
     <string name="calendar_event_recorded">Selia · Periodo registrado</string>
     <string name="calendar_event_estimated">Selia · Periodo estimado</string>
     <string name="calendar_event_fertile">Selia · Ventana fértil estimada</string>

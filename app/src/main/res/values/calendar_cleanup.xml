@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_cleanup_choose">Choose calendar to clean</string>
+    <string name="calendar_cleanup_review">Review calendar copies</string>
+    <string name="calendar_cleanup_scope">Sync will stay OFF. Only checked events in this calendar will be deleted. Local cycle records are kept.</string>
+    <string name="calendar_cleanup_empty">No matching copies are available on this device. If cloud copies remain, check account sync or remove them in your calendar app.</string>
+    <string name="calendar_cleanup_legacy_warning">Older copies have no reliable profile identity. Check the dates before selecting them; copies from other people may have the same title.</string>
+    <string name="calendar_cleanup_count">Selected %1$d of %2$d</string>
+    <string name="calendar_cleanup_select_all">Select all listed</string>
+    <string name="calendar_cleanup_select_none">Clear selection</string>
+    <string name="calendar_cleanup_legacy">Legacy copy · profile unknown</string>
+    <string name="calendar_cleanup_delete_selected">Delete selected (%1$d)</string>
+    <string name="calendar_cleanup_complete">Selected copies were removed from the device calendar. The calendar provider controls account synchronization.</string>
+</resources>

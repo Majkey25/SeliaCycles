@@ -181,7 +181,7 @@
     <string name="permission_denied">Oprávnění bylo zamítnuto. Nic se nezměnilo.</string>
     <string name="operation_failed">Operace selhala. Původní data nebyla nahrazena.</string>
     <string name="calendar_sync_failed">Synchronizace kalendáře selhala. Soukromá data cyklu se nezměnila.</string>
-    <string name="calendar_cleanup_pending">Synchronizace je vypnutá. Některé kopie se nepodařilo smazat. Obnov přístup a použij Smazat události Selia z kalendáře.</string>
+    <string name="calendar_cleanup_pending">Synchronizace je vypnutá. Vyčištění se nedokončilo. Zkontroluj přístup ke kalendáři a znovu načti seznam.</string>
     <string name="calendar_event_recorded">Selia · Zapsaná menstruace</string>
     <string name="calendar_event_estimated">Selia · Odhad menstruace</string>
     <string name="calendar_event_fertile">Selia · Odhad plodného období</string>

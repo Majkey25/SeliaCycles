@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_cleanup_choose">Kalender zum Bereinigen wählen</string>
+    <string name="calendar_cleanup_review">Kalenderkopien prüfen</string>
+    <string name="calendar_cleanup_scope">Die Synchronisierung bleibt AUS. Nur markierte Termine in diesem Kalender werden gelöscht. Lokale Zyklusdaten bleiben erhalten.</string>
+    <string name="calendar_cleanup_empty">Keine passenden Kopien auf diesem Gerät verfügbar. Prüfe die Kontosynchronisierung oder lösche verbliebene Cloud-Kopien in deiner Kalender-App.</string>
+    <string name="calendar_cleanup_legacy_warning">Alte Kopien haben keine verlässliche Profilzuordnung. Prüfe die Daten vor der Auswahl; Kopien anderer Personen können gleich heißen.</string>
+    <string name="calendar_cleanup_count">%1$d von %2$d ausgewählt</string>
+    <string name="calendar_cleanup_select_all">Alle angezeigten auswählen</string>
+    <string name="calendar_cleanup_select_none">Auswahl aufheben</string>
+    <string name="calendar_cleanup_legacy">Alte Kopie · Profil unbekannt</string>
+    <string name="calendar_cleanup_delete_selected">Ausgewählte löschen (%1$d)</string>
+    <string name="calendar_cleanup_complete">Ausgewählte Kopien wurden aus dem Gerätekalender entfernt. Die Kontosynchronisierung steuert der Kalenderanbieter.</string>
+</resources>

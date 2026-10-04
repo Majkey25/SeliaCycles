@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="calendar_delete_copies">Vymazať udalosti Selia z kalendára</string>
-    <string name="calendar_mirror_limits">Kópie zahŕňajú zapísanú históriu a najviac dva mesiace dopredu. Vypnutie zastaví nové udalosti ešte pred mazaním. Synchronizáciu spustíš výberom kalendára; staré pripojenie zostane po tejto aktualizácii vypnuté.</string>
+    <string name="calendar_mirror_limits">Kópie zahŕňajú zapísanú históriu a najviac dva mesiace dopredu. Vypnutie zastaví nové udalosti ešte pred mazaním. Tlačidlom Vymazať udalosti Selia môžeš skontrolovať staršie kópie vo vybranom kalendári.</string>
 </resources>

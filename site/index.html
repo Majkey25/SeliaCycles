@@ -12,7 +12,7 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <main id="main" tabindex="-1">
   <h1>Selia Cycles privacy policy</h1>
-  <p class="meta">Updated October 3, 2026</p>
+  <p class="meta">Updated October 4, 2026</p>
   <p>Selia Cycles is published by MajkeyLab. Contact <a href="mailto:majkeylab@gmail.com">majkeylab@gmail.com</a> about this policy.</p>
   <nav aria-label="Legal documents">
     <a href="index.html" aria-current="page">Privacy policy</a>
@@ -35,8 +35,10 @@
   <p>When you choose an export destination, Selia Cycles writes a .pc backup containing the selected profile's cycle records and app settings to Android's file provider. The file is not encrypted. If you choose a cloud-backed destination, that provider may upload the file under its own terms. Selia Cycles does not upload it to a MajkeyLab server. Anyone with access to the file may be able to read health data, so store and share it securely.</p>
 
   <h2>Optional calendar mirror</h2>
-  <p>Sync is explicitly enabled per profile and never enabled by importing a backup. OFF is saved before cleanup, so failed deletion cannot restart synchronization. Copies include recorded history and at most two months ahead. Delete Selia events stops sync and removes only the selected profile's Selia-created events. If cleanup fails, restore calendar access and retry that button. Ordinary calendar appointments are not interpreted as cycle records.</p>
+  <p>Sync is explicitly enabled per profile and never enabled by importing a backup. OFF is saved before cleanup, so failed deletion cannot restart synchronization. Copies include recorded history and at most two months ahead. Turning sync off removes copies identifiable as belonging to the selected profile. Ordinary calendar appointments are not interpreted as cycle records.</p>
+  <p>Delete Selia events offers a preview in a calendar you choose. Older copies may have lost their app identifiers during account synchronization. Matching titles are shown for your review, with nothing selected by default. A title alone cannot identify the original profile or person: select only copies you intend to delete. The preview can only include events available through the device calendar provider. For cloud-only copies, refresh the provider or use your calendar app. If deletion fails, sync stays off; restore calendar access and refresh the preview before retrying.</p>
   <p>If you enable calendar mirroring, Selia Cycles requests Android calendar read/write permission and copies short labels for recorded periods, period estimates, fertile windows, and estimated ovulation into the calendar you select. Notes, symptoms, measurements, intimacy, and raw mood logs are never copied.</p>
+  <p>New copies include a Selia reference in their description: a local profile identifier, event type and date. This lets Selia recognize its copies even if the provider removes Android-specific app fields. The reference does not contain the profile name. Text added to the description in your calendar is retained when Selia updates the event.</p>
   <p>The selected provider, such as Google Calendar, Outlook, Exchange, or a local calendar, controls account synchronization and access. Events are private by default. For view-only partner access, create and share a separate calendar in the provider, then select it in Selia. Selia cannot grant or enforce provider access. The provider's privacy terms then apply.</p>
 
   <h2>Device transfer</h2>
@@ -44,7 +46,7 @@
 
   <h2>Sharing and deletion</h2>
   <p>Selia Cycles does not sell personal data. Enabling the optional calendar mirror is a user-directed disclosure to the chosen provider.</p>
-  <p><strong>Settings &gt; Data and transfer &gt; Clear this calendar</strong> clears only the selected profile's records and settings. <strong>Manage profiles &gt; Delete profile</strong> removes an additional profile and its records. Clearing Android app storage or uninstalling removes all local profiles. <strong>Stop calendar sync</strong> removes the selected profile's Selia-created calendar events while permission is available. If permission was revoked or the app was uninstalled first, remove calendar copies in the calendar app.</p>
+  <p><strong>Settings &gt; Data and transfer &gt; Clear this calendar</strong> clears only the selected profile's records and settings. <strong>Manage profiles &gt; Delete profile</strong> removes an additional profile and its records. Clearing Android app storage or uninstalling removes all local profiles. <strong>Stop calendar sync</strong> removes identifiable copies for the selected profile while permission is available. Use <strong>Delete Selia events</strong> to review older copies with missing app identifiers. If permission was revoked or the app was uninstalled first, remove calendar copies in the calendar app.</p>
   <p>Exported files and copies held by a selected file or calendar provider are not erased when you clear app data. Delete those copies separately through the provider.</p>
 
   <h2>External links and support</h2>
