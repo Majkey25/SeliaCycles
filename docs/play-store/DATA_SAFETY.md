@@ -40,6 +40,12 @@ These answers describe code 22, version 0.9.0-beta.14. Rechecked September 6, 20
 
 Recheck these answers after every dependency or feature change.
 
+## October 4 calendar cleanup change
+
+Code 31 adds a local preview for older calendar copies whose Android app identifiers are missing. The user chooses a calendar and checks individual copies before deletion. A title-only match cannot identify its original profile, so those copies are not deleted automatically. The preview cannot include cloud events that are absent from the device provider.
+
+New mirrored event descriptions include a local profile identifier, event type, and date. They do not include the profile name. This reference preserves ownership if account synchronization drops Android-specific fields. There is no new network service or permission. The selected calendar provider still controls account synchronization. The privacy policy describes the reference and cleanup limits.
+
 ## September 6 verification
 
 Play Console's saved form selects Period Tracking and no medical-device category. Data safety answers No to reportable collection or sharing; the privacy URL matches the app's link. No declaration required attention at the time of this check.

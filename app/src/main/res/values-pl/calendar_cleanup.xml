@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_cleanup_choose">Wybierz kalendarz do wyczyszczenia</string>
+    <string name="calendar_cleanup_review">Sprawdź kopie w kalendarzu</string>
+    <string name="calendar_cleanup_scope">Synchronizacja pozostanie WYŁĄCZONA. Usunięte zostaną tylko zaznaczone wydarzenia z tego kalendarza. Lokalne dane cyklu pozostaną.</string>
+    <string name="calendar_cleanup_empty">Brak pasujących kopii dostępnych na tym urządzeniu. Jeśli pozostały w chmurze, sprawdź synchronizację konta lub usuń je w aplikacji kalendarza.</string>
+    <string name="calendar_cleanup_legacy_warning">Stare kopie nie mają wiarygodnego oznaczenia profilu. Sprawdź daty przed wyborem; kopie innych osób mogą mieć ten sam tytuł.</string>
+    <string name="calendar_cleanup_count">Wybrano %1$d z %2$d</string>
+    <string name="calendar_cleanup_select_all">Wybierz wszystkie widoczne</string>
+    <string name="calendar_cleanup_select_none">Wyczyść wybór</string>
+    <string name="calendar_cleanup_legacy">Stara kopia · nieznany profil</string>
+    <string name="calendar_cleanup_delete_selected">Usuń wybrane (%1$d)</string>
+    <string name="calendar_cleanup_complete">Wybrane kopie zostały usunięte z kalendarza urządzenia. Synchronizacją konta zarządza dostawca kalendarza.</string>
+</resources>

@@ -529,6 +529,7 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                             },
                             onCalendarSelect = viewModel::connectCalendar,
                             onCalendarDisconnect = viewModel::disconnectCalendar,
+                            onCalendarCleanup = viewModel::previewCalendarCleanup,
                         )
                     }
                 }
@@ -610,6 +611,9 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
     }
     infoDialog?.let { dialog ->
         InfoDialogContent(dialog = dialog, onDismiss = { infoDialog = null })
+    }
+    state.calendarCleanupPreview?.let { preview ->
+        CalendarCleanupDialog(preview, state.busy, viewModel::cancelCalendarCleanup, viewModel::deleteCalendarCopies)
     }
     state.myCalendarPreview?.let { preview ->
         MyCalendarPreviewDialog(
@@ -2142,6 +2146,7 @@ private fun SettingsScreen(
     onRequestCalendarPermission: () -> Unit,
     onCalendarSelect: (Long) -> Unit,
     onCalendarDisconnect: () -> Unit,
+    onCalendarCleanup: (Long) -> Unit,
 ) {
     val settings = state.backup.settings
     val context = LocalContext.current
@@ -2277,6 +2282,7 @@ private fun SettingsScreen(
                     onRequestPermission = onRequestCalendarPermission,
                     onSelect = onCalendarSelect,
                     onDisconnect = onCalendarDisconnect,
+                    onCleanup = onCalendarCleanup,
                 )
                 SettingsPage.DATA -> {
                     Text(stringResource(R.string.profile_transfer_scope), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -2577,9 +2583,11 @@ private fun CalendarSyncSettings(
     onRequestPermission: () -> Unit,
     onSelect: (Long) -> Unit,
     onDisconnect: () -> Unit,
+    onCleanup: (Long) -> Unit,
 ) {
     val selected = state.deviceCalendars.firstOrNull { it.id == state.selectedCalendarId }
     var choosingCalendar by remember { mutableStateOf(false) }
+    var choosingCleanupCalendar by remember { mutableStateOf(false) }
     val syncEnabled = state.calendarSyncEnabled
     InfoBlock(R.string.calendar_sync, R.string.calendar_sync_body, Icons.Outlined.EventRepeat)
     SwitchRow(
@@ -2641,12 +2649,15 @@ private fun CalendarSyncSettings(
             }
         }
     }
-    OutlinedButton(onClick = { choosingCalendar = false; onDisconnect() },
+    OutlinedButton(onClick = { choosingCalendar = false; choosingCleanupCalendar = true },
         modifier = Modifier.fillMaxWidth(), enabled = !state.busy && state.calendarPermissionGranted) {
         Icon(Icons.Outlined.DeleteForever, contentDescription = null)
         Spacer(Modifier.width(8.dp))
         Text(stringResource(if (state.calendarSyncEnabled) R.string.calendar_disconnect else R.string.calendar_delete_copies))
     }
+    if (choosingCleanupCalendar) CalendarCleanupCalendarDialog(state.deviceCalendars,
+        onDismiss = { choosingCleanupCalendar = false },
+        onSelect = { choosingCleanupCalendar = false; onCleanup(it) })
     Text(stringResource(R.string.calendar_mirror_limits), style = MaterialTheme.typography.bodySmall)
     Text(
         stringResource(R.string.calendar_sync_notice),

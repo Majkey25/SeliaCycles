@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0-beta.23 - 2026-10-04
+
+### Fixed
+
+- Explicit calendar cleanup now previews legacy Selia copies without Android provider metadata. Choose the calendar and select the events before deletion.
+- Known profile ownership is preserved. Title-only copies are marked as profile unknown and never selected automatically.
+- New copies retain a profile reference in their description, allowing reconciliation after provider metadata loss without duplicating events.
+- Cleanup rechecks each selected event and guards deletion against changes after preview. Calendar-edited notes are preserved.
+- All supported language resources are bundled so older localized titles can be recognized offline.
+
 ## 0.9.0-beta.22 - 2026-10-03
 
 ### Fixed

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_cleanup_choose">Elige el calendario que limpiar</string>
+    <string name="calendar_cleanup_review">Revisa las copias del calendario</string>
+    <string name="calendar_cleanup_scope">La sincronización seguirá DESACTIVADA. Solo se borrarán los eventos marcados de este calendario. Los registros locales se conservan.</string>
+    <string name="calendar_cleanup_empty">No hay copias coincidentes disponibles en este dispositivo. Si quedan en la nube, revisa la sincronización de la cuenta o bórralas en tu app de calendario.</string>
+    <string name="calendar_cleanup_legacy_warning">Las copias antiguas no identifican el perfil de forma fiable. Revisa las fechas antes de seleccionarlas; otras personas pueden tener copias con el mismo título.</string>
+    <string name="calendar_cleanup_count">Seleccionados %1$d de %2$d</string>
+    <string name="calendar_cleanup_select_all">Seleccionar todos los mostrados</string>
+    <string name="calendar_cleanup_select_none">Quitar selección</string>
+    <string name="calendar_cleanup_legacy">Copia antigua · perfil desconocido</string>
+    <string name="calendar_cleanup_delete_selected">Borrar seleccionados (%1$d)</string>
+    <string name="calendar_cleanup_complete">Se eliminaron las copias seleccionadas del calendario del dispositivo. El proveedor controla la sincronización de la cuenta.</string>
+</resources>

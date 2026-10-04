@@ -44,6 +44,7 @@ data class AppState(
     val calendarPermissionGranted: Boolean = false,
     val selectedCalendarId: Long? = null,
     val calendarSyncEnabled: Boolean = false,
+    val calendarCleanupPreview: CalendarCleanupPreview? = null,
     val deviceCalendars: List<DeviceCalendar> = emptyList(),
     val loading: Boolean = true,
     val loadFailed: Boolean = false,
@@ -270,6 +271,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun previewCalendarCleanup(calendarId: Long) = viewModelScope.launch {
+        if (!acceptsProfile() || _state.value.busy) return@launch
+        val target = session
+        val revision = ++storeRevision
+        _state.value = _state.value.copy(busy = true, message = null, calendarCleanupPreview = null)
+        val result = runCatching { storeMutex.withLock {
+            check(session === target)
+            withContext(Dispatchers.IO) {
+                try { target.calendarMirror.previewCleanup(calendarId) } finally {
+                    val settings = target.store.load().settings
+                    if (settings.partnerViewEnabled) target.store.saveSettings(settings.copy(partnerViewEnabled = false))
+                }
+            }
+        } }.onFailure { if (it is CancellationException) throw it }
+        if (revision != storeRevision) return@launch
+        _state.value = _state.value.copy(calendarCleanupPreview = result.getOrNull())
+        reload(when (result.exceptionOrNull()) {
+            null -> null
+            is CalendarCleanupException -> R.string.calendar_cleanup_pending
+            else -> R.string.operation_failed
+        }, revision)
+    }
+
+    fun cancelCalendarCleanup() {
+        _state.value = _state.value.copy(calendarCleanupPreview = null)
+    }
+
+    fun deleteCalendarCopies(selectedIds: Set<Long>) {
+        val preview = _state.value.calendarCleanupPreview ?: return
+        if (!acceptsProfile(preview.profileId) || _state.value.busy) return
+        _state.value = _state.value.copy(calendarCleanupPreview = null)
+        runStoreAction(R.string.calendar_cleanup_complete) {
+            calendarMirror.deletePreviewedEvents(preview, selectedIds)
+        }
+    }
+
     fun inspectMyCalendar(uri: Uri, expectedProfileId: String? = _state.value.activeProfile.id) = viewModelScope.launch {
         if (!acceptsProfile(expectedProfileId)) return@launch
         val target = session
@@ -409,6 +446,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     calendarPermissionGranted = it.calendar.permissionGranted,
                     selectedCalendarId = it.calendar.selectedCalendarId,
                     calendarSyncEnabled = it.calendar.calendarSyncEnabled,
+                    calendarCleanupPreview = _state.value.calendarCleanupPreview?.takeIf { preview -> preview.profileId == session.profile.id },
                     deviceCalendars = it.calendar.calendars,
                     loading = false,
                     myCalendarPreview = _state.value.myCalendarPreview,

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_cleanup_choose">Vyber kalendář k vyčištění</string>
+    <string name="calendar_cleanup_review">Zkontroluj kopie v kalendáři</string>
+    <string name="calendar_cleanup_scope">Synchronizace zůstane VYPNUTÁ. Smažou se jen zaškrtnuté události v tomto kalendáři. Místní záznamy cyklu zůstanou.</string>
+    <string name="calendar_cleanup_empty">V zařízení nejsou dostupné žádné odpovídající kopie. Pokud zůstaly v cloudu, zkontroluj synchronizaci účtu nebo je smaž v kalendářové aplikaci.</string>
+    <string name="calendar_cleanup_legacy_warning">Staré kopie nemají spolehlivé označení profilu. Před výběrem ověř data; kopie jiné osoby mohou mít stejný název.</string>
+    <string name="calendar_cleanup_count">Vybráno %1$d z %2$d</string>
+    <string name="calendar_cleanup_select_all">Vybrat všechny zobrazené</string>
+    <string name="calendar_cleanup_select_none">Zrušit výběr</string>
+    <string name="calendar_cleanup_legacy">Stará kopie · neznámý profil</string>
+    <string name="calendar_cleanup_delete_selected">Smazat vybrané (%1$d)</string>
+    <string name="calendar_cleanup_complete">Vybrané kopie byly odstraněny z kalendáře v zařízení. Synchronizaci účtu řídí poskytovatel kalendáře.</string>
+</resources>

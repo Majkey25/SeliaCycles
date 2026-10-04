@@ -19,8 +19,8 @@ android {
         applicationId = "com.majkeylab.seliacycles"
         minSdk = 29
         targetSdk = 36
-        versionCode = 30
-        versionName = "0.9.0-beta.22"
+        versionCode = 31
+        versionName = "0.9.0-beta.23"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -66,6 +66,8 @@ android {
         generateLocaleConfig = true
         localeFilters += listOf("en", "cs", "sk", "de", "pl", "es")
     }
+    // Cleanup must recognize titles written in any supported language, including offline Play installs.
+    bundle { language { enableSplit = false } }
 
     testOptions {
         unitTests.isIncludeAndroidResources = true
