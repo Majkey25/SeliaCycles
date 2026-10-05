@@ -1,65 +1,16 @@
 # Selia Cycles privacy policy
 
-Effective: October 3, 2026
+The current policy is published at [Selia Cycles privacy policy](https://majkey25.github.io/SeliaCycles/).
+Its maintained source is [site/index.html](site/index.html).
 
-Selia Cycles is published by MajkeyLab. Contact `majkeylab@gmail.com` about this policy.
+Publisher: Matěj Teplý, using the names Majkey and MajkeyLab.
+Privacy contact: [majkeylab@gmail.com](mailto:majkeylab@gmail.com).
 
-## Data stored by the app
+The policy covers local health records, optional calendar copies and file exports,
+device transfer, retention, deletion, website hosting and support requests.
+This file links to that policy so repository and website copies cannot diverge.
 
-Selia Cycles stores menstrual dates, spotting, flow, symptoms, mood, notes, cervical mucus, ovulation and pregnancy test results, pain, energy, stress, activity, medication status, weight, basal temperature, sleep, intimacy, optional age and height, tracking goal, life situation, saved forecast baselines, reminder settings, and display settings in private storage on the Android device.
-
-The app has no account, ads, analytics, telemetry, Selia cloud, or network permission. MajkeyLab does not receive cycle data.
-
-Each local profile has a separate calendar database. Profile names and display modes are stored on the device. Profiles are not password-protected accounts: anyone who can open the app can switch between them. Add another person's health data only with appropriate consent.
-
-## Contraception records and reminders
-
-Contraception records and optional reminder times stay in the selected profile. Android alarm and notification access is optional. Notifications use private visibility, but their appearance also depends on the device. Reminders never confirm a dose or calculate contraceptive protection. Contraception records are not included in external calendar copies.
-
-## Local self-care suggestions
-
-The app selects self-care ideas from the chosen profile's dates, estimated phase, bleeding-day context, and optional symptom, pain, mood, energy, sleep and pregnancy entries. This processing stays on the device. No records are sent to an AI service, MajkeyLab or a food provider. Using the app does not automatically consent to sharing health information.
-
-Food ideas and activities are educational suggestions, not a diagnosis or treatment plan. No relief or other outcome is guaranteed. Read the [self-care terms and sources](https://majkey25.github.io/SeliaCycles/legal.html#self-care).
-
-## Optional `.pc` import and export
-
-When the user selects a compatible `.pc` backup, Selia Cycles reads the file locally, previews the dated records, and merges confirmed records into private app storage. The file and imported health data are not uploaded. Existing Selia values take priority for the same day.
-
-Import and export apply only to the selected profile. A `.pc` file does not contain the other local profiles.
-
-## Optional `.pc` export
-
-When the user chooses an export destination, Selia Cycles creates a local `.pc` backup containing cycle records and app settings. The export is not uploaded by Selia Cycles and is not encrypted. Anyone with access to the file may be able to read health data, so the user should store or share it securely.
-
-## Optional calendar mirror
-
-Calendar mirroring is explicitly enabled per local profile and never enabled by importing a backup. OFF is saved before cleanup, so a deletion error cannot resume synchronization. Copies include recorded history and at most two months ahead. The cleanup button stops sync and deletes only that profile's Selia-created events; after a provider error or revoked permission, restore access and retry cleanup. Ordinary calendar appointments are not interpreted as cycle records.
-
-If the user enables calendar mirroring, Selia Cycles requests Android calendar read/write permission, lists visible writable calendars, and copies short labels for recorded periods, period estimates, fertile windows, and estimated ovulation into the selected calendar. Notes, symptoms, measurements, spotting, cervical mucus, test results, medication, intimacy, and raw mood logs are never copied.
-
-The selected calendar provider, such as Google Calendar, Outlook, Exchange, or a local calendar, controls whether those labels are uploaded to an account and who can access them. Events are private by default. For view-only partner access, the user creates and shares a separate calendar in the provider, then selects it in Selia. Selia cannot grant or enforce provider access. Its privacy terms apply. Selia stores the selected device calendar row ID in Android no-backup storage because the ID is device-specific.
-
-## Device transfer
-
-Android may copy the private app database and settings directly during new-device setup. Selia Cycles supplies data only when Android identifies the transport as device-to-device transfer. Normal cloud backup receives no app data. Android controls the transfer process; MajkeyLab cannot access it.
-
-## Sharing
-
-Selia Cycles does not sell personal data. Enabling the optional calendar mirror is a user-directed disclosure to the chosen calendar provider. Opening a medical source link hands the URL to the selected browser, whose privacy policy then applies.
-
-## Retention and deletion
-
-**Settings > Data and transfer > Clear this calendar** clears the selected profile's records and settings without changing other profiles. **Manage profiles > Delete profile** removes an additional profile and its records. Clearing Android app storage or uninstalling removes all local profiles. **Stop calendar sync** removes the selected profile's Selia-created calendar events while permission is available. If permission was revoked or the app was uninstalled first, calendar copies must be removed in the calendar app.
-
-## Security
-
-Android app-private storage protects local data. No storage method removes all risk; protect the device with an appropriate screen lock.
-
-## Medical disclaimer
-
-Selia Cycles provides personal tracking, reconstructed forecasts, fertility estimates, phase education, optional self-care timers, and personal mood trends. It does not diagnose or treat a condition, confirm ovulation, predict symptoms with certainty, or provide contraception.
-
-## Policy changes
-
-The repository records policy changes in version control. A material change updates the effective date.
+Related notices: [terms of use](https://majkey25.github.io/SeliaCycles/legal.html#terms),
+[refunds](https://majkey25.github.io/SeliaCycles/legal.html#refunds),
+[cookies](https://majkey25.github.io/SeliaCycles/legal.html#cookies),
+and [Czech legal information](https://majkey25.github.io/SeliaCycles/legal-cs.html).
