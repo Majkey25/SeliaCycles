@@ -1,6 +1,6 @@
 # Google Play declarations
 
-These answers describe code 22, version 0.9.0-beta.14. Rechecked September 6, 2026.
+Current source reference: code 31, version 0.9.0-beta.23. Repository declarations rechecked October 5, 2026. Earlier artifact checks remain dated below.
 
 ## Data safety
 
@@ -33,7 +33,7 @@ These answers describe code 22, version 0.9.0-beta.14. Rechecked September 6, 20
 ## Store setup
 
 - Category: **Health & Fitness**.
-- Target audience: **13–15, 16–17, and 18 and over**. The app does not target children under 13.
+- Target audience: **18 and over**, as saved in Play Console and verified October 5, 2026.
 - Privacy policy URL: `https://majkey25.github.io/SeliaCycles/`.
 - Contact email: `majkeylab@gmail.com`.
 - Contains ads: **No**.
