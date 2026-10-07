@@ -248,7 +248,7 @@ fun ProfilesSheet(
     }
 }
 
-private fun profileIconVector(icon: ProfileIcon) = when (icon) {
+internal fun profileIconVector(icon: ProfileIcon) = when (icon) {
     ProfileIcon.PERSON -> Icons.Outlined.PersonOutline
     ProfileIcon.FLOWER -> Icons.Outlined.LocalFlorist
     ProfileIcon.STAR -> Icons.Outlined.StarBorder

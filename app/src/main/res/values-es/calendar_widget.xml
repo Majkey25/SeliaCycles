@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Calendario Selia</string>
+    <string name="widget_description">Calendario mensual con los colores de la app.</string>
+    <string name="widget_configure">Configurar widget</string>
+    <string name="widget_choose_profile">Toca para elegir un calendario</string>
+    <string name="widget_setup_body">Elige un perfil. El widget usa su aspecto de forma predeterminada; puedes personalizarlo abajo.</string>
+    <string name="widget_show_details">Mostrar marcas del ciclo</string>
+    <string name="widget_privacy">Los colores del ciclo y las marcas de registros serán visibles en la pantalla de inicio. No se muestran notas ni síntomas. Las estimaciones no son anticoncepción.</string>
+    <string name="widget_unavailable">Calendario no disponible. Toca para configurarlo.</string>
+    <string name="widget_add">Añadir widget de calendario</string>
+    <string name="widget_add_help">Mantén pulsada la pantalla de inicio, abre Widgets y elige Calendario Selia.</string>
+    <string name="widget_appearance">Aspecto del widget</string>
+    <string name="widget_preview">Vista previa de colores</string>
+    <string name="widget_transparency">Transparencia del fondo: %1$d%%</string>
+    <string name="widget_background_color">Fondo</string>
+    <string name="widget_text_color">Texto</string>
+    <string name="widget_accent_color">Acento</string>
+    <string name="widget_from_app">Según la app</string>
+    <string name="widget_reset_appearance">Restablecer aspecto del widget</string>
+    <string name="widget_wallpaper_hint">Con transparencia, la legibilidad depende del fondo de pantalla. Elige un color de texto que destaque.</string>
+    <string name="widget_contrast_hint">El contraste del texto es bajo. Elige un color de texto más oscuro o más claro.</string>
+</resources>

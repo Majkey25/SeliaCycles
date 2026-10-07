@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Selia calendar</string>
+    <string name="widget_description">A month calendar in your app colors.</string>
+    <string name="widget_configure">Configure widget</string>
+    <string name="widget_choose_profile">Tap to choose a calendar</string>
+    <string name="widget_setup_body">Choose a profile. Its appearance is used by default; you can customize the widget below.</string>
+    <string name="widget_show_details">Show cycle markings</string>
+    <string name="widget_privacy">Cycle colors and entry markers will be visible on your home screen. Notes and symptoms are not displayed. Estimates are not contraception.</string>
+    <string name="widget_unavailable">Calendar unavailable. Tap to configure.</string>
+    <string name="widget_add">Add calendar widget</string>
+    <string name="widget_add_help">Touch and hold your home screen, open Widgets and choose Selia calendar.</string>
+    <string name="widget_appearance">Widget appearance</string>
+    <string name="widget_preview">Color preview</string>
+    <string name="widget_transparency">Background transparency: %1$d%%</string>
+    <string name="widget_background_color">Background</string>
+    <string name="widget_text_color">Text</string>
+    <string name="widget_accent_color">Accent</string>
+    <string name="widget_from_app">From app</string>
+    <string name="widget_reset_appearance">Reset widget appearance</string>
+    <string name="widget_wallpaper_hint">With transparency, readability depends on your wallpaper. Choose text colors that stand out against it.</string>
+    <string name="widget_contrast_hint">Text contrast is low. Choose a darker or lighter text color.</string>
+</resources>

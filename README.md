@@ -21,6 +21,7 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - New period entries use the configured or learned duration. Automatically filled days persist and use the period color, but remain separate from confirmed bleeding in duration learning and recorded statistics. Individual days, including automatically filled future days, remain editable.
 - Compact linked Today dashboard for the next period, fertile window, ovulation, phase guidance, History, and relief care.
 - Swipeable month calendar with connected tracks, muted adjacent-month dates, and adjacent-day navigation into the correct full month.
+- Resizable home-screen month widget with a fixed local profile, app colors, light/dark/system mode, month navigation, and tap-to-open dates. Cycle markings are opt-in during setup.
 - Calendar color key stays fully hidden below one explanation control until requested.
 - Optional Calendar filters show the existing blue marker only on dates matching up to three locally used trackers.
 - Clear customizable color roles: prominent red menstruation and a short blue underline only for optional user information, with ovulation and fertility kept visually separate.
@@ -54,6 +55,12 @@ Selia Cycles is a private period calendar for Android. It records bleeding, spot
 - Independent automatic/manual cycle and period lengths with a live settings preview.
 
 Existing local records remain in the SQLite database across normal app updates. Selia Cycles has no Selia cloud or partner account. A selected `.pc` backup is read and merged locally. An exported `.pc` file is created only after the user chooses a destination and is not encrypted, so it should be stored securely. If calendar mirroring is enabled, short cycle labels are copied through Android to the selected provider; notes and raw health details are never mirrored.
+
+## Home-screen widget
+
+Add the calendar widget from **Settings > Appearance and language > Add calendar widget**, or from your launcher's widget picker. Choose its profile and whether to show cycle markings. Tap the three-dot control to change those choices. Today returns to the current month; changing records or appearance in the app refreshes existing widgets.
+
+Each widget also has its own background transparency and optional background, text, and accent colors. The color picker and preview are available during setup or reconfiguration. Reset restores the app colors and an opaque background; Cancel leaves saved settings unchanged. Text contrast on a transparent widget depends on the wallpaper behind it.
 
 ## Build
 

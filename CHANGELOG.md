@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.24 - 2026-10-07
+
+### Added
+
+- Resizable home-screen calendar widget with month navigation, Today and tap-to-open dates.
+- Each widget stays bound to its chosen local profile and follows the app theme by default. Cycle markings are opt-in.
+- Per-widget background transparency, background/text/accent colors, a color preview and reset controls. Cancel keeps saved settings unchanged.
+- Widget updates after local record or appearance changes. Deleted or unavailable profiles clear the displayed records instead of showing another profile.
+
 ## 0.9.0-beta.23 - 2026-10-04
 
 ### Fixed

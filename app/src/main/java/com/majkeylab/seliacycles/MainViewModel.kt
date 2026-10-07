@@ -70,6 +70,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var storeRevision = 0L
     private val _state = MutableStateFlow(AppState(activeProfile = session.profile, profiles = localProfiles.profiles()))
     val state = _state.asStateFlow()
+    private val _calendarDestination = MutableStateFlow<Pair<String, java.time.LocalDate>?>(null)
+    val calendarDestination = _calendarDestination.asStateFlow()
+
+    fun openCalendar(profileId: String, day: java.time.LocalDate) {
+        if (day !in DayLog.MIN_DATE..DayLog.MAX_DATE || _state.value.profiles.none { it.id == profileId }) return
+        _calendarDestination.value = profileId to day
+        selectProfile(profileId)
+    }
+
+    fun consumeCalendarDestination() { _calendarDestination.value = null }
     // Retain one editor operation across activity recreation.
     var editorSaveResult: Deferred<Boolean>? = null
         private set
@@ -463,6 +473,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
             },
         )
+        // Widget updates reread committed local data and never trigger calendar synchronization.
+        withContext(Dispatchers.IO) {
+            runCatching { CalendarWidget.refresh(getApplication()) }
+                .onFailure { Log.e("SeliaWidget", "Could not refresh home-screen widgets", it) }
+        }
     }
 
     private fun acceptsProfile(expectedProfileId: String? = _state.value.activeProfile.id): Boolean {
