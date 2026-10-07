@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Selia-Kalender</string>
+    <string name="widget_description">Monatskalender in deinen App-Farben.</string>
+    <string name="widget_configure">Widget einrichten</string>
+    <string name="widget_choose_profile">Tippe, um einen Kalender auszuwählen</string>
+    <string name="widget_setup_body">Wähle ein Profil. Das Widget übernimmt zunächst dessen Design; unten kannst du es anpassen.</string>
+    <string name="widget_show_details">Zyklusmarkierungen anzeigen</string>
+    <string name="widget_privacy">Zyklusfarben und Eintragsmarkierungen sind auf dem Startbildschirm sichtbar. Notizen und Symptome werden nicht angezeigt. Schätzungen sind keine Verhütung.</string>
+    <string name="widget_unavailable">Kalender nicht verfügbar. Zum Einrichten tippen.</string>
+    <string name="widget_add">Kalender-Widget hinzufügen</string>
+    <string name="widget_add_help">Halte den Startbildschirm gedrückt, öffne Widgets und wähle Selia-Kalender.</string>
+    <string name="widget_appearance">Widget-Darstellung</string>
+    <string name="widget_preview">Farbvorschau</string>
+    <string name="widget_transparency">Hintergrundtransparenz: %1$d%%</string>
+    <string name="widget_background_color">Hintergrund</string>
+    <string name="widget_text_color">Text</string>
+    <string name="widget_accent_color">Akzent</string>
+    <string name="widget_from_app">Wie in der App</string>
+    <string name="widget_reset_appearance">Widget-Darstellung zurücksetzen</string>
+    <string name="widget_wallpaper_hint">Bei Transparenz hängt die Lesbarkeit vom Hintergrundbild ab. Wähle eine gut erkennbare Textfarbe.</string>
+    <string name="widget_contrast_hint">Der Textkontrast ist niedrig. Wähle eine dunklere oder hellere Textfarbe.</string>
+</resources>

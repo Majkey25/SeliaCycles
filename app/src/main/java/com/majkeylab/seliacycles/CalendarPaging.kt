@@ -60,3 +60,23 @@ internal fun calendarDayTracks(
     ovulation = day in ovulation,
     predictedOverlap = day in recorded && day in predicted,
 )
+
+/** Shared calendar markings for the app and the home-screen widget. */
+internal class CalendarTracks(content: CycleContent, showFertility: Boolean) {
+    private val recorded = content.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day)
+    private val recordedMonths = content.prediction.periodStarts.mapTo(mutableSetOf(), YearMonth::from)
+    private val predicted = (content.periodEstimates.flatMap { estimate ->
+        generateSequence(estimate.start) { it.plusDays(1) }.takeWhile { it < estimate.endExclusive }.toList()
+    } + content.forecastSnapshots.values.filter { it.month in recordedMonths }.flatMap { snapshot ->
+        (0L until snapshot.periodLength.toLong()).map(snapshot.periodStart::plusDays)
+    }).toSet()
+    private val fertility = if (showFertility) CycleInsights.fertilityEstimates(
+        content.backup, content.forecastSnapshots, content.referenceDate,
+    ) else emptyList()
+    private val fertile = fertility.flatMap { estimate ->
+        generateSequence(estimate.fertileStart) { it.plusDays(1) }.takeWhile { it <= estimate.fertileEnd }.toList()
+    }.toSet()
+    private val ovulation = fertility.mapTo(mutableSetOf(), FertilityEstimate::ovulation)
+
+    fun forDay(day: LocalDate): CalendarDayTracks = calendarDayTracks(day, recorded, predicted, fertile, ovulation)
+}

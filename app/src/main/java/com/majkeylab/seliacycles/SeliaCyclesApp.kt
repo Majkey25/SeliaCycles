@@ -1,5 +1,7 @@
 package com.majkeylab.seliacycles
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -368,6 +370,16 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
     var selfCareDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     var showPhaseDetails by rememberSaveable { mutableStateOf(false) }
     var calendarTargetDay by remember { mutableStateOf<LocalDate?>(null) }
+    val widgetDestination by viewModel.calendarDestination.collectAsStateWithLifecycle()
+    LaunchedEffect(widgetDestination, state.activeProfile.id, state.loading) {
+        widgetDestination?.takeIf { it.first == state.activeProfile.id && !state.loading && !state.loadFailed }?.let {
+            screen = Screen.CALENDAR
+            calendarTargetDay = it.second
+            selectedDay = it.second
+            daySheetMode = DaySheetMode.OVERVIEW
+            viewModel.consumeCalendarDestination()
+        }
+    }
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
 
@@ -1326,36 +1338,8 @@ private fun CalendarScreen(
     var showFilters by remember { mutableStateOf(false) }
     var selectedFilters by remember { mutableStateOf(emptySet<TrackerFilter>()) }
     val availableFilters = remember(state.backup.logs) { TrackerFilter.availableFilters(state.backup.logs) }
-    val recorded = remember(state.backup.logs) {
-        state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day)
-    }
-    val recordedMonths = remember(state.prediction.periodStarts) {
-        state.prediction.periodStarts.mapTo(mutableSetOf(), YearMonth::from)
-    }
-    val savedComparisons = remember(state.forecastSnapshots, recordedMonths) {
-        state.forecastSnapshots.values.filter { it.month in recordedMonths }
-    }
-    val predicted = remember(state.periodEstimates, savedComparisons) {
-        (state.periodEstimates.flatMap { estimate ->
-            generateSequence(estimate.start) { it.plusDays(1) }.takeWhile { it < estimate.endExclusive }.toList()
-        } + savedComparisons.flatMap { snapshot ->
-            (0L until snapshot.periodLength.toLong()).map(snapshot.periodStart::plusDays)
-        }).toSet()
-    }
-    val fertility = remember(state.backup, state.forecastSnapshots, state.referenceDate, state.showFertility) {
-        if (state.showFertility) CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots, state.referenceDate)
-        else emptyList()
-    }
-    val fertile = remember(fertility) {
-        fertility.flatMap { estimate ->
-            generateSequence(estimate.fertileStart) { it.plusDays(1) }
-                .takeWhile { !it.isAfter(estimate.fertileEnd) }.toList()
-        }.toSet()
-    }
-    val ovulation = remember(fertility) { fertility.mapTo(mutableSetOf(), FertilityEstimate::ovulation) }
-    val tracksFor: (LocalDate) -> CalendarDayTracks = remember(recorded, predicted, fertile, ovulation) {
-        { day -> calendarDayTracks(day, recorded, predicted, fertile, ovulation) }
-    }
+    val tracks = remember(state.content, state.showFertility) { CalendarTracks(state.content, state.showFertility) }
+    val tracksFor: (LocalDate) -> CalendarDayTracks = tracks::forDay
     val periodColor = calendarPeriodRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
     val onPeriodColor = periodColor.contrastColor()
     val entryColor = calendarEntryRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
@@ -2261,6 +2245,19 @@ private fun SettingsScreen(
                     }
                     if (settings.palette == AppPalette.CUSTOM) CustomPaletteSettings(settings, onSave)
                     LanguageRow()
+                    OutlinedButton(onClick = {
+                        val manager = android.appwidget.AppWidgetManager.getInstance(context)
+                        val requested = runCatching {
+                            manager.isRequestPinAppWidgetSupported && manager.requestPinAppWidget(
+                                android.content.ComponentName(context, CalendarWidget::class.java), null, null,
+                            )
+                        }.getOrDefault(false)
+                        if (!requested) android.widget.Toast.makeText(context, R.string.widget_add_help, android.widget.Toast.LENGTH_LONG).show()
+                    }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Outlined.CalendarMonth, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.widget_add))
+                    }
                 }
                 SettingsPage.REMINDERS -> {
                     ContraceptionSettings(settings, onSave, onContraceptionReminderChange)
@@ -2975,8 +2972,8 @@ private fun CustomPaletteSettings(settings: AppSettings, onSave: (AppSettings) -
             CustomColorTarget.TERTIARY -> custom.tertiaryRgb
             CustomColorTarget.ENTRY -> custom.entryRgb
         }
-        CustomColorPickerDialog(
-            target = selectedTarget,
+        ColorPickerDialog(
+            title = selectedTarget.label,
             initialRgb = initial,
             onDismiss = { target = null },
             onSave = { rgb ->
@@ -3011,17 +3008,17 @@ private fun CustomColorRow(target: CustomColorTarget, rgb: Int, onClick: () -> U
 }
 
 @Composable
-private fun CustomColorPickerDialog(
-    target: CustomColorTarget,
+internal fun ColorPickerDialog(
+    @StringRes title: Int,
     initialRgb: Int,
     onDismiss: () -> Unit,
     onSave: (Int) -> Unit,
 ) {
     val controller = rememberColorPickerController()
-    var selectedRgb by remember(target, initialRgb) { mutableIntStateOf(initialRgb) }
+    var selectedRgb by remember(title, initialRgb) { mutableIntStateOf(initialRgb) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(target.label)) },
+        title = { Text(stringResource(title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 HsvColorPicker(

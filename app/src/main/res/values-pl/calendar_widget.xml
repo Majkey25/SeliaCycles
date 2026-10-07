@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Kalendarz Selia</string>
+    <string name="widget_description">Kalendarz miesięczny w kolorach aplikacji.</string>
+    <string name="widget_configure">Ustaw widżet</string>
+    <string name="widget_choose_profile">Dotknij, aby wybrać kalendarz</string>
+    <string name="widget_setup_body">Wybierz profil. Widżet domyślnie używa jego wyglądu; poniżej możesz go dostosować.</string>
+    <string name="widget_show_details">Pokaż oznaczenia cyklu</string>
+    <string name="widget_privacy">Kolory cyklu i znaczniki wpisów będą widoczne na ekranie głównym. Notatki i objawy nie są wyświetlane. Szacunki nie są antykoncepcją.</string>
+    <string name="widget_unavailable">Kalendarz niedostępny. Dotknij, aby go skonfigurować.</string>
+    <string name="widget_add">Dodaj widżet kalendarza</string>
+    <string name="widget_add_help">Przytrzymaj ekran główny, otwórz Widżety i wybierz Kalendarz Selia.</string>
+    <string name="widget_appearance">Wygląd widżetu</string>
+    <string name="widget_preview">Podgląd kolorów</string>
+    <string name="widget_transparency">Przezroczystość tła: %1$d%%</string>
+    <string name="widget_background_color">Tło</string>
+    <string name="widget_text_color">Tekst</string>
+    <string name="widget_accent_color">Wyróżnienie</string>
+    <string name="widget_from_app">Z aplikacji</string>
+    <string name="widget_reset_appearance">Przywróć wygląd widżetu</string>
+    <string name="widget_wallpaper_hint">Przy przezroczystym tle czytelność zależy od tapety. Wybierz kolor tekstu, który będzie na niej dobrze widoczny.</string>
+    <string name="widget_contrast_hint">Kontrast tekstu jest niski. Wybierz ciemniejszy lub jaśniejszy kolor tekstu.</string>
+</resources>

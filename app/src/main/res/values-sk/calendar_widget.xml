@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Kalendár Selia</string>
+    <string name="widget_description">Mesačný kalendár vo farbách aplikácie.</string>
+    <string name="widget_configure">Nastaviť widget</string>
+    <string name="widget_choose_profile">Ťukni a vyber kalendár</string>
+    <string name="widget_setup_body">Vyber profil. Predvolene widget prevezme jeho vzhľad; nižšie si ho môžeš upraviť.</string>
+    <string name="widget_show_details">Zobraziť označenia cyklu</string>
+    <string name="widget_privacy">Farby cyklu a značky záznamov budú viditeľné na domovskej obrazovke. Poznámky ani príznaky sa nezobrazujú. Odhady nie sú antikoncepcia.</string>
+    <string name="widget_unavailable">Kalendár nie je dostupný. Ťukni na nastavenie.</string>
+    <string name="widget_add">Pridať widget kalendára</string>
+    <string name="widget_add_help">Podrž prst na domovskej obrazovke, otvor Widgety a vyber Kalendár Selia.</string>
+    <string name="widget_appearance">Vzhľad widgetu</string>
+    <string name="widget_preview">Náhľad farieb</string>
+    <string name="widget_transparency">Priehľadnosť pozadia: %1$d%%</string>
+    <string name="widget_background_color">Pozadie</string>
+    <string name="widget_text_color">Text</string>
+    <string name="widget_accent_color">Zvýraznenie</string>
+    <string name="widget_from_app">Podľa aplikácie</string>
+    <string name="widget_reset_appearance">Obnoviť vzhľad widgetu</string>
+    <string name="widget_wallpaper_hint">Pri priehľadnom pozadí závisí čitateľnosť od tapety. Zvoľ farbu textu, ktorá na nej dobre vynikne.</string>
+    <string name="widget_contrast_hint">Text má nízky kontrast. Zvoľ tmavšiu alebo svetlejšiu farbu textu.</string>
+</resources>

@@ -52,6 +52,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun routeProfile(intent: Intent) {
         val id = intent.getStringExtra(ReminderWorker.PROFILE_ID_EXTRA) ?: return
-        viewModel.selectProfile(id)
+        val day = intent.getStringExtra(CalendarWidget.DAY_EXTRA)?.let {
+            runCatching { java.time.LocalDate.parse(it) }.getOrNull()
+        }
+        if (day != null) viewModel.openCalendar(id, day) else viewModel.selectProfile(id)
     }
 }
