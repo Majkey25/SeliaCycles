@@ -44,9 +44,10 @@
     <string name="personal_patterns_notice">Ide o vzorec v tvojich záznamoch, nie o diagnózu ani istú predpoveď.</string>
     <string name="cycle_analysis">Analýza cyklu</string>
     <string name="recent_cycle_details">Podrobnosti posledných cyklov</string>
-    <string name="prediction_accuracy_summary">Presnosť uložených odhadov</string>
+    <string name="prediction_accuracy_summary">Porovnanie so záznamami</string>
     <plurals name="average_prediction_error"><item quantity="one">Priemerná odchýlka: %d deň</item><item quantity="few">Priemerná odchýlka: %d dni</item><item quantity="many">Priemerná odchýlka: %d dňa</item><item quantity="other">Priemerná odchýlka: %d dní</item></plurals>
-    <string name="within_saved_window">V uloženom rozmedzí: %1$d z %2$d</string>
+    <string name="within_saved_window">Spárované začiatky v uloženom rozmedzí: %1$d z %2$d</string>
+    <string name="accuracy_matching_info">Porovnanie zahŕňa najviac 6 posledných spárovaných zapísaných začiatkov. Ku každému uloženému odhadu sa hľadá najbližší zapísaný začiatok do 14 dní pred alebo po odhade. Každý začiatok sa počíta raz. Nespárované odhady sa nehodnotia.</string>
     <plurals name="period_length_value"><item quantity="one">Menštruácia: %d deň</item><item quantity="few">Menštruácia: %d dni</item><item quantity="many">Menštruácia: %d dňa</item><item quantity="other">Menštruácia: %d dní</item></plurals>
     <string name="more_history_needed">Na graf je potrebných viac dokončených cyklov.</string>
     <string name="cycle_length_description">%1$s, cyklus %2$d dní</string>
@@ -282,7 +283,7 @@
     <string name="legend_more">Vysvetliť farby</string>
     <string name="legend_less">Skryť vysvetlenia</string>
     <string name="calendar_filter">Filtrovať záznamy</string>
-    <string name="calendar_filter_intro">Vyber najviac tri sledované údaje. Pri aktívnom filtri sa modrá bodka zobrazí iba pri zodpovedajúcich dňoch.</string>
+    <string name="calendar_filter_intro">Vyber najviac tri sledované údaje. Pri aktívnom filtri sa modré podčiarknutie zobrazí iba pri zodpovedajúcich dňoch.</string>
     <string name="calendar_filter_count">Vybrané %1$d z %2$d</string>
     <string name="calendar_filter_tests">Testy</string>
     <string name="calendar_filter_clear">Zrušiť filtre</string>
@@ -367,7 +368,7 @@
     <string name="period_end_action">Koniec menštruácie</string>
     <string name="day_status">Stav dňa</string>
     <string name="prediction_accuracy">Odhad menštruácie a skutočnosť</string>
-    <string name="estimate_no_reality">Skutočnosť zatiaľ nie je zapísaná.</string>
+    <string name="estimate_no_reality">Nenašiel sa zapísaný začiatok do 14 dní pred odhadom alebo po ňom.</string>
     <string name="estimate_exact">Uložený odhad bol presný.</string>
     <plurals name="estimate_early"><item quantity="one">Skutočnosť začala o %1$d deň skôr.</item><item quantity="few">Skutočnosť začala o %1$d dni skôr.</item><item quantity="many">Skutočnosť začala o %1$d dňa skôr.</item><item quantity="other">Skutočnosť začala o %1$d dní skôr.</item></plurals>
     <plurals name="estimate_late"><item quantity="one">Skutočnosť začala o %1$d deň neskôr.</item><item quantity="few">Skutočnosť začala o %1$d dni neskôr.</item><item quantity="many">Skutočnosť začala o %1$d dňa neskôr.</item><item quantity="other">Skutočnosť začala o %1$d dní neskôr.</item></plurals>
@@ -417,4 +418,20 @@
     <string name="prediction_settings_lengths">Cyklus (dni): %1$d · Menštruácia (dni): %2$d</string>
     <string name="prediction_settings_live">Zmeny sa prejavia pri budúcich dňoch v kalendári aj v zapnutom zrkadlení do iného kalendára.</string>
     <string name="prediction_fertility_unavailable">Ovuláciu nemožno odhadnúť, keď je luteálna fáza rovnako dlhá alebo dlhšia než celý cyklus. Skontroluj nižšie obe dĺžky.</string>
+    <string name="palette_material">Material</string>
+    <string name="palette_amoled">AMOLED</string>
+    <string name="palette_graphite">Grafit</string>
+    <string name="palette_sand">Piesok</string>
+    <string name="palette_mint">Mäta</string>
+    <string name="appearance_background">Pozadie stránky</string>
+    <string name="appearance_surface">Pozadie kariet</string>
+    <string name="appearance_text">Farba textu</string>
+    <string name="appearance_pairs_hint">Ťuknutím na názov vyberieš oba varianty. Svetlý a tmavý motív môžeš zvoliť aj zvlášť.</string>
+    <string name="appearance_material_dynamic">Material používa farby tvojej tapety. Tmavý AMOLED má čisto čierne pozadie.</string>
+    <string name="appearance_material_fallback">Material používa fialovú paletu. Farby tapety vyžadujú Android 12 alebo novší. Tmavý AMOLED má čisto čierne pozadie.</string>
+    <string name="appearance_customize">Upraviť aktuálny motív</string>
+    <string name="appearance_contrast_hint">Farby s nízkym kontrastom upravíme, aby text zostal čitateľný.</string>
+    <string name="appearance_text_size">Veľkosť textu v aplikácii · %1$d%%</string>
+    <string name="appearance_text_sample">Kalendár a podrobnosti o cykle</string>
+    <string name="appearance_reset">Obnoviť predvolený vzhľad</string>
 </resources>

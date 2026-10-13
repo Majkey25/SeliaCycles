@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      emulator_qa:
+        description: Run optional emulator QA; physical release verification remains required
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -33,6 +39,7 @@ jobs:
           if-no-files-found: error
 
   device-tests:
+    if: github.event_name == 'workflow_dispatch' && inputs.emulator_qa
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

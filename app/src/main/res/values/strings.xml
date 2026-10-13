@@ -45,9 +45,10 @@
     <string name="personal_patterns_notice">This is a pattern in your records, not a diagnosis or guarantee.</string>
     <string name="cycle_analysis">Cycle analysis</string>
     <string name="recent_cycle_details">Recent cycle details</string>
-    <string name="prediction_accuracy_summary">Saved prediction accuracy</string>
+    <string name="prediction_accuracy_summary">Comparison with records</string>
     <plurals name="average_prediction_error"><item quantity="one">Average difference: %d day</item><item quantity="other">Average difference: %d days</item></plurals>
-    <string name="within_saved_window">Inside the saved range: %1$d of %2$d</string>
+    <string name="within_saved_window">Matched starts inside the saved range: %1$d of %2$d</string>
+    <string name="accuracy_matching_info">Uses the latest matches, up to 6 distinct recorded starts. Each saved estimate is matched to the nearest recorded start within 14 days before or after the estimate. Each start is counted once. Unmatched estimates are not scored.</string>
     <plurals name="period_length_value"><item quantity="one">Period: %d day</item><item quantity="other">Period: %d days</item></plurals>
     <string name="more_history_needed">More completed cycles are needed for a chart.</string>
     <string name="cycle_length_description">%1$s, %2$d-day cycle</string>
@@ -191,7 +192,7 @@
     <string name="period_end_action">End period</string>
     <string name="day_status">Day status</string>
     <string name="prediction_accuracy">Period estimate versus reality</string>
-    <string name="estimate_no_reality">Reality has not been recorded yet.</string>
+    <string name="estimate_no_reality">No recorded start was matched within 14 days before or after this estimate.</string>
     <string name="estimate_exact">The saved estimate was exact.</string>
     <plurals name="estimate_early"><item quantity="one">Reality started %1$d day earlier.</item><item quantity="other">Reality started %1$d days earlier.</item></plurals>
     <plurals name="estimate_late"><item quantity="one">Reality started %1$d day later.</item><item quantity="other">Reality started %1$d days later.</item></plurals>
@@ -418,4 +419,20 @@
     <string name="prediction_settings_lengths">Cycle (days): %1$d · Period (days): %2$d</string>
     <string name="prediction_settings_live">Changes apply to future dates in the calendar and to an enabled calendar mirror.</string>
     <string name="prediction_fertility_unavailable">Ovulation cannot be estimated when the luteal phase is as long as or longer than the cycle. Check these two lengths below.</string>
+    <string name="palette_material">Material</string>
+    <string name="palette_amoled">AMOLED</string>
+    <string name="palette_graphite">Graphite</string>
+    <string name="palette_sand">Sand</string>
+    <string name="palette_mint">Mint</string>
+    <string name="appearance_background">Page background</string>
+    <string name="appearance_surface">Card background</string>
+    <string name="appearance_text">Text color</string>
+    <string name="appearance_pairs_hint">Tap a name to use both variants, or choose light and dark themes separately.</string>
+    <string name="appearance_material_dynamic">Material uses your wallpaper colors. AMOLED has a pure black dark background.</string>
+    <string name="appearance_material_fallback">Material uses a violet palette. Wallpaper colors need Android 12 or newer. AMOLED has a pure black dark background.</string>
+    <string name="appearance_customize">Customize current theme</string>
+    <string name="appearance_contrast_hint">Colors with low contrast are adjusted to keep text readable.</string>
+    <string name="appearance_text_size">App text size · %1$d%%</string>
+    <string name="appearance_text_sample">Calendar and cycle details</string>
+    <string name="appearance_reset">Reset appearance</string>
 </resources>

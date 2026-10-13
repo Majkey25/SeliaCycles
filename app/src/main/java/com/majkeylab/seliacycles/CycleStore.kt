@@ -15,6 +15,7 @@ internal fun hasLogCapacity(existingCount: Long, replacing: Boolean): Boolean =
 
 internal fun mergedTransferSettings(current: AppSettings, incoming: AppSettings): AppSettings =
     incoming.copy(partnerViewEnabled = current.partnerViewEnabled,
+        reminderEnabled = current.reminderEnabled,
         contraceptionReminderEnabled = current.contraceptionReminderEnabled)
 
 class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID) :
@@ -79,7 +80,12 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
                 period_length_override INTEGER,
                 active_period_start INTEGER,
                 contraception_reminder INTEGER NOT NULL DEFAULT 0 CHECK (contraception_reminder IN (0, 1)),
-                contraception_minute INTEGER NOT NULL DEFAULT 1200 CHECK (contraception_minute BETWEEN 0 AND 1439)
+                contraception_minute INTEGER NOT NULL DEFAULT 1200 CHECK (contraception_minute BETWEEN 0 AND 1439),
+                dark_palette TEXT,
+                text_scale INTEGER NOT NULL DEFAULT 100 CHECK (text_scale BETWEEN 85 AND 140),
+                custom_background INTEGER,
+                custom_surface INTEGER,
+                custom_text INTEGER
             )
             """.trimIndent(),
         )
@@ -88,6 +94,13 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
     }
 
     override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 13) {
+            database.execSQL("ALTER TABLE settings ADD COLUMN dark_palette TEXT")
+            database.execSQL("ALTER TABLE settings ADD COLUMN text_scale INTEGER NOT NULL DEFAULT 100 CHECK (text_scale BETWEEN 85 AND 140)")
+            database.execSQL("ALTER TABLE settings ADD COLUMN custom_background INTEGER")
+            database.execSQL("ALTER TABLE settings ADD COLUMN custom_surface INTEGER")
+            database.execSQL("ALTER TABLE settings ADD COLUMN custom_text INTEGER")
+        }
         if (oldVersion < 12) {
             database.execSQL("ALTER TABLE day_logs ADD COLUMN contraception TEXT")
             database.execSQL("ALTER TABLE settings ADD COLUMN contraception_reminder INTEGER NOT NULL DEFAULT 0 CHECK (contraception_reminder IN (0, 1))")
@@ -216,17 +229,24 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
         val settings = mergedTransferSettings(currentSettings, transfer.backup.settings).normalized()
         check(update("settings", settingsValues(settings), "id = 1", null) == 1)
         transfer.snapshots.forEach { snapshot ->
-            insertWithOnConflict(
-                "forecast_snapshots",
-                null,
-                forecastValues(snapshot),
-                SQLiteDatabase.CONFLICT_IGNORE,
-            )
+            val selectionArgs = arrayOf(snapshot.month.toEpochMonth().toString())
+            if (!snapshot.reconstructed) delete("forecast_snapshots", "month = ? AND reconstructed = 1", selectionArgs)
+            if (DatabaseUtils.queryNumEntries(this, "forecast_snapshots", "month = ?", selectionArgs) == 0L) {
+                insertOrThrow("forecast_snapshots", null, forecastValues(snapshot))
+            }
         }
     }
 
     fun saveSettings(settings: AppSettings) {
         check(writableDatabase.update("settings", settingsValues(settings.normalized()), "id = 1", null) == 1)
+    }
+
+    fun saveSettingsChanges(previous: AppSettings, settings: AppSettings) {
+        val changes = settingsValues(settings.normalized())
+        settingsValues(previous.normalized()).valueSet().forEach { (key, value) ->
+            if (changes.get(key) == value) changes.remove(key)
+        }
+        if (changes.size() > 0) check(writableDatabase.update("settings", changes, "id = 1", null) == 1)
     }
 
     fun loadForecastSnapshots(): List<ForecastSnapshot> = readableDatabase.query(
@@ -316,7 +336,8 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
             partnerViewEnabled = cursor.getInt(7) == 1,
             palette = AppPalette.valueOf(cursor.getString(8)),
             lutealPhaseLength = cursor.getInt(9),
-            customPalette = CustomPalette(cursor.getInt(10), cursor.getInt(11), cursor.getInt(12), cursor.getInt(13)),
+            customPalette = CustomPalette(cursor.getInt(10), cursor.getInt(11), cursor.getInt(12), cursor.getInt(13),
+                cursor.getNullableInt(30), cursor.getNullableInt(31), cursor.getNullableInt(32)),
             profile = UserProfile(
                 age = cursor.getNullableInt(14),
                 heightCm = cursor.getNullableInt(15),
@@ -333,6 +354,8 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
             activePeriodStart = cursor.getNullableLong(25)?.let(LocalDate::ofEpochDay),
             contraceptionReminderEnabled = cursor.getInt(26) == 1,
             contraceptionReminderMinute = cursor.getInt(27),
+            darkPalette = cursor.getString(28)?.let(AppPalette::valueOf),
+            textScalePercent = cursor.getInt(29),
         )
     }
 
@@ -425,6 +448,11 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
         put("active_period_start", settings.activePeriodStart?.toEpochDay())
         put("contraception_reminder", settings.contraceptionReminderEnabled)
         put("contraception_minute", settings.contraceptionReminderMinute)
+        put("dark_palette", settings.darkPalette?.name)
+        put("text_scale", settings.textScalePercent)
+        put("custom_background", settings.customPalette.backgroundRgb)
+        put("custom_surface", settings.customPalette.surfaceRgb)
+        put("custom_text", settings.customPalette.textRgb)
     }
 
     private fun forecastValues(snapshot: ForecastSnapshot): ContentValues = ContentValues().apply {
@@ -468,7 +496,7 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
     }
 
     companion object {
-        private const val DATABASE_VERSION = 12
+        private const val DATABASE_VERSION = 13
         private val LOG_COLUMNS = arrayOf(
             "day",
             "bleeding",
@@ -522,6 +550,11 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
             "active_period_start",
             "contraception_reminder",
             "contraception_minute",
+            "dark_palette",
+            "text_scale",
+            "custom_background",
+            "custom_surface",
+            "custom_text",
         )
         private val FORECAST_COLUMNS = arrayOf(
             "month",

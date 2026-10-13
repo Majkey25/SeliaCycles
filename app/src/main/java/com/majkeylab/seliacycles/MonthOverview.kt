@@ -59,8 +59,9 @@ internal fun MonthOverview(state: AppState, month: YearMonth, locale: Locale, on
         )
     }
     val format = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
-    val periodColor = calendarPeriodRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
-    val entryColor = calendarEntryRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
+    val periodColor = calendarPeriodColor(LocalAppPalette.current, state.backup.settings.customPalette,
+        MaterialTheme.colorScheme.background)
+    val entryColor = calendarEntryRgb(LocalAppPalette.current, state.backup.settings.customPalette).color()
         .readableOn(MaterialTheme.colorScheme.surface).readableOn(MaterialTheme.colorScheme.surfaceVariant)
     val saved = state.forecastSnapshots[month]
     Column(

@@ -44,9 +44,10 @@
     <string name="personal_patterns_notice">To wzorzec w twoich zapisach, a nie diagnoza ani pewna prognoza.</string>
     <string name="cycle_analysis">Analiza cyklu</string>
     <string name="recent_cycle_details">Szczegóły ostatnich cykli</string>
-    <string name="prediction_accuracy_summary">Dokładność zapisanych prognoz</string>
+    <string name="prediction_accuracy_summary">Porównanie z zapisami</string>
     <plurals name="average_prediction_error"><item quantity="one">Średnia różnica: %d dzień</item><item quantity="few">Średnia różnica: %d dni</item><item quantity="many">Średnia różnica: %d dni</item><item quantity="other">Średnia różnica: %d dnia</item></plurals>
-    <string name="within_saved_window">W zapisanym zakresie: %1$d z %2$d</string>
+    <string name="within_saved_window">Dopasowane początki miesiączki w zapisanym przedziale: %1$d z %2$d</string>
+    <string name="accuracy_matching_info">Porównanie obejmuje maksymalnie 6 ostatnich dopasowanych zapisanych początków miesiączki. Każdej zapisanej prognozie przypisywany jest najbliższy zapisany początek w granicach 14 dni przed nią lub po niej. Każdy początek jest liczony raz. Prognozy bez dopasowania nie są oceniane.</string>
     <plurals name="period_length_value"><item quantity="one">Miesiączka: %d dzień</item><item quantity="few">Miesiączka: %d dni</item><item quantity="many">Miesiączka: %d dni</item><item quantity="other">Miesiączka: %d dnia</item></plurals>
     <string name="more_history_needed">Do wykresu potrzeba więcej zakończonych cykli.</string>
     <string name="cycle_length_description">%1$s, cykl %2$d dni</string>
@@ -282,7 +283,7 @@
     <string name="legend_more">Wyjaśnij kolory</string>
     <string name="legend_less">Ukryj wyjaśnienia</string>
     <string name="calendar_filter">Filtruj wpisy</string>
-    <string name="calendar_filter_intro">Wybierz maksymalnie trzy dane. Przy aktywnym filtrze niebieska kropka pojawia się tylko przy pasujących dniach.</string>
+    <string name="calendar_filter_intro">Wybierz maksymalnie trzy dane. Przy aktywnym filtrze niebieskie podkreślenie pojawia się tylko przy pasujących dniach.</string>
     <string name="calendar_filter_count">Wybrano %1$d z %2$d</string>
     <string name="calendar_filter_tests">Testy</string>
     <string name="calendar_filter_clear">Wyczyść filtry</string>
@@ -367,7 +368,7 @@
     <string name="period_end_action">Koniec miesiączki</string>
     <string name="day_status">Status dnia</string>
     <string name="prediction_accuracy">Prognoza miesiączki i rzeczywistość</string>
-    <string name="estimate_no_reality">Rzeczywistość nie została jeszcze zapisana.</string>
+    <string name="estimate_no_reality">Nie znaleziono zapisanego początku miesiączki w ciągu 14 dni przed prognozą ani po niej.</string>
     <string name="estimate_exact">Zapisana prognoza była dokładna.</string>
     <plurals name="estimate_early"><item quantity="one">Rzeczywistość zaczęła się %1$d dzień wcześniej.</item><item quantity="few">Rzeczywistość zaczęła się %1$d dni wcześniej.</item><item quantity="many">Rzeczywistość zaczęła się %1$d dnia wcześniej.</item><item quantity="other">Rzeczywistość zaczęła się %1$d dni wcześniej.</item></plurals>
     <plurals name="estimate_late"><item quantity="one">Rzeczywistość zaczęła się %1$d dzień później.</item><item quantity="few">Rzeczywistość zaczęła się %1$d dni później.</item><item quantity="many">Rzeczywistość zaczęła się %1$d dnia później.</item><item quantity="other">Rzeczywistość zaczęła się %1$d dni później.</item></plurals>
@@ -417,4 +418,20 @@
     <string name="prediction_settings_lengths">Cykl (dni): %1$d · Miesiączka (dni): %2$d</string>
     <string name="prediction_settings_live">Zmiany dotyczą przyszłych dni w kalendarzu oraz jego kopii w innym kalendarzu, jeśli synchronizacja jest włączona.</string>
     <string name="prediction_fertility_unavailable">Nie można oszacować owulacji, gdy faza lutealna trwa tyle samo co cały cykl lub dłużej. Sprawdź poniżej obie długości.</string>
+    <string name="palette_material">Material</string>
+    <string name="palette_amoled">AMOLED</string>
+    <string name="palette_graphite">Grafit</string>
+    <string name="palette_sand">Piasek</string>
+    <string name="palette_mint">Mięta</string>
+    <string name="appearance_background">Tło strony</string>
+    <string name="appearance_surface">Tło kart</string>
+    <string name="appearance_text">Kolor tekstu</string>
+    <string name="appearance_pairs_hint">Dotknij nazwy, aby wybrać oba warianty, lub wybierz jasny i ciemny motyw osobno.</string>
+    <string name="appearance_material_dynamic">Material używa kolorów tapety. Ciemny motyw AMOLED ma czarne tło.</string>
+    <string name="appearance_material_fallback">Material używa fioletowej palety. Kolory tapety wymagają Androida 12 lub nowszego. Ciemny motyw AMOLED ma czarne tło.</string>
+    <string name="appearance_customize">Dostosuj bieżący motyw</string>
+    <string name="appearance_contrast_hint">Kolory o niskim kontraście są dostosowywane, aby tekst był czytelny.</string>
+    <string name="appearance_text_size">Rozmiar tekstu w aplikacji · %1$d%%</string>
+    <string name="appearance_text_sample">Kalendarz i szczegóły cyklu</string>
+    <string name="appearance_reset">Przywróć domyślny wygląd</string>
 </resources>

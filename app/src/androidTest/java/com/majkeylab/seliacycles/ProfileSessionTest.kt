@@ -18,6 +18,51 @@ import org.junit.Test
 
 class ProfileSessionTest {
     @Test
+    fun queuedThemeTogglesPreserveStartedPeriod() = runBlocking {
+        val application = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as Application
+        check(application.packageName.endsWith(".qa"))
+        val profiles = LocalProfiles(application)
+        val original = profiles.selected()
+        val profile = profiles.create("Settings race")
+        val today = LocalDate.now()
+        CycleStore(application, profile.id).use { it.saveSettings(AppSettings(theme = AppTheme.LIGHT, periodLengthOverride = 6)) }
+        val viewModels = ViewModelStore()
+        val model = withContext(Dispatchers.Main) {
+            MainViewModel(application).also { viewModels.put("settings-race", it) }
+        }
+        suspend fun awaitProfile(id: String) = withTimeout(15_000) {
+            model.state.first { !it.loading && !it.busy && !it.loadFailed && it.activeProfile.id == id }
+        }
+        try {
+            awaitProfile(original.id)
+            withContext(Dispatchers.Main) { model.selectProfile(profile.id) }
+            awaitProfile(profile.id)
+            withContext(Dispatchers.Main) {
+                model.startPeriod(today)
+                model.saveSettings(model.state.value.backup.settings.copy(theme = AppTheme.DARK))
+                model.saveSettings(model.state.value.backup.settings.copy(theme = AppTheme.LIGHT, textScalePercent = 125))
+            }
+            awaitProfile(profile.id)
+            CycleStore(application, profile.id).use { store ->
+                val saved = store.load()
+                assertEquals(today, saved.settings.activePeriodStart)
+                assertEquals(AppTheme.LIGHT, saved.settings.theme)
+                assertEquals(125, saved.settings.textScalePercent)
+                assertEquals(6, saved.logs.count(DayLog::bleeding))
+                assertEquals(1, saved.logs.count(DayLog::confirmedBleeding))
+            }
+            assertEquals(null, model.state.value.pendingSettings)
+        } finally {
+            withContext(Dispatchers.Main) { model.selectProfile(original.id) }
+            awaitProfile(original.id)
+            withContext(Dispatchers.Main) { viewModels.clear() }
+            ReminderWorker.cancel(application, profile.id)
+            application.deleteDatabase(profileDatabaseName(profile.id))
+            profiles.remove(profile.id)
+        }
+    }
+
+    @Test
     fun failedProfileReadBlocksWritesUntilExplicitRetrySucceeds() = runBlocking {
         val application = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as Application
         check(application.packageName.endsWith(".qa")) { "Tests must use the isolated QA application" }

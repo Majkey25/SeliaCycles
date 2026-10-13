@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -36,6 +37,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -157,6 +160,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -230,6 +234,9 @@ private enum class CustomColorTarget(@param:StringRes val label: Int) {
     SECONDARY(R.string.custom_secondary_color),
     TERTIARY(R.string.custom_tertiary_color),
     ENTRY(R.string.custom_entry_color),
+    BACKGROUND(R.string.appearance_background),
+    SURFACE(R.string.appearance_surface),
+    TEXT(R.string.appearance_text),
 }
 
 internal enum class SelfCareActivity(
@@ -358,6 +365,7 @@ private fun dailyFertilityLabel(level: DailyFertilityLevel): Int = when (level) 
 private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
     val profileScope = rememberCoroutineScope()
     var screen by rememberSaveable { mutableStateOf(Screen.TODAY) }
+    val screenStates = rememberSaveableStateHolder()
     var showProfiles by rememberSaveable { mutableStateOf(false) }
     var startCreatingProfile by rememberSaveable { mutableStateOf(false) }
     var documentProfileId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -365,6 +373,7 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
     var contraceptionPermissionPending by rememberSaveable { mutableStateOf(false) }
     var selectedDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     var daySheetMode by rememberSaveable { mutableStateOf(DaySheetMode.OVERVIEW) }
+    var periodFromCalendar by rememberSaveable { mutableStateOf(false) }
     var infoDialog by remember { mutableStateOf<InfoDialog?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var selfCareDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
@@ -470,6 +479,7 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                 } else if (state.loading) {
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 } else {
+                    screenStates.SaveableStateProvider(screen.name) {
                     when (screen) {
                         Screen.TODAY -> TodayScreen(
                             state,
@@ -500,6 +510,7 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                             onEditPeriod = {
                                 selectedDay = it
                                 daySheetMode = DaySheetMode.PERIOD
+                                periodFromCalendar = true
                             },
                         )
                         Screen.HISTORY -> HistoryScreen(state)
@@ -544,6 +555,7 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                             onCalendarCleanup = viewModel::previewCalendarCleanup,
                         )
                     }
+                    }
                 }
             }
             if (state.busy) {
@@ -579,7 +591,7 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                     day = day,
                     state = state,
                     onDismiss = { selectedDay = null },
-                    onEditPeriod = { daySheetMode = DaySheetMode.PERIOD },
+                    onEditPeriod = { periodFromCalendar = false; daySheetMode = DaySheetMode.PERIOD },
                     onEditDetails = { daySheetMode = DaySheetMode.DETAILS },
                     onStartPeriod = {
                         viewModel.startPeriod(day)
@@ -596,14 +608,15 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
                     logs = state.backup.logs,
                     periodLength = state.prediction.averagePeriodLength,
                     firstDayOfWeek = state.backup.settings.firstDayOfWeek,
-                    periodColor = calendarPeriodRgb(
-                        state.backup.settings.palette,
+                    periodColor = calendarPeriodColor(
+                        LocalAppPalette.current,
                         state.backup.settings.customPalette,
-                    ).color(),
+                        MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
                     isBusy = isBusy,
                     saveFailed = saveFailed,
                     onRetryLoad = if (state.loadFailed) viewModel::retryLoad else null,
-                    onDismiss = { daySheetMode = DaySheetMode.OVERVIEW },
+                    onDismiss = { if (periodFromCalendar) selectedDay = null else daySheetMode = DaySheetMode.OVERVIEW },
                     onSave = { saveEditor { viewModel.savePeriodDays(day, it) } },
                 )
                 DaySheetMode.DETAILS -> DayLogSheet(
@@ -691,7 +704,7 @@ private fun TodayScreen(
     onOpenHistory: () -> Unit,
     onOpenPhase: () -> Unit,
 ) {
-    val today = LocalDate.now()
+    val today = state.referenceDate
     val prediction = state.prediction
     val predictionsEnabled = state.backup.settings.canPredictPeriods
     val insight = state.todayInsight
@@ -716,8 +729,9 @@ private fun TodayScreen(
         Box(
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).clickable { onOpenCalendar(today) }
                 .background(Brush.linearGradient(paletteGradientColors(
-                    state.backup.settings.palette,
+                    LocalAppPalette.current,
                     state.backup.settings.customPalette,
+                    MaterialTheme.colorScheme,
                 )))
                 .padding(24.dp),
         ) {
@@ -793,7 +807,9 @@ private fun TodayScreen(
         UpcomingCycleSection(
             insight = insight,
             fertility = CycleInsights.fertilityEstimates(state.backup, state.forecastSnapshots, today)
-                .firstOrNull { !it.fertileEnd.isBefore(today) }.takeIf { state.showFertility },
+                .firstOrNull { !it.fertileEnd.isBefore(today) &&
+                    !CycleInsights.hasElapsedCycle(state.backup, state.prediction, it.ovulation, state.referenceDate) }
+                .takeIf { state.showFertility },
             predictionsEnabled = predictionsEnabled,
             dateFormat = shortDateFormat,
             distance = distance,
@@ -1072,13 +1088,7 @@ private fun SelfCareSheet(insight: DailyCycleInsight, day: LocalDate, log: DayLo
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             SheetHeader(R.string.self_care_title, onDismiss)
-            plan.alert?.let { alert ->
-                Text(stringResource(when (alert) {
-                    SelfCareAlert.SEVERE_PAIN -> R.string.care_alert_pain
-                    SelfCareAlert.PREGNANCY -> R.string.care_alert_pregnancy
-                    SelfCareAlert.MENOPAUSE -> R.string.care_alert_menopause
-                }), color = MaterialTheme.colorScheme.error)
-            }
+            plan.alert?.let { SelfCareAlertText(it) }
             if (selected == null) {
                 Text(day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)))
                 if (plan.showPhase) {
@@ -1336,13 +1346,14 @@ private fun CalendarScreen(
     var overviewExpanded by rememberSaveable { mutableStateOf(false) }
     var focusedDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     var showFilters by remember { mutableStateOf(false) }
-    var selectedFilters by remember { mutableStateOf(emptySet<TrackerFilter>()) }
+    var selectedFilters by rememberSaveable { mutableStateOf(emptySet<TrackerFilter>()) }
     val availableFilters = remember(state.backup.logs) { TrackerFilter.availableFilters(state.backup.logs) }
     val tracks = remember(state.content, state.showFertility) { CalendarTracks(state.content, state.showFertility) }
     val tracksFor: (LocalDate) -> CalendarDayTracks = tracks::forDay
-    val periodColor = calendarPeriodRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
+    val periodColor = calendarPeriodColor(LocalAppPalette.current, state.backup.settings.customPalette,
+        MaterialTheme.colorScheme.background)
     val onPeriodColor = periodColor.contrastColor()
-    val entryColor = calendarEntryRgb(state.backup.settings.palette, state.backup.settings.customPalette).color()
+    val entryColor = calendarEntryRgb(LocalAppPalette.current, state.backup.settings.customPalette).color()
         .readableOn(MaterialTheme.colorScheme.surface)
     LaunchedEffect(availableFilters) {
         selectedFilters = selectedFilters.intersect(availableFilters.toSet())
@@ -1685,7 +1696,7 @@ private fun CalendarDay(
 ) {
     val predictedPeriodColor = calendarPredictedPeriodColor(periodColor)
     val decorationAlpha = if (inShownMonth) 1f else 0.42f
-    val surface = MaterialTheme.colorScheme.surface
+    val surface = MaterialTheme.colorScheme.background
     val fertileBackground = when {
         tracks.fertile -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.20f * decorationAlpha)
         possibleFertile -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.08f * decorationAlpha)
@@ -1810,14 +1821,14 @@ private fun HistoryScreen(state: AppState) {
     val locale = currentLocale()
     val dateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val prediction = state.prediction
-    val today = LocalDate.now()
+    val today = state.referenceDate
     val pastStarts = prediction.periodStarts.filter { !it.isAfter(today) }
     val futureStarts = prediction.periodStarts.filter { it.isAfter(today) }
     val averageCycle = remember(pastStarts) {
         CycleAnalysis.recentLengths(pastStarts).takeIf { it.isNotEmpty() }
             ?.map(CycleLengthSample::days)?.average()?.let { kotlin.math.round(it).toInt() }
     }
-    val averagePeriod = remember(state.backup.logs, state.backup.settings.activePeriodStart) {
+    val averagePeriod = remember(pastStarts, state.backup.logs, state.backup.settings.activePeriodStart) {
         CycleAnalysis.averageRecordedPeriodDays(pastStarts,
             state.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day),
             state.backup.settings.activePeriodStart,
@@ -1830,23 +1841,30 @@ private fun HistoryScreen(state: AppState) {
     )
     val predictionAccuracy = CycleAnalysis.predictionAccuracy(pastStarts, state.forecastSnapshots)
     val symptomPatterns = remember(state.backup) { PersonalPatterns.symptomPatterns(state.backup) }
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        Text(stringResource(R.string.history_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Metric(Icons.Outlined.Autorenew, R.string.average_cycle, averageCycle?.let { pluralStringResource(R.plurals.days_value, it, it) } ?: "—", Modifier.weight(1f))
-            Metric(Icons.Outlined.WaterDrop, R.string.average_period, averagePeriod?.let { pluralStringResource(R.plurals.days_value, it, it) } ?: "—", Modifier.weight(1f))
-            Metric(Icons.Outlined.History, R.string.recorded_cycles, pastStarts.size.toString(), Modifier.weight(1f))
+        item {
+            Text(stringResource(R.string.history_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
         }
-        predictionAccuracy?.let { PredictionAccuracyCard(it) }
-        if (symptomPatterns.isNotEmpty()) PersonalPatternsCard(symptomPatterns)
-        CycleLengthChart(pastStarts, locale)
-        if (state.backup.settings.canEstimateFertility) CycleHistoryDetails(cycleHistory, locale)
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Metric(Icons.Outlined.Autorenew, R.string.average_cycle, averageCycle?.let { pluralStringResource(R.plurals.days_value, it, it) } ?: "—", Modifier.weight(1f))
+                Metric(Icons.Outlined.WaterDrop, R.string.average_period, averagePeriod?.let { pluralStringResource(R.plurals.days_value, it, it) } ?: "—", Modifier.weight(1f))
+                Metric(Icons.Outlined.History, R.string.recorded_cycles, pastStarts.size.toString(), Modifier.weight(1f))
+            }
+        }
+        predictionAccuracy?.let { summary -> item { PredictionAccuracyCard(summary) } }
+        if (symptomPatterns.isNotEmpty()) item { PersonalPatternsCard(symptomPatterns) }
+        item { CycleLengthChart(pastStarts, locale) }
+        if (state.backup.settings.canEstimateFertility && cycleHistory.isNotEmpty()) {
+            item { CycleHistoryDetails(cycleHistory, locale) }
+        }
         if (futureStarts.isNotEmpty()) {
-            SectionLabel(Icons.Outlined.EventRepeat, R.string.upcoming_entries)
-            futureStarts.forEach { start ->
+            item { SectionLabel(Icons.Outlined.EventRepeat, R.string.upcoming_entries) }
+            items(futureStarts, key = { it.toEpochDay() }) { start ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(12.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer))
                     Spacer(Modifier.width(12.dp))
@@ -1857,11 +1875,11 @@ private fun HistoryScreen(state: AppState) {
                 }
             }
         }
-        HorizontalDivider()
+        item { HorizontalDivider() }
         if (pastStarts.isEmpty()) {
-            Text(stringResource(R.string.no_history), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            item { Text(stringResource(R.string.no_history), color = MaterialTheme.colorScheme.onSurfaceVariant) }
         } else {
-            pastStarts.asReversed().forEach { start ->
+            items(pastStarts.asReversed(), key = { it.toEpochDay() }) { start ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(12.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondary))
                     Spacer(Modifier.width(12.dp))
@@ -1928,9 +1946,21 @@ private fun PersonalPatternsCard(patterns: List<SymptomPattern>) {
 
 @Composable
 private fun PredictionAccuracyCard(summary: PredictionAccuracySummary) {
+    var showMatchingInfo by rememberSaveable { mutableStateOf(false) }
+    if (showMatchingInfo) {
+        AlertDialog(
+            onDismissRequest = { showMatchingInfo = false },
+            title = { Text(stringResource(R.string.prediction_accuracy_summary)) },
+            text = { Text(stringResource(R.string.accuracy_matching_info)) },
+            confirmButton = {
+                TextButton(onClick = { showMatchingInfo = false }) { Text(stringResource(R.string.close)) }
+            },
+        )
+    }
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(role = Role.Button, onClick = { showMatchingInfo = true }).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -2229,21 +2259,10 @@ private fun SettingsScreen(
                     ) { onSave(settings.copy(showCycleDetails = it)) }
                 }
                 SettingsPage.APPEARANCE -> {
-                    SectionLabel(Icons.Outlined.Palette, R.string.theme)
-                    ThemeModeSelector(settings.theme) { onSave(settings.copy(theme = it)) }
-                    SectionLabel(Icons.Outlined.Palette, R.string.color_palette)
-                    AppPalette.entries.forEach { palette ->
-                        AppearancePreviewRow(
-                            label = paletteLabel(palette),
-                            colors = if (palette == AppPalette.CUSTOM) emptyList() else {
-                                palettePreviewColors(palette, settings.customPalette)
-                            },
-                            icon = Icons.Outlined.Edit.takeIf { palette == AppPalette.CUSTOM },
-                            summary = R.string.palette_custom_hint.takeIf { palette == AppPalette.CUSTOM },
-                            selected = settings.palette == palette,
-                        ) { onSave(settings.copy(palette = palette)) }
+                    AppAppearanceSettings(settings, onSave)
+                    if (settings.palette == AppPalette.CUSTOM || settings.darkPalette == AppPalette.CUSTOM) {
+                        CustomPaletteSettings(settings, onSave)
                     }
-                    if (settings.palette == AppPalette.CUSTOM) CustomPaletteSettings(settings, onSave)
                     LanguageRow()
                     OutlinedButton(onClick = {
                         val manager = android.appwidget.AppWidgetManager.getInstance(context)
@@ -2813,10 +2832,12 @@ private fun <T> ChoiceRow(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             choices.forEach { choice ->
+                val description = stringResource(label) + ": " + stringResource(choice.label)
                 FilterChip(
                     selected = choice.value == selected,
                     onClick = { onSelect(choice.value) },
                     enabled = enabled,
+                    modifier = Modifier.semantics { contentDescription = description },
                     label = { Text(stringResource(choice.label)) },
                     leadingIcon = choice.icon?.let { choiceIcon ->
                         { Icon(choiceIcon, contentDescription = null, modifier = Modifier.size(18.dp)) }
@@ -2828,53 +2849,13 @@ private fun <T> ChoiceRow(
 }
 
 @Composable
-private fun AppearancePreviewRow(
-    @StringRes label: Int,
-    colors: List<Color> = emptyList(),
-    icon: ImageVector? = null,
-    @StringRes summary: Int? = null,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val shape = RoundedCornerShape(16.dp)
-    Row(
-        modifier = Modifier.fillMaxWidth().clip(shape)
-            .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
-            .border(1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, shape)
-            .clickable(onClick = onClick).padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (icon == null) {
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                colors.forEach { color -> Box(Modifier.size(24.dp).clip(CircleShape).background(color)) }
-            }
-        } else {
-            Box(
-                Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-        }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(stringResource(label), fontWeight = FontWeight.SemiBold)
-            summary?.let {
-                Text(stringResource(it), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-        if (selected) Icon(Icons.Outlined.CheckCircle, contentDescription = stringResource(R.string.calendar_selected))
-    }
-}
-
-@Composable
-private fun ThemeModeSelector(selected: AppTheme, onSelect: (AppTheme) -> Unit) {
+internal fun ThemeModeSelector(selected: AppTheme, onSelect: (AppTheme) -> Unit) {
     Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         AppTheme.entries.forEach { theme ->
             val isSelected = selected == theme
             val shape = RoundedCornerShape(16.dp)
             Column(
-                modifier = Modifier.weight(1f).heightIn(min = 76.dp).clip(shape)
+                modifier = Modifier.weight(1f).heightIn(min = 64.dp).clip(shape)
                     .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                     .border(
                         1.dp,
@@ -2911,27 +2892,19 @@ private fun CustomPaletteSettings(settings: AppSettings, onSave: (AppSettings) -
     var secondary by remember(custom.secondaryRgb) { mutableStateOf(custom.secondaryRgb.rgbHex()) }
     var tertiary by remember(custom.tertiaryRgb) { mutableStateOf(custom.tertiaryRgb.rgbHex()) }
     var entry by remember(custom.entryRgb) { mutableStateOf(custom.entryRgb.rgbHex()) }
-    SectionLabel(Icons.Outlined.Palette, R.string.palette_presets)
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        AppPalette.entries.filterNot { it == AppPalette.CUSTOM }.forEach { preset ->
-            val colors = palettePreviewColors(preset)
-            FilterChip(
-                selected = false,
-                onClick = { onSave(settings.copy(customPalette = paletteAsCustom(preset))) },
-                label = { Text(stringResource(paletteLabel(preset))) },
-                leadingIcon = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                        colors.forEach { color -> Box(Modifier.size(7.dp).clip(CircleShape).background(color)) }
-                    }
-                },
-            )
-        }
-    }
+    val dark = LocalAppDarkTheme.current
+    val scheme = paletteColorScheme(AppPalette.CUSTOM, custom,
+        if (settings.paletteFor(dark) == AppPalette.CUSTOM) dark else !dark)
     SectionLabel(Icons.Outlined.Palette, R.string.custom_colors)
     CustomColorRow(CustomColorTarget.PRIMARY, custom.primaryRgb) { target = CustomColorTarget.PRIMARY }
     CustomColorRow(CustomColorTarget.SECONDARY, custom.secondaryRgb) { target = CustomColorTarget.SECONDARY }
     CustomColorRow(CustomColorTarget.TERTIARY, custom.tertiaryRgb) { target = CustomColorTarget.TERTIARY }
     CustomColorRow(CustomColorTarget.ENTRY, custom.entryRgb) { target = CustomColorTarget.ENTRY }
+    CustomColorRow(CustomColorTarget.BACKGROUND, custom.backgroundRgb ?: (scheme.background.toArgb() and 0xFFFFFF)) { target = CustomColorTarget.BACKGROUND }
+    CustomColorRow(CustomColorTarget.SURFACE, custom.surfaceRgb ?: (scheme.surface.toArgb() and 0xFFFFFF)) { target = CustomColorTarget.SURFACE }
+    CustomColorRow(CustomColorTarget.TEXT, custom.textRgb ?: (scheme.onSurface.toArgb() and 0xFFFFFF)) { target = CustomColorTarget.TEXT }
+    Text(stringResource(R.string.appearance_contrast_hint), style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant)
     TextButton(onClick = { showHex = !showHex }) {
         Icon(Icons.Outlined.Palette, contentDescription = null)
         Spacer(Modifier.width(8.dp))
@@ -2956,6 +2929,24 @@ private fun CustomPaletteSettings(settings: AppSettings, onSave: (AppSettings) -
             entry = it
             parseRgbHex(it)?.let { rgb -> onSave(settings.copy(customPalette = custom.copy(entryRgb = rgb))) }
         }, R.string.custom_entry_color)
+        listOf(CustomColorTarget.BACKGROUND, CustomColorTarget.SURFACE, CustomColorTarget.TEXT).forEach { field ->
+            val value = when (field) {
+                CustomColorTarget.BACKGROUND -> custom.backgroundRgb ?: (scheme.background.toArgb() and 0xFFFFFF)
+                CustomColorTarget.SURFACE -> custom.surfaceRgb ?: (scheme.surface.toArgb() and 0xFFFFFF)
+                else -> custom.textRgb ?: (scheme.onSurface.toArgb() and 0xFFFFFF)
+            }
+            var hex by remember(value) { mutableStateOf(value.rgbHex()) }
+            HexColorField(hex, { input ->
+                hex = input
+                parseRgbHex(input)?.let { rgb ->
+                    onSave(settings.copy(customPalette = when (field) {
+                        CustomColorTarget.BACKGROUND -> custom.copy(backgroundRgb = rgb)
+                        CustomColorTarget.SURFACE -> custom.copy(surfaceRgb = rgb)
+                        else -> custom.copy(textRgb = rgb)
+                    }))
+                }
+            }, field.label)
+        }
     }
     OutlinedButton(
         onClick = { onSave(settings.copy(customPalette = CustomPalette())) },
@@ -2971,6 +2962,9 @@ private fun CustomPaletteSettings(settings: AppSettings, onSave: (AppSettings) -
             CustomColorTarget.SECONDARY -> custom.secondaryRgb
             CustomColorTarget.TERTIARY -> custom.tertiaryRgb
             CustomColorTarget.ENTRY -> custom.entryRgb
+            CustomColorTarget.BACKGROUND -> custom.backgroundRgb ?: (scheme.background.toArgb() and 0xFFFFFF)
+            CustomColorTarget.SURFACE -> custom.surfaceRgb ?: (scheme.surface.toArgb() and 0xFFFFFF)
+            CustomColorTarget.TEXT -> custom.textRgb ?: (scheme.onSurface.toArgb() and 0xFFFFFF)
         }
         ColorPickerDialog(
             title = selectedTarget.label,
@@ -2982,6 +2976,9 @@ private fun CustomPaletteSettings(settings: AppSettings, onSave: (AppSettings) -
                     CustomColorTarget.SECONDARY -> custom.copy(secondaryRgb = rgb)
                     CustomColorTarget.TERTIARY -> custom.copy(tertiaryRgb = rgb)
                     CustomColorTarget.ENTRY -> custom.copy(entryRgb = rgb)
+                    CustomColorTarget.BACKGROUND -> custom.copy(backgroundRgb = rgb)
+                    CustomColorTarget.SURFACE -> custom.copy(surfaceRgb = rgb)
+                    CustomColorTarget.TEXT -> custom.copy(textRgb = rgb)
                 }
                 onSave(settings.copy(customPalette = updated))
                 target = null
@@ -3025,7 +3022,9 @@ internal fun ColorPickerDialog(
                     modifier = Modifier.fillMaxWidth().height(240.dp),
                     controller = controller,
                     initialColor = Color(0xFF000000L or initialRgb.toLong()),
-                    onColorChanged = { envelope -> selectedRgb = envelope.color.toArgb() and 0xFFFFFF },
+                    onColorChanged = { envelope ->
+                        if (envelope.fromUser) selectedRgb = envelope.color.toArgb() and 0xFFFFFF
+                    },
                 )
                 BrightnessSlider(
                     modifier = Modifier.fillMaxWidth().height(28.dp),
@@ -3080,7 +3079,7 @@ private fun themeLabel(theme: AppTheme): Int = when (theme) {
 }
 
 @StringRes
-private fun paletteLabel(palette: AppPalette): Int = when (palette) {
+internal fun paletteLabel(palette: AppPalette): Int = when (palette) {
     AppPalette.SELIA -> R.string.palette_selia
     AppPalette.ROSE -> R.string.palette_rose
     AppPalette.OCEAN -> R.string.palette_ocean
@@ -3088,6 +3087,11 @@ private fun paletteLabel(palette: AppPalette): Int = when (palette) {
     AppPalette.SUNSET -> R.string.palette_sunset
     AppPalette.LILAC -> R.string.palette_lilac
     AppPalette.CUSTOM -> R.string.palette_custom
+    AppPalette.MATERIAL -> R.string.palette_material
+    AppPalette.AMOLED -> R.string.palette_amoled
+    AppPalette.GRAPHITE -> R.string.palette_graphite
+    AppPalette.SAND -> R.string.palette_sand
+    AppPalette.MINT -> R.string.palette_mint
 }
 
 @Composable
@@ -3135,6 +3139,15 @@ private fun SettingsLink(icon: ImageVector, @StringRes label: Int, onClick: () -
 }
 
 @Composable
+private fun SelfCareAlertText(alert: SelfCareAlert) {
+    Text(stringResource(when (alert) {
+        SelfCareAlert.SEVERE_PAIN -> R.string.care_alert_pain
+        SelfCareAlert.PREGNANCY -> R.string.care_alert_pregnancy
+        SelfCareAlert.MENOPAUSE -> R.string.care_alert_menopause
+    }), color = MaterialTheme.colorScheme.error)
+}
+
+@Composable
 private fun SupportButton() {
     val context = LocalContext.current
     val notice = stringResource(R.string.support_notice)
@@ -3173,6 +3186,9 @@ private fun DayOverviewSheet(
     val shortDateFormat = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val log = state.logsByDay[day]
     val insight = CycleInsights.forDate(state.backup, state.forecastSnapshots, day, referenceDate = state.referenceDate)
+    val care = remember(day, log, state.content) {
+        selfCarePlan(insight, log, day, state.backup.settings.profile.lifeSituation, state.backup.logs)
+    }
     val comparison = DayOverview.compare(day, state.backup, state.forecastSnapshots)
     val today = LocalDate.now()
     val canChangePeriod = !day.isAfter(today) || log?.automaticBleeding == true
@@ -3274,8 +3290,9 @@ private fun DayOverviewSheet(
                         statusLabels.forEach { Text(stringResource(it), fontWeight = FontWeight.SemiBold) }
                     }
                 }
-                PhaseGuidanceCard(insight, onSelfCare)
-                if (insight.phase == null) DashboardLinkRow(
+                care.alert?.let { SelfCareAlertText(it) }
+                if (care.showPhase) PhaseGuidanceCard(insight, onSelfCare)
+                else DashboardLinkRow(
                     Icons.Outlined.Healing, R.string.self_care_title, R.string.self_care_dashboard_body, onSelfCare,
                 )
                 if (state.showFertility) {
@@ -3504,10 +3521,10 @@ private fun PeriodEditorSheet(
             }
             EditorSaveFeedback(saveFailed, busy, onRetryLoad)
             HorizontalDivider()
-            Row(
+            FlowRow(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 if (selectedDays.isNotEmpty()) {
                     TextButton(onClick = {
@@ -3519,7 +3536,6 @@ private fun PeriodEditorSheet(
                         Text(stringResource(R.string.clear_period), color = MaterialTheme.colorScheme.error)
                     }
                 }
-                Spacer(Modifier.weight(1f))
                 TextButton(onClick = requestDismiss, enabled = !busy) { Text(stringResource(R.string.cancel)) }
                 Button(
                     onClick = { onSave(selectedDays) },
@@ -3803,17 +3819,16 @@ private fun DayLogSheet(
             }
             EditorSaveFeedback(saveFailed, busy, onRetryLoad)
             HorizontalDivider()
-            Row(
+            FlowRow(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 if (initial?.hasCalendarMarker == true) {
                     TextButton(onClick = { if (!isBusy()) confirmDelete = true }, enabled = editable) {
                         Text(stringResource(R.string.delete_information))
                     }
                 }
-                Spacer(Modifier.weight(1f))
                 TextButton(onClick = requestDismiss, enabled = !busy) { Text(stringResource(R.string.cancel)) }
                 Button(onClick = { draftLog()?.let(onSave) }, enabled = canSave && editable) { Text(stringResource(R.string.save)) }
             }

@@ -23,6 +23,9 @@ data class StoredMirrorEvent(
     val key: String,
     val current: MirrorEvent? = null,
     val description: String? = null,
+    val calendarId: Long? = null,
+    val appPackage: String? = null,
+    val appUri: String? = null,
 )
 
 sealed interface MirrorMutation {

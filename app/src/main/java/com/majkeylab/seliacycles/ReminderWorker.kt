@@ -48,30 +48,38 @@ internal fun reminderNotificationTag(profileId: String): String? {
     return profileId.takeUnless { it == LocalProfiles.DEFAULT_ID }
 }
 
+internal fun reminderNotificationsEnabled(context: Context, channelId: String): Boolean {
+    val manager = NotificationManagerCompat.from(context)
+    return manager.areNotificationsEnabled() &&
+        manager.getNotificationChannel(channelId)?.importance != NotificationManager.IMPORTANCE_NONE
+}
+
 class ReminderWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = synchronized(LocalProfiles.lock) {
         val profileId = inputData.getString(PROFILE_ID_EXTRA) ?: LocalProfiles.DEFAULT_ID
-        if (runCatching { requireValidProfileId(profileId) }.isFailure) return Result.success()
+        if (runCatching { requireValidProfileId(profileId) }.isFailure) return@synchronized Result.success()
         if (LocalProfiles(applicationContext).profiles().none { it.id == profileId }) {
             cancel(applicationContext, profileId)
-            return Result.success()
+            return@synchronized Result.success()
         }
+        if (!applicationContext.getDatabasePath(profileDatabaseName(profileId)).exists()) return@synchronized Result.success()
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
-        ) return Result.success()
+        ) return@synchronized Result.success()
         val (backup, snapshots) = CycleStore(applicationContext, profileId).use { store ->
             store.load() to store.loadForecastSnapshots().associateBy(ForecastSnapshot::month)
         }
-        if (!backup.settings.reminderEnabled || !backup.settings.canPredictPeriods) return Result.success()
+        if (!backup.settings.reminderEnabled || !backup.settings.canPredictPeriods) return@synchronized Result.success()
 
-        val next = CycleInsights.forDate(backup, snapshots).nextPeriodStart ?: return Result.success()
+        val next = CycleInsights.forDate(backup, snapshots).nextPeriodStart ?: return@synchronized Result.success()
         val daysUntil = ChronoUnit.DAYS.between(LocalDate.now(), next).toInt()
         val reminderState = applicationContext.getSharedPreferences(reminderStateName(profileId), Context.MODE_PRIVATE)
         val lastNotified = reminderState.getLong(LAST_NOTIFIED_PERIOD, Long.MIN_VALUE).takeUnless { it == Long.MIN_VALUE }
-        if (!shouldNotifyPeriod(daysUntil, backup.settings.reminderDays, next.toEpochDay(), lastNotified)) return Result.success()
+        if (!shouldNotifyPeriod(daysUntil, backup.settings.reminderDays, next.toEpochDay(), lastNotified)) return@synchronized Result.success()
 
         createChannel()
+        if (!reminderNotificationsEnabled(applicationContext, CHANNEL_ID)) return@synchronized Result.success()
         val intent = Intent(applicationContext, MainActivity::class.java)
             .setData("selia://local-profile/$profileId".toUri())
             .putExtra(PROFILE_ID_EXTRA, profileId)
@@ -96,7 +104,7 @@ class ReminderWorker(context: Context, parameters: WorkerParameters) : Coroutine
             .build()
         NotificationManagerCompat.from(applicationContext).notify(reminderNotificationTag(profileId), NOTIFICATION_ID, notification)
         reminderState.edit { putLong(LAST_NOTIFIED_PERIOD, next.toEpochDay()) }
-        return Result.success()
+        Result.success()
     }
 
     private fun createChannel() {
@@ -122,12 +130,14 @@ class ReminderWorker(context: Context, parameters: WorkerParameters) : Coroutine
             NotificationManagerCompat.from(context).cancel(reminderNotificationTag(profileId), NOTIFICATION_ID)
         }
 
-        fun sync(context: Context, settings: AppSettings, profileId: String = LocalProfiles.DEFAULT_ID) {
+        fun sync(context: Context, settings: AppSettings, profileId: String = LocalProfiles.DEFAULT_ID): Unit = synchronized(LocalProfiles.lock) {
             val workName = reminderWorkName(profileId)
             val workManager = WorkManager.getInstance(context)
-            if (!settings.reminderEnabled || !settings.canPredictPeriods) {
+            if (LocalProfiles(context).profiles().none { it.id == profileId } ||
+                !context.getDatabasePath(profileDatabaseName(profileId)).exists() ||
+                !settings.reminderEnabled || !settings.canPredictPeriods) {
                 cancel(context, profileId)
-                return
+                return@synchronized
             }
             val request = PeriodicWorkRequestBuilder<ReminderWorker>(24, TimeUnit.HOURS)
                 .setInputData(workDataOf(PROFILE_ID_EXTRA to profileId))

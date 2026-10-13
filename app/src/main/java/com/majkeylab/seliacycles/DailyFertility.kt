@@ -15,7 +15,8 @@ object DailyFertility {
         referenceDate: LocalDate,
     ): DailyFertilityLevel {
         if (date !in DayLog.MIN_DATE..DayLog.MAX_DATE || referenceDate !in DayLog.MIN_DATE..DayLog.MAX_DATE ||
-            !CycleInsights.canEstimateFertility(backup, prediction)
+            !CycleInsights.canEstimateFertility(backup, prediction) ||
+            CycleInsights.hasElapsedCycle(backup, prediction, date, referenceDate)
         ) return DailyFertilityLevel.UNAVAILABLE
 
         val validEstimates = estimates.filter { isValid(it, prediction) }

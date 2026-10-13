@@ -9,6 +9,19 @@ import kotlin.test.assertTrue
 class PeriodActionsTest {
     private val start = LocalDate.of(2026, 8, 10)
 
+    @Test fun `split editor retains active latest group when older fragment is removed`() {
+        val today = start.plusDays(3)
+        val original = PeriodActions.start(start, emptyList(), 5)
+        val originalDays = PeriodActions.periodDays(start, original)
+        val split = PeriodActions.replace(start, setOf(start, today, today.plusDays(1)), original, today)
+        val active = PeriodActions.activeStartAfterEdit(start, originalDays, split, today)
+        assertEquals(today, active)
+        val cleared = PeriodActions.replace(start, emptySet(), split, today)
+        assertEquals(today, PeriodActions.activeStartAfterEdit(active, PeriodActions.periodDays(start, split), cleared, today))
+        val ended = PeriodActions.replace(today, setOf(today), cleared, today)
+        assertEquals(null, PeriodActions.activeStartAfterEdit(active, PeriodActions.periodDays(today, cleared), ended, today))
+    }
+
     @Test fun `start fills the whole default duration in one action`() {
         assertEquals((0L..4L).map(start::plusDays),
             PeriodActions.start(start, emptyList()).filter(DayLog::bleeding).map(DayLog::day))

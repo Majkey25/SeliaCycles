@@ -27,12 +27,16 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import java.io.File
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.Dispatchers
@@ -64,14 +68,26 @@ class CalendarWidgetTest {
     @Test fun remoteCalendarRendersAppColorsRecordsAndPrivacyMode() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         check(context.packageName.endsWith(".qa"))
-        val today = LocalDate.of(2026, 10, 7)
+        val today = LocalDate.of(2026, 10, 28)
+        val locale = context.resources.configuration.locales[0]
         val profile = LocalProfile(LocalProfiles.DEFAULT_ID, "Widget QA")
         val logs = (0L..4L).map { DayLog(today.plusDays(it), bleeding = true, flow = Flow.LIGHT, note = if (it == 0L) "Private note" else "") }
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
-                listOf(AppTheme.LIGHT, AppTheme.DARK).forEach { theme ->
-                    val settings = AppSettings(theme = theme, palette = AppPalette.CUSTOM,
-                        customPalette = CustomPalette(primaryRgb = 0x6F4BA7, secondaryRgb = 0xBA1745, tertiaryRgb = 0x00695C))
+                val custom = CustomPalette(primaryRgb = 0x6F4BA7, secondaryRgb = 0xBA1745, tertiaryRgb = 0x00695C)
+                listOf(
+                    AppSettings(theme = AppTheme.LIGHT, palette = AppPalette.CUSTOM, customPalette = custom),
+                    AppSettings(theme = AppTheme.DARK, palette = AppPalette.CUSTOM, customPalette = custom),
+                    AppSettings(theme = AppTheme.DARK, palette = AppPalette.OCEAN, darkPalette = AppPalette.CUSTOM,
+                        customPalette = custom.copy(secondaryRgb = 0xFFF5C0)),
+                    AppSettings(theme = AppTheme.LIGHT, palette = AppPalette.CUSTOM, darkPalette = AppPalette.AMOLED,
+                        customPalette = custom.copy(secondaryRgb = 0xFFF5C0)),
+                    AppSettings(theme = AppTheme.LIGHT, palette = AppPalette.CUSTOM,
+                        customPalette = custom.copy(secondaryRgb = 0xC62828, backgroundRgb = 0xC62828, surfaceRgb = 0xC62828)),
+                    AppSettings(theme = AppTheme.DARK, palette = AppPalette.OCEAN, darkPalette = AppPalette.CUSTOM,
+                        customPalette = custom.copy(secondaryRgb = 0xC62828, backgroundRgb = 0xC62828, surfaceRgb = 0xC62828)),
+                ).forEach { settings ->
+                    val theme = settings.theme
                     val content = CycleContent(CycleBackup(logs, settings), referenceDate = today)
                     val remote = calendarWidgetViews(context, 77, profile, content, YearMonth.from(today), true)
                     // A launcher inflates platform Views, not AppCompat activity replacements.
@@ -83,12 +99,26 @@ class CalendarWidgetTest {
                     val height = (360 * context.resources.displayMetrics.density).toInt()
                     view.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY))
                     view.layout(0, 0, width, height)
-                    val date = view.findViewWithText<TextView>("7")
-                    assertEquals(calendarPeriodRgb(settings.palette, settings.customPalette).color().contrastColor().toArgb(), date.currentTextColor)
-                    val day = date.parent as View
+                    val day = view.findCalendarDay(today, locale)
+                    val date = day.findViewById<TextView>(R.id.widget_date)
+                    val scheme = appearanceColorScheme(context, settings, theme == AppTheme.DARK)
+                    assertEquals(calendarPeriodColor(settings.paletteFor(theme == AppTheme.DARK), settings.customPalette,
+                        scheme.surface).contrastColor().toArgb(), date.currentTextColor)
                     assertTrue(day.contentDescription.contains(context.getString(R.string.recorded_legend)))
                     assertFalse(day.contentDescription.contains("Private note"))
+                    assertEquals(View.VISIBLE, day.findViewById<ImageView>(R.id.widget_today_ring).visibility)
                     assertEquals(View.VISIBLE, day.findViewById<ImageView>(R.id.widget_note).visibility)
+                    if (settings.customPalette.surfaceRgb == settings.customPalette.secondaryRgb) {
+                        val band = day.findViewById<ImageView>(R.id.widget_period)
+                        val bandBitmap = Bitmap.createBitmap(band.width, band.height, Bitmap.Config.ARGB_8888)
+                        try {
+                            band.draw(Canvas(bandBitmap))
+                            val fill = Color(bandBitmap.getPixel(band.width / 2, band.height / 2))
+                            val contrast = (maxOf(fill.luminance(), scheme.surface.luminance()) + .05f) /
+                                (minOf(fill.luminance(), scheme.surface.luminance()) + .05f)
+                            assertTrue("Period band contrast: $contrast", contrast >= 4.5f)
+                        } finally { bandBitmap.recycle() }
+                    }
                     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
                     try {
                         view.draw(Canvas(bitmap))
@@ -97,7 +127,7 @@ class CalendarWidgetTest {
                         }
                     } finally { bitmap.recycle() }
                     val hidden = calendarWidgetViews(context, 77, profile, content, YearMonth.from(today), false).apply(context, parent)
-                    assertFalse((hidden.findViewWithText<TextView>("7").parent as View).contentDescription.contains(context.getString(R.string.recorded_legend)))
+                    assertFalse(hidden.findCalendarDay(today, locale).contentDescription.contains(context.getString(R.string.recorded_legend)))
                     val czech = context.createConfigurationContext(Configuration(context.resources.configuration).apply { setLocale(Locale.forLanguageTag("cs")) })
                     val localized = calendarWidgetViews(czech, 77, profile, content, YearMonth.from(today), false).apply(context, parent)
                     assertEquals(czech.getString(R.string.today_heading), localized.findViewById<TextView>(R.id.widget_today).text)
@@ -125,12 +155,17 @@ class CalendarWidgetTest {
             assertTrue(first.findViewById<TextView>(R.id.widget_brand).text.contains(bound.name))
             assertFalse(first.findViewById<TextView>(R.id.widget_brand).text.contains(other.name))
             context.deleteDatabase(profileDatabaseName(bound.id))
+            CalendarWidget.loadViews(context, 77).reapply(context, first)
+            assertEquals(context.getString(R.string.widget_unavailable), first.findViewById<TextView>(R.id.widget_message).text)
+            assertEquals(0, first.findViewById<ViewGroup>(R.id.widget_weeks).childCount)
+            assertFalse(context.getDatabasePath(profileDatabaseName(bound.id)).exists())
             profiles.remove(bound.id)
             CalendarWidget.loadViews(context, 77).reapply(context, first)
             assertEquals(context.getString(R.string.widget_choose_profile), first.findViewById<TextView>(R.id.widget_message).text)
             assertEquals(View.VISIBLE, first.findViewById<TextView>(R.id.widget_message).visibility)
             assertEquals(context.getString(R.string.app_name), first.findViewById<TextView>(R.id.widget_brand).text)
             assertEquals(0, first.findViewById<ViewGroup>(R.id.widget_weeks).childCount)
+            assertFalse(context.getDatabasePath(profileDatabaseName(bound.id)).exists())
             check(prefs.edit().putString("profile_77", other.id).commit())
             CalendarWidget.loadViews(context, 77).reapply(context, first)
             assertEquals(View.VISIBLE, first.findViewById<View>(R.id.widget_navigation).visibility)
@@ -144,6 +179,53 @@ class CalendarWidgetTest {
                 if (profiles.profiles().any { profile -> profile.id == it.id }) profiles.remove(it.id)
             }
             prefs.edit().remove("profile_77").remove("details_77").commit()
+        }
+    }
+
+    @Test fun configurationRejectsMissingAndRemovedProfilesWithoutCreatingDatabases() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        check(context.packageName.endsWith(".qa"))
+        val manager = AppWidgetManager.getInstance(context)
+        val host = AppWidgetHost(context, 3108)
+        val id = host.allocateAppWidgetId()
+        val profiles = LocalProfiles(context)
+        val missing = profiles.create("Missing configuration profile")
+        val available = profiles.create("Available configuration profile")
+        val prefs = CalendarWidget.preferences(context)
+        try {
+            CycleStore(context, available.id).use { it.saveSettings(AppSettings()) }
+            check(prefs.edit().putString("profile_$id", missing.id).commit())
+            instrumentation.uiAutomation.adoptShellPermissionIdentity(android.Manifest.permission.BIND_APPWIDGET)
+            try { assertTrue(manager.bindAppWidgetIdIfAllowed(id, ComponentName(context, CalendarWidget::class.java))) }
+            finally { instrumentation.uiAutomation.dropShellPermissionIdentity() }
+            ActivityScenario.launch<CalendarWidgetConfiguration>(CalendarWidget.configureIntent(context, id)).use {
+                compose.waitUntil(10_000) {
+                    runCatching { compose.onNodeWithText(context.getString(R.string.operation_failed)).assertExists(); true }.getOrDefault(false)
+                }
+                compose.onNodeWithText(context.getString(R.string.save)).assertIsNotEnabled()
+                assertFalse(context.getDatabasePath(profileDatabaseName(missing.id)).exists())
+                compose.onNodeWithText(available.name).performClick()
+                compose.waitUntil(10_000) {
+                    runCatching { compose.onNodeWithText(context.getString(R.string.save)).assertIsEnabled(); true }.getOrDefault(false)
+                }
+                profiles.remove(missing.id)
+                compose.onNodeWithText(missing.name).performClick()
+                compose.waitUntil(10_000) {
+                    runCatching { compose.onNodeWithText(context.getString(R.string.operation_failed)).assertExists(); true }.getOrDefault(false)
+                }
+                compose.onNodeWithText(context.getString(R.string.save)).assertIsNotEnabled()
+                assertFalse(context.getDatabasePath(profileDatabaseName(missing.id)).exists())
+            }
+        } finally {
+            host.deleteAppWidgetId(id)
+            prefs.edit().remove("profile_$id").commit()
+            listOf(missing, available).forEach {
+                synchronized(LocalProfiles.lock) {
+                    context.deleteDatabase(profileDatabaseName(it.id))
+                    if (profiles.profiles().any { profile -> profile.id == it.id }) profiles.remove(it.id)
+                }
+            }
         }
     }
 
@@ -254,8 +336,7 @@ class CalendarWidgetTest {
                     viewModel.calendarDestination.value == profile.id to today }
                 withContext(Dispatchers.Main) { viewModel.saveLog(DayLog(today, note = "Hidden detail")).await() }
                 awaitUi {
-                    val date = hostView.findViewWithText<TextView>(today.dayOfMonth.toString())
-                    (date.parent as View).contentDescription.contains(context.getString(R.string.recorded_values))
+                    hostView.findCalendarDay(today, locale).contentDescription.contains(context.getString(R.string.recorded_values))
                 }
             }
         } finally {
@@ -270,8 +351,9 @@ class CalendarWidgetTest {
     }
 }
 
-private inline fun <reified T : View> View.findViewWithText(text: String): T {
+private fun View.findCalendarDay(day: LocalDate, locale: Locale): View {
     val matches = ArrayList<View>()
-    findViewsWithText(matches, text, View.FIND_VIEWS_WITH_TEXT)
-    return matches.filterIsInstance<T>().first { it is TextView && it.text.toString() == text }
+    val date = day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale))
+    findViewsWithText(matches, date, View.FIND_VIEWS_WITH_CONTENT_DESCRIPTION)
+    return matches.first { it.id == R.id.widget_day }
 }

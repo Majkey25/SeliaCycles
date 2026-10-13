@@ -82,6 +82,44 @@ class PersonalPatternsTest {
         assertEquals(CyclePhase.LUTEAL, PersonalPatterns.symptomPatterns(backup).single().phase)
     }
 
+    @Test
+    fun `disabled fertility estimates preserve confirmed menstrual patterns only`() {
+        val logs = trackedPeriods(listOf(first, second, third), mapOf(
+            first.plusDays(1) to setOf(Symptom.CRAMPS),
+            first.plusDays(2) to setOf(Symptom.CRAMPS),
+            second.plusDays(1) to setOf(Symptom.CRAMPS),
+        )) + listOf(first.plusDays(9), first.plusDays(10), second.plusDays(9)).map {
+            DayLog(it, symptoms = setOf(Symptom.HEADACHE))
+        } + listOf(first.plusDays(19), first.plusDays(20), second.plusDays(20)).map {
+            DayLog(it, symptoms = setOf(Symptom.BACKACHE))
+        }
+        listOf(
+            AppSettings(profile = UserProfile(lifeSituation = LifeSituation.HORMONAL_CONTRACEPTION)),
+            AppSettings(predictionsEnabled = false),
+        ).forEach { settings ->
+            assertEquals(
+                listOf(SymptomPattern(Symptom.CRAMPS, CyclePhase.MENSTRUAL, sampleCount = 3, cycleCount = 2)),
+                PersonalPatterns.symptomPatterns(CycleBackup(logs, settings)),
+            )
+        }
+    }
+
+    @Test
+    fun `recurring minority phase is not hidden by more samples from one cycle`() {
+        val backup = CycleBackup(logs = trackedPeriods(listOf(first, second, third), mapOf(
+            first.plusDays(1) to setOf(Symptom.CRAMPS),
+            first.plusDays(2) to setOf(Symptom.CRAMPS),
+            second.plusDays(1) to setOf(Symptom.CRAMPS),
+        )) + (19L..22L).map {
+            DayLog(first.plusDays(it), symptoms = setOf(Symptom.CRAMPS))
+        })
+
+        assertEquals(
+            SymptomPattern(Symptom.CRAMPS, CyclePhase.MENSTRUAL, sampleCount = 3, cycleCount = 2),
+            PersonalPatterns.symptomPatterns(backup).single(),
+        )
+    }
+
     private fun period(start: LocalDate): List<DayLog> = (0L..4L).map { offset ->
         DayLog(start.plusDays(offset), bleeding = true, flow = Flow.UNKNOWN)
     }

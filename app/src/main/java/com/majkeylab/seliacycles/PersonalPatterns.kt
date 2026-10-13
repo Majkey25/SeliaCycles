@@ -17,19 +17,21 @@ object PersonalPatterns {
         val observations = cycles.flatMap { (start, next) ->
             backup.logs.asSequence().filter { it.day >= start && it.day < next && it.symptoms.isNotEmpty() }
                 .flatMap { log ->
+                    if (!backup.settings.canEstimateFertility && !log.confirmedBleeding) return@flatMap emptySequence()
                     val phase = phaseFor(log, start, next, backup.settings.lutealPhaseLength)
                         ?: return@flatMap emptySequence()
                     log.symptoms.asSequence().map { symptom -> Observation(symptom, phase, start) }
                 }.toList()
         }
         return observations.groupBy(Observation::symptom).mapNotNull { (symptom, samples) ->
-            val strongest = samples.groupBy(Observation::phase).maxWithOrNull(
+            val strongest = samples.groupBy(Observation::phase).filterValues { phaseSamples ->
+                phaseSamples.size >= MIN_SAMPLES && phaseSamples.map(Observation::cycleStart).distinct().size >= MIN_CYCLES
+            }.maxWithOrNull(
                 compareBy<Map.Entry<CyclePhase, List<Observation>>> { it.value.size }
                     .thenByDescending { it.key.ordinal },
             ) ?: return@mapNotNull null
             val cycleCount = strongest.value.map(Observation::cycleStart).distinct().size
             SymptomPattern(symptom, strongest.key, strongest.value.size, cycleCount)
-                .takeIf { it.sampleCount >= MIN_SAMPLES && it.cycleCount >= MIN_CYCLES }
         }.sortedWith(compareByDescending<SymptomPattern> { it.sampleCount }.thenBy { it.symptom.ordinal })
             .take(MAX_PATTERNS)
     }

@@ -16,6 +16,7 @@ import android.provider.CalendarContract.Events
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.util.UUID
 import org.junit.Assert.*
 import org.junit.Test
@@ -83,6 +84,61 @@ class LegacyCalendarCleanupTest {
             assertTrue(it.getString(0).contains("My own calendar note"))
             assertTrue(it.getString(0).contains("[SeliaCycles:"))
         }
+    }
+
+    @Test fun syncUpdatesLengthAndPrivacyWithoutReplacingTheEventOrRepeatingWrites() = withCalendar { context, provider ->
+        val today = LocalDate.now()
+        val backup = CycleBackup(listOf(DayLog(today.minusDays(1), bleeding = true, flow = Flow.LIGHT)),
+            AppSettings(predictionsEnabled = false, partnerViewEnabled = true))
+        val mirror = CalendarMirror(context)
+        mirror.connect(1, backup, emptyMap())
+        val id = provider.ids().single()
+        provider.db.execSQL("UPDATE events SET description=description || ' My own calendar note' WHERE _id=?", arrayOf(id))
+        val changed = backup.copy(logs = backup.logs + DayLog(today, bleeding = true, flow = Flow.LIGHT),
+            settings = backup.settings.copy(partnerViewEnabled = false))
+        mirror.snapshot(changed, emptyMap())
+        assertEquals(setOf(id), provider.ids())
+        provider.db.rawQuery("SELECT dtend,accessLevel,description FROM events WHERE _id=?", arrayOf(id.toString())).use {
+            assertTrue(it.moveToFirst())
+            assertEquals(today.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(), it.getLong(0))
+            assertEquals(Events.ACCESS_PRIVATE, it.getInt(1))
+            assertTrue(it.getString(2).contains("My own calendar note"))
+        }
+        assertEquals(1, provider.updates)
+        mirror.snapshot(changed, emptyMap())
+        assertEquals(1, provider.updates)
+        assertEquals(1, provider.inserts)
+    }
+
+    @Test fun automaticDeletionRechecksOwnershipAndCalendarAtWriteAndStaysOff() {
+        val day = LocalDate.now()
+        val otherProfile = UUID.randomUUID().toString()
+        listOf(
+            Events.CALENDAR_ID to "2",
+            Events.CUSTOM_APP_PACKAGE to "another.app",
+            Events.CUSTOM_APP_URI to "selia://profile-calendar-mirror/$otherProfile/recorded/$day",
+            Events.DESCRIPTION to "[SeliaCycles:$otherProfile:recorded/$day]",
+        ).forEach { (column, replacement) -> withCalendar { context, provider ->
+            val backup = CycleBackup(listOf(DayLog(day, bleeding = true, flow = Flow.LIGHT)),
+                AppSettings(predictionsEnabled = false))
+            val mirror = CalendarMirror(context)
+            mirror.connect(1, backup, emptyMap())
+            val id = provider.ids().single()
+            provider.beforeBatch = {
+                provider.db.execSQL("UPDATE events SET $column=? WHERE _id=?", arrayOf<Any>(replacement, id))
+            }
+            assertThrows(CalendarCleanupException::class.java) { mirror.disconnect() }
+            assertEquals(setOf(id), provider.ids())
+            provider.db.rawQuery("SELECT $column FROM events WHERE _id=?", arrayOf(id.toString())).use {
+                assertTrue(it.moveToFirst())
+                assertEquals(replacement, it.getString(0))
+            }
+            val restarted = CalendarMirror(context)
+            assertFalse(restarted.calendarSyncEnabled())
+            restarted.snapshot(backup, emptyMap())
+            assertEquals(setOf(id), provider.ids())
+            assertEquals(1, provider.inserts)
+        } }
     }
 
     @Test fun onlyPackageLossStillUsesTheExistingProfileUri() = withCalendar { context, provider ->
@@ -155,7 +211,9 @@ class LegacyCalendarCleanupTest {
             execSQL("INSERT INTO calendars (_id,calendar_displayName,account_name,calendar_color) VALUES (1,'QA','local',0),(2,'Other calendar','local',0)")
         }
         var inserts = 0
+        var updates = 0
         var failDelete = false
+        var beforeBatch: (() -> Unit)? = null
         override fun onCreate() = true
         override fun getType(uri: Uri) = "vnd.android.cursor.dir/event"
         private fun where(uri: Uri, selection: String?) = listOfNotNull(
@@ -167,13 +225,24 @@ class LegacyCalendarCleanupTest {
             inserts++
             return ContentUris.withAppendedId(uri, db.insertOrThrow("events", null, values))
         }
-        override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?) =
-            db.update("events", values, where(uri, selection), selectionArgs)
+        private fun verifyMutation(uri: Uri, selection: String?) {
+            require(uri.lastPathSegment?.toLongOrNull() == null || selection.isNullOrEmpty()) {
+                "Selection not permitted for $uri"
+            }
+        }
+        override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int {
+            verifyMutation(uri, selection)
+            return db.update("events", values, where(uri, selection), selectionArgs).also { updates += it }
+        }
         override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int {
+            verifyMutation(uri, selection)
             check(!failDelete) { "Simulated provider failure" }
             return db.delete("events", where(uri, selection), selectionArgs)
         }
         override fun applyBatch(operations: ArrayList<ContentProviderOperation>): Array<ContentProviderResult> {
+            val change = beforeBatch
+            beforeBatch = null
+            change?.invoke()
             db.beginTransaction()
             try { return super.applyBatch(operations).also { db.setTransactionSuccessful() } }
             finally { db.endTransaction() }

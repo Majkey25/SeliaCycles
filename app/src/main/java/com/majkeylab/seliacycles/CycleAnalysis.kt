@@ -49,9 +49,11 @@ object CycleAnalysis {
         periodStarts: List<LocalDate>,
         bleedingDays: Set<LocalDate>,
         lutealPhaseDays: Int,
-    ): List<CycleHistorySample> = periodStarts.zipWithNext().mapNotNull { (start, next) ->
+    ): List<CycleHistorySample> = periodStarts.zipWithNext().filter { (start, next) ->
         val cycleDays = ChronoUnit.DAYS.between(start, next).toInt()
-        if (cycleDays !in 15..90 || cycleDays <= lutealPhaseDays) return@mapNotNull null
+        cycleDays in 15..90 && cycleDays > lutealPhaseDays
+    }.takeLast(6).map { (start, next) ->
+        val cycleDays = ChronoUnit.DAYS.between(start, next).toInt()
         val fertility = CycleInsights.fertilityForPeriod(next, lutealPhaseDays)
         CycleHistorySample(
             start = start,
@@ -62,7 +64,7 @@ object CycleAnalysis {
             fertileStart = fertility.fertileStart,
             fertileEnd = fertility.fertileEnd,
         )
-    }.takeLast(6)
+    }
 
     fun predictionAccuracy(
         periodStarts: List<LocalDate>,
@@ -72,10 +74,11 @@ object CycleAnalysis {
             .sortedBy(ForecastSnapshot::month).mapNotNull { snapshot ->
             val actual = closestRecordedStart(snapshot, periodStarts) ?: return@mapNotNull null
             AccuracySample(
+                actualStart = actual,
                 errorDays = abs(ChronoUnit.DAYS.between(snapshot.periodStart, actual).toInt()),
                 withinWindow = actual in snapshot.earliestStart..snapshot.latestStart,
             )
-        }.takeLast(6)
+        }.distinctBy(AccuracySample::actualStart).takeLast(6)
         if (samples.isEmpty()) return null
         return PredictionAccuracySummary(
             sampleCount = samples.size,
@@ -95,7 +98,7 @@ object CycleAnalysis {
         snapshots.minByOrNull { abs(ChronoUnit.DAYS.between(it.periodStart, actualStart)) }
             ?.takeIf { abs(ChronoUnit.DAYS.between(it.periodStart, actualStart)) <= MAX_ESTIMATE_MATCH_DAYS }
 
-    private data class AccuracySample(val errorDays: Int, val withinWindow: Boolean)
+    private data class AccuracySample(val actualStart: LocalDate, val errorDays: Int, val withinWindow: Boolean)
 
     private const val MAX_ESTIMATE_MATCH_DAYS = 14L
 }

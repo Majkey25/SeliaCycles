@@ -22,19 +22,24 @@ internal fun calendarWidgetViews(
     val settings = content.backup.settings
     val dark = settings.theme == AppTheme.DARK || settings.theme == AppTheme.SYSTEM &&
         context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
-    val lightColors = appearance.colors(paletteColorScheme(settings.palette, settings.customPalette, false))
-    val darkColors = appearance.colors(paletteColorScheme(settings.palette, settings.customPalette, true))
+    val lightColors = appearance.colors(appearanceColorScheme(context, settings, false))
+    val darkColors = appearance.colors(appearanceColorScheme(context, settings, true))
     val colors = if (dark) darkColors else lightColors
     fun RemoteViews.color(view: Int, method: String, select: (ColorScheme) -> Color) {
         if (settings.theme == AppTheme.SYSTEM && Build.VERSION.SDK_INT >= 31) {
             setColorInt(view, method, select(lightColors).toArgb(), select(darkColors).toArgb())
         } else setInt(view, method, select(colors).toArgb())
     }
+    fun RemoteViews.paletteColor(view: Int, select: (AppPalette, ColorScheme) -> Color) {
+        if (settings.theme == AppTheme.SYSTEM && Build.VERSION.SDK_INT >= 31) {
+            setColorInt(view, "setColorFilter", select(settings.paletteFor(false), lightColors).toArgb(),
+                select(settings.paletteFor(true), darkColors).toArgb())
+        } else setInt(view, "setColorFilter", select(settings.paletteFor(dark), colors).toArgb())
+    }
     val locale = context.resources.configuration.locales[0]
     val days = CalendarPaging.gridDays(month, settings.firstDayOfWeek)
     val tracks = CalendarTracks(content, profile.mode != UiMode.SIMPLE && settings.canEstimateFertility)
-    val period = calendarPeriodRgb(settings.palette, settings.customPalette).color()
-    val entry = calendarEntryRgb(settings.palette, settings.customPalette).color()
+    val period = calendarPeriodColor(settings.paletteFor(dark), settings.customPalette, colors.surface)
     val dateFormat = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale)
     return RemoteViews(context.packageName, R.layout.calendar_widget).apply {
         color(R.id.widget_background, "setColorFilter") { it.surface }
@@ -79,10 +84,12 @@ internal fun calendarWidgetViews(
                 }.let { it.copy(alpha = it.alpha * opacity) }
                 val fertilityFill = if (state.fertile) colors.tertiary.copy(alpha = 0.20f * opacity) else Color.Transparent
                 fun foreground(scheme: ColorScheme): Color {
+                    val schemePeriod = calendarPeriodColor(settings.paletteFor(scheme === darkColors), settings.customPalette, scheme.surface)
+                    val schemePeriodFill = schemePeriod.copy(alpha = periodFill.alpha)
                     val fertile = if (state.fertile) scheme.tertiary.copy(alpha = 0.20f * opacity) else Color.Transparent
                     val ovulation = if (state.ovulation) scheme.primary.copy(alpha = 0.20f * opacity) else Color.Transparent
-                    val background = ovulation.compositeOver(periodFill).compositeOver(fertile).compositeOver(scheme.surface)
-                    val text = if (!inMonth) scheme.onSurfaceVariant else if (recorded) period.contrastColor() else scheme.onSurface
+                    val background = ovulation.compositeOver(schemePeriodFill).compositeOver(fertile).compositeOver(scheme.surface)
+                    val text = if (!inMonth) scheme.onSurfaceVariant else if (recorded) schemePeriod.contrastColor() else scheme.onSurface
                     // Keep explicit text colors on wallpaper; opaque period bands still need readable dates.
                     return if (appearance.textRgb != null && !recorded) text else text.readableOn(background)
                 }
@@ -103,13 +110,16 @@ internal fun calendarWidgetViews(
                         setInt(view, "setImageAlpha", (fill.alpha * 255).toInt())
                     }
                     band(R.id.widget_period, periodFill) { tracks.forDay(it).period == state.period }
+                    paletteColor(R.id.widget_period) { palette, scheme -> calendarPeriodColor(palette, settings.customPalette, scheme.surface) }
                     band(R.id.widget_fertile, fertilityFill) { tracks.forDay(it).fertile }
                     color(R.id.widget_fertile, "setColorFilter") { it.tertiary }
                     color(R.id.widget_ovulation, "setColorFilter") { it.primary }
                     setInt(R.id.widget_ovulation, "setImageAlpha", if (state.ovulation) (51 * opacity).toInt() else 0)
                     color(R.id.widget_today_ring, "setColorFilter") { it.primary }
                     setViewVisibility(R.id.widget_today_ring, if (day == content.referenceDate) View.VISIBLE else View.GONE)
-                    color(R.id.widget_note, "setColorFilter") { entry.readableOn(it.surface) }
+                    paletteColor(R.id.widget_note) { palette, scheme ->
+                        calendarEntryRgb(palette, settings.customPalette).color().readableOn(scheme.surface)
+                    }
                     setViewVisibility(R.id.widget_note, if (hasNote) View.VISIBLE else View.GONE)
                     setContentDescription(R.id.widget_day, buildList {
                         add(day.format(dateFormat))

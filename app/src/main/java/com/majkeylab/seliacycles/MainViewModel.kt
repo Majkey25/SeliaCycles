@@ -50,9 +50,10 @@ data class AppState(
     val loadFailed: Boolean = false,
     val busy: Boolean = false,
     val myCalendarPreview: MyCalendarPreview? = null,
+    val pendingSettings: AppSettings? = null,
     @param:StringRes val message: Int? = null,
 ) {
-    val backup get() = content.backup
+    val backup get() = pendingSettings?.let { content.backup.copy(settings = it) } ?: content.backup
     val forecastSnapshots get() = content.forecastSnapshots
     val referenceDate get() = content.referenceDate
     val logsByDay get() = content.logsByDay
@@ -170,11 +171,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 withContext(NonCancellable) {
                     val next = withContext(Dispatchers.IO) {
                         if (target.calendarMirror.selectedCalendarId() != null) target.calendarMirror.disconnect()
-                        ReminderWorker.cancel(getApplication(), target.profile.id)
-                        ContraceptionReminder.cancel(getApplication(), target.profile.id, clearHistory = true)
-                        target.store.close()
-                        check(getApplication<Application>().deleteDatabase(profileDatabaseName(target.profile.id)))
-                        localProfiles.remove(target.profile.id)
+                        synchronized(LocalProfiles.lock) {
+                            ReminderWorker.cancel(getApplication(), target.profile.id)
+                            ContraceptionReminder.cancel(getApplication(), target.profile.id, clearHistory = true)
+                            target.store.close()
+                            check(getApplication<Application>().deleteDatabase(profileDatabaseName(target.profile.id)))
+                            localProfiles.remove(target.profile.id)
+                        }
                         openSession(localProfiles.selected())
                     }
                     session = next
@@ -210,18 +213,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val today = java.time.LocalDate.now()
         val originalDays = PeriodActions.periodDays(day, backup.logs)
         val logs = PeriodActions.replace(day, selectedDays, backup.logs, today)
-        val active = when (backup.settings.activePeriodStart) {
-            in originalDays, null -> selectedDays.minOrNull()?.takeIf { selectedDays.any { it > today } }
-            else -> backup.settings.activePeriodStart
-        }
+        val active = PeriodActions.activeStartAfterEdit(backup.settings.activePeriodStart, originalDays, logs, today)
         store.savePeriodState(logs, backup.settings.copy(activePeriodStart = active))
     }.also { editorSaveResult = it }
 
     fun saveSettings(settings: AppSettings, expectedProfileId: String? = _state.value.activeProfile.id) {
         if (!acceptsProfile(expectedProfileId)) return
-        _state.value = _state.value.copy(content = _state.value.content.copy(backup = _state.value.backup.copy(settings = settings)))
+        val previous = _state.value.backup.settings
+        _state.value = _state.value.copy(pendingSettings = settings)
         runStoreAction {
-            store.saveSettings(settings)
+            // A queued edit must not overwrite fields changed by a period action or import.
+            store.saveSettingsChanges(previous, settings)
         }
     }
 
@@ -468,7 +470,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _state.value.copy(
                     activeProfile = session.profile,
                     content = if (_state.value.activeProfile.id == session.profile.id) _state.value.content else CycleContent(),
-                    loading = false, loadFailed = true, busy = false, myCalendarPreview = null,
+                    loading = false, loadFailed = true, busy = false, myCalendarPreview = null, pendingSettings = null,
                     message = R.string.operation_failed,
                 )
             },
@@ -478,6 +480,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             runCatching { CalendarWidget.refresh(getApplication()) }
                 .onFailure { Log.e("SeliaWidget", "Could not refresh home-screen widgets", it) }
         }
+        if (loaded.isSuccess) refreshForToday()
     }
 
     private fun acceptsProfile(expectedProfileId: String? = _state.value.activeProfile.id): Boolean {

@@ -44,9 +44,10 @@
     <string name="personal_patterns_notice">Dies ist ein Muster in deinen Einträgen, keine Diagnose oder sichere Vorhersage.</string>
     <string name="cycle_analysis">Zyklusanalyse</string>
     <string name="recent_cycle_details">Details der letzten Zyklen</string>
-    <string name="prediction_accuracy_summary">Genauigkeit gespeicherter Schätzungen</string>
+    <string name="prediction_accuracy_summary">Vergleich mit Einträgen</string>
     <plurals name="average_prediction_error"><item quantity="one">Durchschnittliche Abweichung: %d Tag</item><item quantity="other">Durchschnittliche Abweichung: %d Tage</item></plurals>
-    <string name="within_saved_window">Im gespeicherten Bereich: %1$d von %2$d</string>
+    <string name="within_saved_window">Zugeordnete Periodenbeginne im gespeicherten Zeitraum: %1$d von %2$d</string>
+    <string name="accuracy_matching_info">Der Vergleich umfasst bis zu 6 der letzten zugeordneten erfassten Periodenbeginne. Für jede gespeicherte Schätzung wird der zeitlich nächste erfasste Beginn innerhalb von 14 Tagen davor oder danach zugeordnet. Jeder Beginn wird einmal gezählt. Schätzungen ohne Zuordnung werden nicht bewertet.</string>
     <plurals name="period_length_value"><item quantity="one">Periode: %d Tag</item><item quantity="other">Periode: %d Tage</item></plurals>
     <string name="more_history_needed">Für ein Diagramm werden mehr abgeschlossene Zyklen benötigt.</string>
     <string name="cycle_length_description">%1$s, Zyklus mit %2$d Tagen</string>
@@ -282,7 +283,7 @@
     <string name="legend_more">Farben erklären</string>
     <string name="legend_less">Erklärungen ausblenden</string>
     <string name="calendar_filter">Einträge filtern</string>
-    <string name="calendar_filter_intro">Wähle bis zu drei Einträge. Bei aktivem Filter erscheint der blaue Punkt nur an passenden Tagen.</string>
+    <string name="calendar_filter_intro">Wähle bis zu drei Einträge. Bei aktivem Filter erscheint die blaue Unterstreichung nur an passenden Tagen.</string>
     <string name="calendar_filter_count">%1$d von %2$d ausgewählt</string>
     <string name="calendar_filter_tests">Tests</string>
     <string name="calendar_filter_clear">Filter löschen</string>
@@ -367,7 +368,7 @@
     <string name="period_end_action">Periode beenden</string>
     <string name="day_status">Tagesstatus</string>
     <string name="prediction_accuracy">Periodenschätzung und Wirklichkeit</string>
-    <string name="estimate_no_reality">Die Wirklichkeit wurde noch nicht erfasst.</string>
+    <string name="estimate_no_reality">Innerhalb von 14 Tagen vor oder nach der Schätzung wurde kein passender erfasster Periodenbeginn gefunden.</string>
     <string name="estimate_exact">Die gespeicherte Schätzung war genau.</string>
     <plurals name="estimate_early"><item quantity="one">Die Wirklichkeit begann %1$d Tag früher.</item><item quantity="other">Die Wirklichkeit begann %1$d Tage früher.</item></plurals>
     <plurals name="estimate_late"><item quantity="one">Die Wirklichkeit begann %1$d Tag später.</item><item quantity="other">Die Wirklichkeit begann %1$d Tage später.</item></plurals>
@@ -417,4 +418,20 @@
     <string name="prediction_settings_lengths">Zyklus (Tage): %1$d · Menstruation (Tage): %2$d</string>
     <string name="prediction_settings_live">Änderungen gelten für zukünftige Tage im Kalender und bei aktivierter Kalenderspiegelung auch im anderen Kalender.</string>
     <string name="prediction_fertility_unavailable">Der Eisprung lässt sich nicht schätzen, wenn die Lutealphase genauso lang oder länger als der gesamte Zyklus ist. Prüfe unten beide Längen.</string>
+    <string name="palette_material">Material</string>
+    <string name="palette_amoled">AMOLED</string>
+    <string name="palette_graphite">Graphit</string>
+    <string name="palette_sand">Sand</string>
+    <string name="palette_mint">Minze</string>
+    <string name="appearance_background">Seitenhintergrund</string>
+    <string name="appearance_surface">Kartenhintergrund</string>
+    <string name="appearance_text">Textfarbe</string>
+    <string name="appearance_pairs_hint">Tippe auf einen Namen für beide Varianten oder wähle helle und dunkle Designs getrennt.</string>
+    <string name="appearance_material_dynamic">Material verwendet die Farben deines Hintergrundbilds. Das dunkle AMOLED-Design hat einen tiefschwarzen Hintergrund.</string>
+    <string name="appearance_material_fallback">Material verwendet eine violette Palette. Hintergrundbildfarben benötigen Android 12 oder neuer. Das dunkle AMOLED-Design hat einen tiefschwarzen Hintergrund.</string>
+    <string name="appearance_customize">Aktuelles Design anpassen</string>
+    <string name="appearance_contrast_hint">Farben mit geringem Kontrast werden für lesbaren Text angepasst.</string>
+    <string name="appearance_text_size">Textgröße in der App · %1$d%%</string>
+    <string name="appearance_text_sample">Kalender und Zyklusdetails</string>
+    <string name="appearance_reset">Darstellung zurücksetzen</string>
 </resources>
