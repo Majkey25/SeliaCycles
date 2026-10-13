@@ -6,6 +6,17 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class CalendarMirrorPlannerTest {
+    @Test fun `exclusive event end must overlap the first mirrored day`() {
+        val reference = LocalDate.of(2026, 5, 15)
+        val events = CalendarMirrorPlanner.plan(
+            CycleBackup(listOf(DayLog(reference.minusDays(1), bleeding = true, flow = Flow.UNKNOWN))),
+            emptyMap(), reference,
+        )
+
+        assertTrue(events.any { it.kind == MirrorEventKind.RECORDED })
+        assertTrue(events.all { it.endExclusive > reference.withDayOfMonth(1) })
+    }
+
     @Test fun `future events end within two months including long periods`() {
         val today = LocalDate.of(2026, 10, 3)
         val backup = CycleBackup(listOf(DayLog(today, bleeding = true, flow = Flow.LIGHT)),

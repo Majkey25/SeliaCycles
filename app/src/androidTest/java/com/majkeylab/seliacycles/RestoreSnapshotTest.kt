@@ -5,9 +5,13 @@ import androidx.test.platform.app.InstrumentationRegistry
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RestoreSnapshotTest {
@@ -58,6 +62,48 @@ class RestoreSnapshotTest {
 
         assertEquals(before, store.load())
         assertEquals(listOf(reconstructed), store.loadForecastSnapshots())
+    }
+
+    @Test fun savingAnExistingSnapshotPreservesItAndStillAddsOtherMonths() = withStore { store ->
+        val month = YearMonth.now().minusMonths(4)
+        val original = snapshot(month, 10, false)
+        val added = snapshot(month.plusMonths(1), 12, false)
+        store.saveForecastSnapshots(listOf(original))
+
+        store.saveForecastSnapshots(listOf(snapshot(month, 15, true), added))
+
+        assertEquals(listOf(original, added), store.loadForecastSnapshots())
+    }
+
+    @Test fun readingDuringPeriodWritesKeepsLogsAndSettingsFromTheSameSnapshot() = withStore { store ->
+        val first = LocalDate.of(2020, 1, 1)
+        val second = first.plusDays(28)
+        fun write(day: LocalDate) = store.savePeriodState(
+            listOf(DayLog(day, bleeding = true, flow = Flow.UNKNOWN)),
+            AppSettings(activePeriodStart = day),
+        )
+        write(first)
+        val start = CountDownLatch(1)
+        val pool = Executors.newFixedThreadPool(2)
+        try {
+            val writer = pool.submit {
+                start.await()
+                repeat(200) { write(if (it % 2 == 0) second else first) }
+            }
+            val reader = pool.submit {
+                start.await()
+                repeat(400) {
+                    val backup = store.load()
+                    assertEquals(backup.logs.single().day, backup.settings.activePeriodStart)
+                }
+            }
+            start.countDown()
+            writer.get(15, TimeUnit.SECONDS)
+            reader.get(15, TimeUnit.SECONDS)
+        } finally {
+            pool.shutdown()
+            assertTrue(pool.awaitTermination(15, TimeUnit.SECONDS))
+        }
     }
 
     private fun snapshot(month: YearMonth, day: Int, reconstructed: Boolean): ForecastSnapshot {

@@ -47,6 +47,15 @@ class CalendarUiModelTest {
     }
 
     @Test
+    fun `period editor keeps weekday alignment at the earliest supported date`() {
+        val days = CalendarPaging.periodEditorDays(DayLog.MIN_DATE, DayOfWeek.SUNDAY)
+
+        assertEquals(DayOfWeek.SUNDAY, days.first().dayOfWeek)
+        assertTrue(DayLog.MIN_DATE in days)
+        assertEquals(28, days.size)
+    }
+
+    @Test
     fun `pager maps the supported month range without drift`() {
         val current = YearMonth.of(2026, 8)
 
@@ -174,5 +183,34 @@ class CalendarUiModelTest {
         assertEquals(reference, state.referenceDate)
         assertEquals(LocalDate.of(2026, 7, 29), state.prediction.nextPeriodStart)
         assertEquals(CyclePhase.MENSTRUAL, state.todayInsight.phase)
+    }
+
+    @Test
+    fun `paused predictions retain elapsed current month snapshots without a recorded start`() {
+        val historical = LocalDate.of(2026, 9, 10)
+        val future = LocalDate.of(2026, 10, 8)
+        val snapshots = listOf(historical, future).associate { start ->
+            YearMonth.from(start) to ForecastSnapshot(YearMonth.from(start), start,
+                start.minusDays(2), start.plusDays(2), 5, false)
+        }
+        val logs = (0L..4L).map { DayLog(LocalDate.of(2026, 8, 13).plusDays(it), true, flow = Flow.UNKNOWN) }
+        val settings = listOf(
+            AppSettings(predictionsEnabled = false),
+            AppSettings(profile = UserProfile(lifeSituation = LifeSituation.PREGNANT)),
+        )
+
+        settings.forEach {
+            val content = CycleContent(CycleBackup(logs, it), snapshots, LocalDate.of(2026, 9, 19))
+            assertEquals(listOf(historical), content.periodEstimates.map(PeriodEstimate::start))
+            val calendar = CalendarTracks(content, showFertility = true)
+            assertEquals(CalendarPeriodLayer.PREDICTED, calendar.forDay(historical).period)
+            assertEquals(CalendarPeriodLayer.NONE, calendar.forDay(future).period)
+
+            val before = content.copy(referenceDate = LocalDate.of(2026, 9, 5))
+            assertTrue(before.periodEstimates.isEmpty())
+            assertEquals(CalendarPeriodLayer.NONE, CalendarTracks(before, showFertility = true).forDay(historical).period)
+            val nextMonth = content.copy(referenceDate = LocalDate.of(2026, 10, 1))
+            assertEquals(listOf(historical), nextMonth.periodEstimates.map(PeriodEstimate::start))
+        }
     }
 }

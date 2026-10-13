@@ -16,6 +16,9 @@
 - Settings updates preserve concurrent period changes. Inactive custom palettes retain their exact colors until edited; the color picker no longer changes colors merely by opening it.
 - Calendar and editor state survive navigation; large-text actions wrap, and important symptom guidance remains visible before ordinary self-care advice.
 - File-based device-transfer backup is enabled explicitly; cloud backup remains excluded.
+- Historical estimates remain visible in the current month when predictions are paused. Future estimates remain hidden.
+- Local readers receive records and settings from one database transaction. Repeated snapshot inserts retain the original without turning an ignored duplicate into a read failure.
+- Period-editor weekdays remain aligned at the supported date boundary; calendar copies exclude events ending before the first mirrored day.
 
 ## 0.9.0-beta.24 - 2026-10-07
 

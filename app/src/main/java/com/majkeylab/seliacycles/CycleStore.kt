@@ -182,10 +182,9 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
         }
     }
 
-    fun load(): CycleBackup = CycleBackup(
-        logs = readLogs(readableDatabase),
-        settings = readSettings(readableDatabase),
-    )
+    fun load(): CycleBackup = readableDatabase.runInTransaction {
+        CycleBackup(logs = readLogs(this), settings = readSettings(this))
+    }
 
     fun saveLog(log: DayLog) = writableDatabase.runInTransaction {
         val normalized = PeriodActions.removeFutureBleeding(listOf(log), LocalDate.now()).singleOrNull()
@@ -276,12 +275,10 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
 
     fun saveForecastSnapshots(snapshots: List<ForecastSnapshot>) = writableDatabase.runInTransaction {
         snapshots.forEach { snapshot ->
-            check(insertWithOnConflict(
-                "forecast_snapshots",
-                null,
-                forecastValues(snapshot),
-                SQLiteDatabase.CONFLICT_IGNORE,
-            ) != -1L)
+            val month = arrayOf(snapshot.month.toEpochMonth().toString())
+            if (DatabaseUtils.queryNumEntries(this, "forecast_snapshots", "month = ?", month) == 0L) {
+                insertOrThrow("forecast_snapshots", null, forecastValues(snapshot))
+            }
         }
     }
 

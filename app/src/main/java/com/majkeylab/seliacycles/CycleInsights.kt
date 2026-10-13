@@ -125,7 +125,7 @@ object CycleInsights {
     ): List<PeriodEstimate> {
         val currentMonth = YearMonth.from(referenceDate)
         val history = periodEstimates(backup, snapshots, referenceDate)
-            .filter { YearMonth.from(it.start) < currentMonth }
+            .filter { !backup.settings.canPredictPeriods || YearMonth.from(it.start) < currentMonth }
         val current = periodEstimates(backup, emptyMap(), referenceDate)
         val ongoing = backup.settings.activePeriodStart?.takeIf { start ->
             backup.settings.canPredictPeriods && start <= referenceDate

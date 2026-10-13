@@ -30,7 +30,7 @@ object CalendarPaging {
 
     fun periodEditorDays(base: LocalDate, firstDayOfWeek: DayOfWeek): List<LocalDate> {
         val leading = (base.dayOfWeek.value - firstDayOfWeek.value + 7) % 7
-        val first = maxOf(DayLog.MIN_DATE, base.minusDays(leading.toLong()).minusWeeks(1))
+        val first = base.minusDays(leading.toLong()).minusWeeks(1)
         return List(28) { first.plusDays(it.toLong()) }
     }
 }
