@@ -249,7 +249,8 @@ class ProfileUiTest {
             awaitProfile(viewModel, LocalProfiles.DEFAULT_ID, UiMode.STANDARD)
             assertEquals(400, viewModel.state.value.prediction.periodStarts.size)
             compose.onAllNodesWithText(text(R.string.nav_history)).onLast().performClick()
-            compose.onNodeWithText(text(R.string.history_heading)).assertIsDisplayed()
+            compose.onNode(hasText(text(R.string.history_heading)) and
+                hasAnyAncestor(SemanticsMatcher.keyIsDefined(SemanticsActions.ScrollToIndex))).assertIsDisplayed()
             val list = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsActions.ScrollToIndex))
             list.performScrollToNode(hasText(text(R.string.prediction_accuracy_summary)))
             compose.onNodeWithText(text(R.string.prediction_accuracy_summary)).performClick()
