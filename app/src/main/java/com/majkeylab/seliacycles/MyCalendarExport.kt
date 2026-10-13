@@ -79,47 +79,53 @@ class MyCalendarExporter(context: Context) {
         val databaseFile = kotlin.io.path.createTempFile(cacheDirectory.toPath(), "selia-export-", ".db").toFile()
         try {
             SQLiteDatabase.openOrCreateDatabase(databaseFile, null).use { database ->
-                createSchema(database)
-                database.delete("android_metadata", null, null)
-                database.insertOrThrow("android_metadata", null, ContentValues().apply { put("locale", Locale.getDefault().toLanguageTag()) })
-                database.insertOrThrow("User", null, ContentValues().apply {
-                    put("uid", MY_CALENDAR_UID)
-                    put("update_time", System.currentTimeMillis())
-                    put("name", "Selia Cycles")
-                    put("setting", userSettings(transfer.backup.settings, prediction).toString())
-                })
-                MyCalendarExportMapper.periodRows(transfer.backup.logs).forEach { row ->
-                    database.insertOrThrow("Period", null, ContentValues().apply {
+                database.beginTransaction()
+                try {
+                    createSchema(database)
+                    database.delete("android_metadata", null, null)
+                    database.insertOrThrow("android_metadata", null, ContentValues().apply { put("locale", Locale.getDefault().toLanguageTag()) })
+                    database.insertOrThrow("User", null, ContentValues().apply {
                         put("uid", MY_CALENDAR_UID)
                         put("update_time", System.currentTimeMillis())
-                        put("create_date", row.date)
-                        put("date", row.date)
-                        put("period", row.periodValue)
-                        put("cycle", prediction.averageCycleLength)
-                        put("pregnancy", 0)
-                        put("pregnancy_date", 0)
-                        put("due_date_select", 0)
-                        put("mask_periods", "[]")
+                        put("name", "Selia Cycles")
+                        put("setting", userSettings(transfer.backup.settings, prediction).toString())
                     })
-                }
-                MyCalendarExportMapper.noteRows(transfer.backup.logs).forEach { row ->
-                    database.insertOrThrow("Note", null, ContentValues().apply {
-                        put("date", row.date)
-                        put("uid", MY_CALENDAR_UID)
-                        put("update_time", System.currentTimeMillis())
-                        put("create_date", row.date)
-                        put("temperature", row.temperatureC)
-                        put("weight", row.weightKg)
-                        put("sleep", row.sleep)
-                        put("note", row.note)
-                        put("intimate", row.intimate)
-                        put("condom", row.condom)
+                    MyCalendarExportMapper.periodRows(transfer.backup.logs).forEach { row ->
+                        database.insertOrThrow("Period", null, ContentValues().apply {
+                            put("uid", MY_CALENDAR_UID)
+                            put("update_time", System.currentTimeMillis())
+                            put("create_date", row.date)
+                            put("date", row.date)
+                            put("period", row.periodValue)
+                            put("cycle", prediction.averageCycleLength)
+                            put("pregnancy", 0)
+                            put("pregnancy_date", 0)
+                            put("due_date_select", 0)
+                            put("mask_periods", "[]")
+                        })
+                    }
+                    MyCalendarExportMapper.noteRows(transfer.backup.logs).forEach { row ->
+                        database.insertOrThrow("Note", null, ContentValues().apply {
+                            put("date", row.date)
+                            put("uid", MY_CALENDAR_UID)
+                            put("update_time", System.currentTimeMillis())
+                            put("create_date", row.date)
+                            put("temperature", row.temperatureC)
+                            put("weight", row.weightKg)
+                            put("sleep", row.sleep)
+                            put("note", row.note)
+                            put("intimate", row.intimate)
+                            put("condom", row.condom)
+                        })
+                    }
+                    database.insertOrThrow("SeliaBackup", null, ContentValues().apply {
+                        put("version", 1)
+                        put("payload", SeliaBackupCodec.encode(transfer))
                     })
+                    database.setTransactionSuccessful()
+                } finally {
+                    database.endTransaction()
                 }
-                database.insertOrThrow("SeliaBackup", null, ContentValues().apply {
-                    put("version", 1)
-                    put("payload", SeliaBackupCodec.encode(transfer))
-                })
             }
             if (databaseFile.length() > MyCalendarContainerReader.MAX_DATABASE_BYTES) {
                 throw MyCalendarFormatException("Export database is too large")
@@ -302,15 +308,20 @@ internal fun encryptedMyCalendarJson(json: String): ByteArray {
 
 object SeliaBackupCodec {
     private const val MAGIC = 0x53434C31
-    private const val VERSION = 3
+    private const val VERSION = 4
     const val MAX_BYTES = 5 * 1024 * 1024
 
     fun encode(transfer: SeliaTransfer): ByteArray {
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).use { output ->
             val version = when {
+                transfer.backup.settings.let { settings ->
+                    settings.darkPalette != null || settings.textScalePercent != 100 ||
+                        settings.palette.ordinal > AppPalette.CUSTOM.ordinal ||
+                        settings.customPalette.let { it.backgroundRgb != null || it.surfaceRgb != null || it.textRgb != null }
+                } -> 4
                 transfer.backup.logs.any { it.contraception != null } || transfer.backup.settings.contraceptionReminderEnabled ||
-                    transfer.backup.settings.contraceptionReminderMinute != AppSettings().contraceptionReminderMinute -> VERSION
+                    transfer.backup.settings.contraceptionReminderMinute != AppSettings().contraceptionReminderMinute -> 3
                 transfer.backup.logs.any(DayLog::automaticBleeding) -> 2
                 else -> 1
             }
@@ -380,37 +391,51 @@ object SeliaBackupCodec {
             writeBoolean(settings.contraceptionReminderEnabled)
             writeInt(settings.contraceptionReminderMinute)
         }
+        if (version >= 4) {
+            writeNullableEnum(settings.darkPalette)
+            writeInt(settings.textScalePercent)
+            writeNullableInt(settings.customPalette.backgroundRgb)
+            writeNullableInt(settings.customPalette.surfaceRgb)
+            writeNullableInt(settings.customPalette.textRgb)
+        }
     }
 
-    private fun DataInputStream.readSettings(version: Int): AppSettings = AppSettings(
-        cycleLength = readInt(),
-        periodLength = readInt(),
-        cycleLengthOverride = readNullableInt(),
-        periodLengthOverride = readNullableInt(),
-        activePeriodStart = readNullableDate(),
-        firstDayOfWeek = readEnum(DayOfWeek.entries.toTypedArray()),
-        predictionsEnabled = readBoolean(),
-        reminderEnabled = readBoolean(),
-        reminderDays = readInt(),
-        lutealPhaseLength = readInt(),
-        theme = readEnum(AppTheme.entries.toTypedArray()),
-        palette = readEnum(AppPalette.entries.toTypedArray()),
-        customPalette = CustomPalette(readInt(), readInt(), readInt(), readInt()),
-        partnerViewEnabled = readBoolean(),
-        profile = UserProfile(
-            age = readNullableInt(),
-            heightCm = readNullableInt(),
-            weightKg = readNullableDouble(),
-            goal = readEnum(TrackingGoal.entries.toTypedArray()),
-            lifeSituation = readEnum(LifeSituation.entries.toTypedArray()),
-        ),
-        showPhaseGuidance = readBoolean(),
-        showSelfCare = readBoolean(),
-        showCycleDetails = readBoolean(),
-        simpleMode = readBoolean(),
-        contraceptionReminderEnabled = version >= 3 && readBoolean(),
-        contraceptionReminderMinute = if (version >= 3) readInt() else AppSettings().contraceptionReminderMinute,
-    )
+    private fun DataInputStream.readSettings(version: Int): AppSettings {
+        val settings = AppSettings(
+            cycleLength = readInt(),
+            periodLength = readInt(),
+            cycleLengthOverride = readNullableInt(),
+            periodLengthOverride = readNullableInt(),
+            activePeriodStart = readNullableDate(),
+            firstDayOfWeek = readEnum(DayOfWeek.entries.toTypedArray()),
+            predictionsEnabled = readBoolean(),
+            reminderEnabled = readBoolean(),
+            reminderDays = readInt(),
+            lutealPhaseLength = readInt(),
+            theme = readEnum(AppTheme.entries.toTypedArray()),
+            palette = readEnum(AppPalette.entries.toTypedArray()),
+            customPalette = CustomPalette(readInt(), readInt(), readInt(), readInt()),
+            partnerViewEnabled = readBoolean(),
+            profile = UserProfile(
+                age = readNullableInt(),
+                heightCm = readNullableInt(),
+                weightKg = readNullableDouble(),
+                goal = readEnum(TrackingGoal.entries.toTypedArray()),
+                lifeSituation = readEnum(LifeSituation.entries.toTypedArray()),
+            ),
+            showPhaseGuidance = readBoolean(),
+            showSelfCare = readBoolean(),
+            showCycleDetails = readBoolean(),
+            simpleMode = readBoolean(),
+            contraceptionReminderEnabled = version >= 3 && readBoolean(),
+            contraceptionReminderMinute = if (version >= 3) readInt() else AppSettings().contraceptionReminderMinute,
+        )
+        return if (version < 4) settings else settings.copy(
+            darkPalette = readNullableEnum(AppPalette.entries.toTypedArray()),
+            textScalePercent = readInt(),
+            customPalette = settings.customPalette.copy(backgroundRgb = readNullableInt(), surfaceRgb = readNullableInt(), textRgb = readNullableInt()),
+        )
+    }
 
     private fun DataOutputStream.writeLog(log: DayLog, version: Int) {
         writeLong(log.day.toEpochDay())

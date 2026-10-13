@@ -20,19 +20,23 @@ enum class Symptom {
 
 enum class AppTheme { SYSTEM, LIGHT, DARK }
 
-enum class AppPalette { SELIA, ROSE, OCEAN, FOREST, SUNSET, LILAC, CUSTOM }
+enum class AppPalette { SELIA, ROSE, OCEAN, FOREST, SUNSET, LILAC, CUSTOM, MATERIAL, AMOLED, GRAPHITE, SAND, MINT }
 
 data class CustomPalette(
     val primaryRgb: Int = 0xF4B400,
     val secondaryRgb: Int = 0xC62828,
     val tertiaryRgb: Int = 0x00897B,
     val entryRgb: Int = 0x1565C0,
+    val backgroundRgb: Int? = null,
+    val surfaceRgb: Int? = null,
+    val textRgb: Int? = null,
 ) {
     init {
         require(primaryRgb in RGB_RANGE)
         require(secondaryRgb in RGB_RANGE)
         require(tertiaryRgb in RGB_RANGE)
         require(entryRgb in RGB_RANGE)
+        require(listOf(backgroundRgb, surfaceRgb, textRgb).all { it == null || it in RGB_RANGE })
     }
 
     private companion object {
@@ -208,6 +212,8 @@ data class AppSettings(
     val simpleMode: Boolean = false,
     val contraceptionReminderEnabled: Boolean = false,
     val contraceptionReminderMinute: Int = 20 * 60,
+    val darkPalette: AppPalette? = null,
+    val textScalePercent: Int = 100,
 ) {
     init {
         require(cycleLength in 15..90)
@@ -219,6 +225,7 @@ data class AppSettings(
         require(reminderDays in 0..14)
         require(lutealPhaseLength in 7..19)
         require(contraceptionReminderMinute in 0 until 24 * 60)
+        require(textScalePercent in 85..140)
     }
 
     val canPredictPeriods: Boolean
@@ -228,6 +235,8 @@ data class AppSettings(
     val canEstimateFertility: Boolean
         get() = canPredictPeriods && profile.lifeSituation != LifeSituation.HORMONAL_CONTRACEPTION &&
             profile.lifeSituation != LifeSituation.PERIMENOPAUSE
+
+    fun paletteFor(dark: Boolean): AppPalette = if (dark) darkPalette ?: palette else palette
 }
 
 data class CycleBackup(

@@ -2,6 +2,7 @@ package com.majkeylab.seliacycles
 
 import android.graphics.Bitmap
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
@@ -39,6 +40,32 @@ class PeriodPrefillTest {
 
     @Test fun historicalEntryPrefillsLearnedLengthAndCanBeShortened() = checkPrefill(null, 6)
     @Test fun historicalEntryUsesManualLengthBeforeHistory() = checkPrefill(3, 3)
+
+    @Test fun largeTextPeriodActionsRemainAccessibleAndDirectCancelReturnsToCalendar() {
+        CycleStore(context).use { it.saveSettings(AppSettings(textScalePercent = 140)) }
+        launch().use {
+            openEditor(today)
+            selected(today).assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.save)).assertIsDisplayed().assertIsEnabled()
+            compose.onNodeWithText(text(R.string.cancel)).assertIsDisplayed().assertIsEnabled().performClick()
+            compose.onNodeWithText(text(R.string.unsaved_changes_title)).assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.discard_changes)).performClick()
+            compose.waitForIdle()
+            compose.onNodeWithText(text(R.string.edit_period)).assertDoesNotExist()
+            compose.onNodeWithText(text(R.string.day_overview)).assertDoesNotExist()
+            val buttons = compose.onAllNodesWithText(text(R.string.calendar_add_period))
+            val visible = buttons.fetchSemanticsNodes().indices.single { buttons[it].isDisplayed() }
+            buttons[visible].assertIsDisplayed()
+            assertEquals(history, CycleStore(context).use { it.load().logs })
+            openEditor(today)
+            compose.onNodeWithText(text(R.string.save)).assertIsDisplayed().assertIsEnabled().performClick()
+            compose.waitUntil(10_000) {
+                viewModel.state.value.let { !it.busy && it.backup.settings.activePeriodStart == today }
+            }
+            compose.onNodeWithText(text(R.string.edit_period)).assertDoesNotExist()
+            compose.onNodeWithText(text(R.string.day_overview)).assertDoesNotExist()
+        }
+    }
 
     private fun checkPrefill(override: Int?, length: Int) {
         CycleStore(context).use { it.saveSettings(AppSettings(periodLengthOverride = override)) }

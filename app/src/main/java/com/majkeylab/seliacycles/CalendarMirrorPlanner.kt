@@ -23,6 +23,9 @@ data class StoredMirrorEvent(
     val key: String,
     val current: MirrorEvent? = null,
     val description: String? = null,
+    val calendarId: Long? = null,
+    val appPackage: String? = null,
+    val appUri: String? = null,
 )
 
 sealed interface MirrorMutation {
@@ -74,14 +77,14 @@ object CalendarMirrorPlanner {
         } else {
             CycleInsights.periodEstimates(backup, snapshots, referenceDate)
         }
-            .filter { it.endExclusive >= firstDay && it.start <= lastDay }
+            .filter { it.endExclusive > firstDay && it.start <= lastDay }
         val estimated = estimates.map { MirrorEvent(MirrorEventKind.ESTIMATED, it.start, it.endExclusive) }
         val fertility = CycleInsights.fertilityEstimates(backup, snapshots, referenceDate).flatMap { value ->
             listOf(
                 MirrorEvent(MirrorEventKind.FERTILE, value.fertileStart, value.fertileEnd.plusDays(1)),
                 MirrorEvent(MirrorEventKind.OVULATION, value.ovulation, value.ovulation.plusDays(1)),
             )
-        }.filter { it.endExclusive >= firstDay && it.start <= lastDay }
+        }.filter { it.endExclusive > firstDay && it.start <= lastDay }
         return (recorded + estimated + fertility)
             .map { it.copy(endExclusive = minOf(it.endExclusive, lastDay.plusDays(1))) }
             .sortedWith(compareBy(MirrorEvent::start, MirrorEvent::kind))

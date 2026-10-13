@@ -49,7 +49,7 @@ class AutomaticBleedingStorageTest {
             CycleStore(context, id).use {
                 assertEquals(listOf(original), it.load().logs.filterNot(DayLog::automaticBleeding))
                 assertEquals(if (open) 6 else 1, it.load().logs.size)
-                assertEquals(12, it.readableDatabase.version)
+                assertEquals(13, it.readableDatabase.version)
                 assertEquals(false, it.load().settings.contraceptionReminderEnabled)
             }
         } finally { context.deleteDatabase(name) }

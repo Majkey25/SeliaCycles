@@ -62,6 +62,11 @@ object PeriodActions {
             .mapTo(mutableSetOf(), DayLog::day)
     }
 
+    fun activeStartAfterEdit(previous: LocalDate?, originalDays: Set<LocalDate>, logs: List<DayLog>, today: LocalDate): LocalDate? {
+        if (previous != null && previous !in originalDays) return previous
+        return periodContaining(today, logs)?.takeIf { it.second > today }?.first
+    }
+
     fun suggestedDays(day: LocalDate, logs: List<DayLog>, periodLength: Int, today: LocalDate): Set<LocalDate> {
         require(periodLength in 1..MAX_PERIOD_DAYS)
         require(day in DayLog.MIN_DATE..DayLog.MAX_DATE && (day <= today || logs.any { it.day == day && it.automaticBleeding }))

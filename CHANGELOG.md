@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.9.0-beta.25 - 2026-10-13
+
+### Added
+
+- Material, AMOLED, Graphite, Sand and Mint palettes, separate light/dark custom colors, and adjustable text size.
+
+### Fixed
+
+- Calendar copies use guarded collection updates and deletions, including providers that reject item-URI selections. Sync remains OFF after failed cleanup.
+- Local imports reject views and oversized payloads; larger valid backups round-trip without the default cursor-window limit. Restore preserves local reminder choices and authentic forecast snapshots.
+- Fertility estimates stop presenting an overdue cycle as a current ovulation window. Confirmed period edits replace conflicting reconstructed fertility markers while retaining saved forecasts for comparison.
+- Comparison statistics count each matched recorded start once and explain their matching limits.
+- Profile deletion, widget reads and reminder delivery share the existing profile lock. Missing profiles cannot recreate deleted databases or deliver stale notifications.
+- Settings updates preserve concurrent period changes. Inactive custom palettes retain their exact colors until edited; the color picker no longer changes colors merely by opening it.
+- Calendar and editor state survive navigation; large-text actions wrap, and important symptom guidance remains visible before ordinary self-care advice.
+- File-based device-transfer backup is enabled explicitly; cloud backup remains excluded.
+- Historical estimates remain visible in the current month when predictions are paused. Future estimates remain hidden.
+- Local readers receive records and settings from one database transaction. Repeated snapshot inserts retain the original without turning an ignored duplicate into a read failure.
+- Period-editor weekdays remain aligned at the supported date boundary; calendar copies exclude events ending before the first mirrored day.
+
 ## 0.9.0-beta.24 - 2026-10-07
 
 ### Added

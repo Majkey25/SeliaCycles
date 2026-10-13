@@ -26,4 +26,26 @@ class CycleStorePolicyTest {
         assertFalse(privateResult.partnerViewEnabled)
         assertTrue(sharedResult.partnerViewEnabled)
     }
+
+    @Test
+    fun `imported settings cannot change independent local reminder consent`() {
+        val settings = listOf(
+            AppSettings(),
+            AppSettings(reminderEnabled = true),
+            AppSettings(contraceptionReminderEnabled = true),
+            AppSettings(reminderEnabled = true, contraceptionReminderEnabled = true),
+        )
+        settings.forEach { current ->
+            val incoming = AppSettings(
+                cycleLength = 31,
+                reminderEnabled = !current.reminderEnabled,
+                contraceptionReminderEnabled = !current.contraceptionReminderEnabled,
+            )
+            val merged = mergedTransferSettings(current, incoming)
+
+            assertEquals(current.reminderEnabled, merged.reminderEnabled)
+            assertEquals(current.contraceptionReminderEnabled, merged.contraceptionReminderEnabled)
+            assertEquals(31, merged.cycleLength)
+        }
+    }
 }

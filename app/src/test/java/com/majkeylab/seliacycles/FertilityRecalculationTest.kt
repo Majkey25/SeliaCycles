@@ -40,6 +40,30 @@ class FertilityRecalculationTest {
         assertEquals(LocalDate.of(2026, 10, 4), CycleInsights.prediction(moved, reference).nextPeriodStart)
     }
 
+    @Test fun `a completed long cycle replaces an old fertility window more than fourteen days away`() {
+        val actual = LocalDate.of(2026, 10, 12)
+        val oldEstimate = LocalDate.of(2026, 9, 26)
+        val oldOvulation = LocalDate.of(2026, 9, 12)
+        val history = CycleBackup(period(LocalDate.of(2026, 8, 29)) + period(actual))
+        val today = LocalDate.of(2026, 11, 1)
+
+        listOf(false, true).forEach { reconstructed ->
+            val saved = ForecastSnapshot(YearMonth.from(oldEstimate), oldEstimate,
+                oldEstimate.minusDays(2), oldEstimate.plusDays(2), 5, reconstructed)
+            val content = CycleContent(history, mapOf(saved.month to saved), today)
+            val windows = CycleInsights.fertilityEstimates(history, content.forecastSnapshots, today)
+            assertFalse(windows.any { it.periodStart == oldEstimate })
+            assertEquals(LocalDate.of(2026, 9, 28), windows.single { it.periodStart == actual }.ovulation)
+            assertEquals(FertilityStatus.OUTSIDE,
+                CycleInsights.forDate(history, content.forecastSnapshots, oldOvulation, today).fertilityStatus)
+            assertEquals(DailyFertilityLevel.OUTSIDE_ESTIMATE, DailyFertility.forDate(
+                oldOvulation, history, content.prediction, content.periodEstimates, today))
+            assertFalse(CalendarTracks(content, showFertility = true).forDay(oldOvulation).fertile)
+            assertEquals(oldEstimate, CycleInsights.periodEstimates(history, content.forecastSnapshots, today)
+                .single { it.origin == if (reconstructed) EstimateOrigin.RECONSTRUCTED else EstimateOrigin.SAVED }.start)
+        }
+    }
+
     private fun period(start: LocalDate) = (0L..4L).map { DayLog(start.plusDays(it), bleeding = true, flow = Flow.UNKNOWN) }
 
     @Test fun `cycle length counts elapsed days across leap and year boundaries`() {

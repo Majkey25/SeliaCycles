@@ -1,11 +1,20 @@
 package com.majkeylab.seliacycles
 
+import android.content.Context
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 
@@ -109,6 +118,11 @@ private fun paletteRgb(palette: AppPalette, custom: CustomPalette): PaletteRgb =
     AppPalette.SUNSET -> PaletteRgb(0x9C432E, 0x8B4A5C, 0x7C5800)
     AppPalette.LILAC -> PaletteRgb(0x6F4BA7, 0x7B526B, 0x4C6090)
     AppPalette.CUSTOM -> PaletteRgb(custom.primaryRgb, custom.secondaryRgb, custom.tertiaryRgb)
+    AppPalette.MATERIAL -> PaletteRgb(0x6750A4, 0x625B71, 0x7D5260)
+    AppPalette.AMOLED -> PaletteRgb(0x90CAF9, 0xFFB4AB, 0x80CBC4)
+    AppPalette.GRAPHITE -> PaletteRgb(0x55575B, 0x7C5265, 0x49656B)
+    AppPalette.SAND -> PaletteRgb(0x87582F, 0xA4474D, 0x587A4B)
+    AppPalette.MINT -> PaletteRgb(0x00695C, 0x8B4256, 0x466742)
 }
 
 internal fun palettePreviewColors(
@@ -116,20 +130,25 @@ internal fun palettePreviewColors(
     custom: CustomPalette = CustomPalette(),
 ): List<Color> = paletteRgb(palette, custom).let { listOf(it.primary.color(), it.secondary.color(), it.tertiary.color()) }
 
-internal fun paletteAsCustom(palette: AppPalette): CustomPalette {
-    require(palette != AppPalette.CUSTOM)
-    return paletteRgb(palette, CustomPalette()).let { CustomPalette(it.primary, it.secondary, it.tertiary) }
-}
+internal val LocalAppPalette = staticCompositionLocalOf { AppPalette.OCEAN }
+internal val LocalAppDarkTheme = staticCompositionLocalOf { false }
 
 internal fun paletteGradientColors(
     palette: AppPalette,
-    custom: CustomPalette = CustomPalette(),
-): List<Color> = paletteRgb(palette, custom).let {
-    listOf(it.primary.color().withReadableWhite(), it.secondary.color().withReadableWhite())
+    custom: CustomPalette,
+    scheme: ColorScheme,
+): List<Color> {
+    val colors = if (palette == AppPalette.MATERIAL) listOf(scheme.primary, scheme.secondary) else {
+        paletteRgb(palette, custom).let { listOf(it.primary.color(), it.secondary.color()) }
+    }
+    return colors.map { it.withReadableWhite() }
 }
 
 internal fun calendarPeriodRgb(palette: AppPalette, custom: CustomPalette): Int =
     if (palette == AppPalette.CUSTOM) custom.secondaryRgb else 0xB71C1C
+
+internal fun calendarPeriodColor(palette: AppPalette, custom: CustomPalette, surface: Color): Color =
+    calendarPeriodRgb(palette, custom).color().readableOn(surface)
 
 internal fun calendarPredictedPeriodColor(periodColor: Color): Color = periodColor.copy(alpha = 0.28f)
 
@@ -144,25 +163,88 @@ internal fun parseRgbHex(value: String): Int? {
 
 @Composable
 fun SeliaCyclesTheme(
-    theme: AppTheme,
-    palette: AppPalette,
-    customPalette: CustomPalette,
+    settings: AppSettings,
     content: @Composable () -> Unit,
 ) {
-    val dark = when (theme) {
+    val dark = when (settings.theme) {
         AppTheme.SYSTEM -> isSystemInDarkTheme()
         AppTheme.LIGHT -> false
         AppTheme.DARK -> true
     }
-    MaterialTheme(colorScheme = paletteColorScheme(palette, customPalette, dark), content = content)
+    val density = LocalDensity.current
+    CompositionLocalProvider(
+        LocalDensity provides Density(density.density, density.fontScale * settings.textScalePercent / 100f),
+        LocalAppPalette provides settings.paletteFor(dark),
+        LocalAppDarkTheme provides dark,
+    ) {
+        MaterialTheme(colorScheme = appearanceColorScheme(LocalContext.current, settings, dark), content = content)
+    }
+}
+
+internal fun appearanceColorScheme(context: Context, settings: AppSettings, dark: Boolean): ColorScheme {
+    val palette = settings.paletteFor(dark)
+    return if (palette == AppPalette.MATERIAL && Build.VERSION.SDK_INT >= 31) {
+        if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    } else paletteColorScheme(palette, settings.customPalette, dark)
 }
 
 internal fun paletteColorScheme(palette: AppPalette, custom: CustomPalette, dark: Boolean): ColorScheme = when (palette) {
     AppPalette.SELIA -> if (dark) seliaDarkColors else seliaLightColors
     AppPalette.ROSE -> if (dark) roseDarkColors else roseLightColors
     AppPalette.OCEAN -> if (dark) oceanDarkColors else oceanLightColors
+    AppPalette.MATERIAL -> derivedScheme(if (dark) oceanDarkColors else oceanLightColors, paletteRgb(palette, custom), dark)
+    AppPalette.AMOLED -> derivedScheme(neutralScheme(dark, if (dark) 0x000000 else 0xFAFAFA, if (dark) 0x202020 else 0xE4E4E4), paletteRgb(palette, custom), dark)
+    AppPalette.GRAPHITE -> derivedScheme(neutralScheme(dark, if (dark) 0x151619 else 0xF8F8F8, if (dark) 0x303237 else 0xE2E3E5), paletteRgb(palette, custom), dark)
+    AppPalette.SAND -> derivedScheme(neutralScheme(dark, if (dark) 0x211B15 else 0xFDF7EC, if (dark) 0x40352B else 0xEFE2D0), paletteRgb(palette, custom), dark)
+    AppPalette.MINT -> derivedScheme(neutralScheme(dark, if (dark) 0x111B17 else 0xF3FAF5, if (dark) 0x2B3E34 else 0xDAEADF), paletteRgb(palette, custom), dark)
+    AppPalette.CUSTOM -> customSurfaces(derivedScheme(if (dark) seliaDarkColors else seliaLightColors, paletteRgb(palette, custom), dark), custom)
     else -> derivedScheme(if (dark) seliaDarkColors else seliaLightColors, paletteRgb(palette, custom), dark)
 }
+
+private fun neutralScheme(dark: Boolean, background: Int, variant: Int): ColorScheme {
+    val base = if (dark) darkColorScheme() else lightColorScheme()
+    val surface = background.color()
+    val text = surface.contrastColor()
+    return base.copy(background = surface, onBackground = text, surface = surface, onSurface = text,
+        surfaceVariant = variant.color(), onSurfaceVariant = text, surfaceContainerLowest = surface,
+        surfaceContainerLow = surface.mix(text, 0.03f), surfaceContainer = surface.mix(text, 0.05f),
+        surfaceContainerHigh = surface.mix(text, 0.08f), surfaceContainerHighest = variant.color(),
+        surfaceBright = surface.mix(text, 0.06f), surfaceDim = surface)
+}
+
+private fun customSurfaces(base: ColorScheme, custom: CustomPalette): ColorScheme {
+    if (custom.backgroundRgb == null && custom.surfaceRgb == null && custom.textRgb == null) return base
+    val background = custom.backgroundRgb?.color() ?: base.background
+    val text = (custom.textRgb?.color() ?: base.onSurface).readableOn(background)
+    fun readableSurface(requested: Color): Color {
+        var result = requested
+        repeat(20) {
+            if (contrast(text, result) >= 4.5f) return result
+            result = result.mix(background, 0.2f)
+        }
+        return background
+    }
+    val surface = readableSurface(custom.surfaceRgb?.color() ?: background)
+    val variant = readableSurface(surface.mix(text, 0.06f))
+    fun accent(requested: Color): Color = requested.readableOn(background).readableOn(surface).readableOn(variant)
+        .takeIf { color -> listOf(background, surface, variant).all { contrast(color, it) >= 4.5f } } ?: text
+    return base.copy(background = background, onBackground = text, surface = surface, onSurface = text,
+        surfaceVariant = variant, onSurfaceVariant = text,
+        primary = accent(base.primary), onPrimary = accent(base.primary).contrastColor(),
+        secondary = accent(base.secondary), onSecondary = accent(base.secondary).contrastColor(),
+        tertiary = accent(base.tertiary), onTertiary = accent(base.tertiary).contrastColor(),
+        primaryContainer = readableSurface(base.primaryContainer), onPrimaryContainer = text,
+        secondaryContainer = readableSurface(base.secondaryContainer), onSecondaryContainer = text,
+        tertiaryContainer = readableSurface(base.tertiaryContainer), onTertiaryContainer = text,
+        error = accent(base.error), onError = accent(base.error).contrastColor(),
+        errorContainer = readableSurface(base.errorContainer), onErrorContainer = text,
+        outline = text, outlineVariant = text.copy(alpha = 0.35f),
+        surfaceContainerLowest = background, surfaceContainerLow = surface, surfaceContainer = surface,
+        surfaceContainerHigh = variant, surfaceContainerHighest = variant, surfaceBright = variant, surfaceDim = background)
+}
+
+private fun contrast(first: Color, second: Color): Float =
+    (maxOf(first.luminance(), second.luminance()) + 0.05f) / (minOf(first.luminance(), second.luminance()) + 0.05f)
 
 private fun derivedScheme(base: ColorScheme, rgb: PaletteRgb, dark: Boolean): ColorScheme {
     val background = if (dark) Color.Black else Color.White

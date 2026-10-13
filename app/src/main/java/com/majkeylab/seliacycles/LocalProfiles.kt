@@ -101,6 +101,6 @@ class LocalProfiles(context: Context) {
         const val DEFAULT_ID = "default"
         const val MAX_PROFILES = 12
         const val MAX_NAME_LENGTH = 40
-        private val lock = Any()
+        internal val lock = Any()
     }
 }

@@ -44,9 +44,10 @@
     <string name="personal_patterns_notice">Es un patrón de tus registros, no un diagnóstico ni una predicción segura.</string>
     <string name="cycle_analysis">Análisis del ciclo</string>
     <string name="recent_cycle_details">Detalles de los últimos ciclos</string>
-    <string name="prediction_accuracy_summary">Precisión de las estimaciones guardadas</string>
+    <string name="prediction_accuracy_summary">Comparación con los registros</string>
     <plurals name="average_prediction_error"><item quantity="one">Diferencia media: %d día</item><item quantity="many">Diferencia media: %d días</item><item quantity="other">Diferencia media: %d días</item></plurals>
-    <string name="within_saved_window">Dentro del intervalo guardado: %1$d de %2$d</string>
+    <string name="within_saved_window">Inicios asociados dentro del intervalo guardado: %1$d de %2$d</string>
+    <string name="accuracy_matching_info">La comparación incluye hasta 6 de los últimos inicios registrados asociados. Cada estimación guardada se vincula al inicio registrado más cercano dentro de los 14 días anteriores o posteriores. Cada inicio se cuenta una vez. Las estimaciones sin un inicio asociado no se evalúan.</string>
     <plurals name="period_length_value"><item quantity="one">Periodo: %d día</item><item quantity="many">Periodo: %d días</item><item quantity="other">Periodo: %d días</item></plurals>
     <string name="more_history_needed">Se necesitan más ciclos completados para mostrar un gráfico.</string>
     <string name="cycle_length_description">%1$s, ciclo de %2$d días</string>
@@ -282,7 +283,7 @@
     <string name="legend_more">Explicar colores</string>
     <string name="legend_less">Ocultar explicaciones</string>
     <string name="calendar_filter">Filtrar registros</string>
-    <string name="calendar_filter_intro">Elige hasta tres datos. Con el filtro activo, el punto azul solo aparece en los días que coinciden.</string>
+    <string name="calendar_filter_intro">Elige hasta tres datos. Con el filtro activo, el subrayado azul solo aparece en los días que coinciden.</string>
     <string name="calendar_filter_count">Seleccionados %1$d de %2$d</string>
     <string name="calendar_filter_tests">Pruebas</string>
     <string name="calendar_filter_clear">Borrar filtros</string>
@@ -367,7 +368,7 @@
     <string name="period_end_action">Finalizar periodo</string>
     <string name="day_status">Estado del día</string>
     <string name="prediction_accuracy">Estimación del periodo y realidad</string>
-    <string name="estimate_no_reality">La realidad todavía no está registrada.</string>
+    <string name="estimate_no_reality">No se encontró un inicio registrado a un máximo de 14 días antes o después de la estimación.</string>
     <string name="estimate_exact">La estimación guardada fue exacta.</string>
     <plurals name="estimate_early"><item quantity="one">La realidad empezó %1$d día antes.</item><item quantity="many">La realidad empezó %1$d días antes.</item><item quantity="other">La realidad empezó %1$d días antes.</item></plurals>
     <plurals name="estimate_late"><item quantity="one">La realidad empezó %1$d día después.</item><item quantity="many">La realidad empezó %1$d días después.</item><item quantity="other">La realidad empezó %1$d días después.</item></plurals>
@@ -417,4 +418,20 @@
     <string name="prediction_settings_lengths">Ciclo (días): %1$d · Menstruación (días): %2$d</string>
     <string name="prediction_settings_live">Los cambios se aplican a los días futuros del calendario y a su copia en otro calendario si la sincronización está activada.</string>
     <string name="prediction_fertility_unavailable">No se puede estimar la ovulación si la fase lútea dura tanto como el ciclo completo o más. Revisa ambas duraciones a continuación.</string>
+    <string name="palette_material">Material</string>
+    <string name="palette_amoled">AMOLED</string>
+    <string name="palette_graphite">Grafito</string>
+    <string name="palette_sand">Arena</string>
+    <string name="palette_mint">Menta</string>
+    <string name="appearance_background">Fondo de página</string>
+    <string name="appearance_surface">Fondo de tarjetas</string>
+    <string name="appearance_text">Color del texto</string>
+    <string name="appearance_pairs_hint">Toca un nombre para usar ambas variantes o elige los temas claro y oscuro por separado.</string>
+    <string name="appearance_material_dynamic">Material usa los colores de tu fondo de pantalla. El tema AMOLED oscuro tiene un fondo negro puro.</string>
+    <string name="appearance_material_fallback">Material usa una paleta violeta. Los colores del fondo de pantalla requieren Android 12 o posterior. El tema AMOLED oscuro tiene un fondo negro puro.</string>
+    <string name="appearance_customize">Personalizar tema actual</string>
+    <string name="appearance_contrast_hint">Los colores con poco contraste se ajustan para mantener el texto legible.</string>
+    <string name="appearance_text_size">Tamaño del texto de la app · %1$d%%</string>
+    <string name="appearance_text_sample">Calendario y detalles del ciclo</string>
+    <string name="appearance_reset">Restablecer apariencia</string>
 </resources>

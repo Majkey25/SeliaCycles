@@ -57,6 +57,19 @@ object CycleInsights {
     fun canEstimateFertility(backup: CycleBackup, prediction: CyclePrediction): Boolean =
         backup.settings.canEstimateFertility && prediction.averageCycleLength > backup.settings.lutealPhaseLength
 
+    internal fun hasElapsedCycle(
+        backup: CycleBackup,
+        prediction: CyclePrediction,
+        date: LocalDate,
+        referenceDate: LocalDate,
+    ): Boolean {
+        val lastStart = prediction.periodStarts.lastOrNull() ?: return false
+        return backup.settings.canPredictPeriods && date <= referenceDate &&
+            date > lastStart.plusDays((prediction.averageCycleLength +
+                maxOf(prediction.averagePeriodLength - 1, prediction.uncertaintyDays)).toLong()) &&
+            !backup.logs.any { it.day == date && it.confirmedBleeding }
+    }
+
     fun fertilityForPeriod(periodStart: LocalDate, lutealPhaseDays: Int = DEFAULT_LUTEAL_PHASE_DAYS): FertilityEstimate {
         require(lutealPhaseDays in 7..19)
         val ovulation = periodStart.minusDays(lutealPhaseDays.toLong())
@@ -112,7 +125,7 @@ object CycleInsights {
     ): List<PeriodEstimate> {
         val currentMonth = YearMonth.from(referenceDate)
         val history = periodEstimates(backup, snapshots, referenceDate)
-            .filter { YearMonth.from(it.start) < currentMonth }
+            .filter { !backup.settings.canPredictPeriods || YearMonth.from(it.start) < currentMonth }
         val current = periodEstimates(backup, emptyMap(), referenceDate)
         val ongoing = backup.settings.activePeriodStart?.takeIf { start ->
             backup.settings.canPredictPeriods && start <= referenceDate
@@ -150,7 +163,10 @@ object CycleInsights {
         val recordedSet = recorded.toSet()
         val previousByStart = recorded.zipWithNext().associate { (previous, next) -> next to previous }
         val estimated = estimates.filterNot { it.origin == EstimateOrigin.ONGOING }.map(PeriodEstimate::start)
-            .filterNot { CycleAnalysis.closestRecordedStart(it, recorded) != null }
+            .filterNot { start ->
+                recorded.size > 1 && start > recorded.first() && start < recorded.last() ||
+                    CycleAnalysis.closestRecordedStart(start, recorded) != null
+            }
         return (estimated + recorded).distinct().sorted().mapNotNull { start ->
             if (start in recordedSet) {
                 val previous = previousByStart[start]
@@ -184,9 +200,7 @@ object CycleInsights {
             ?.plusDays(prediction.averageCycleLength.toLong())
             ?.takeIf { it <= date }
         val recordedBleeding = backup.logs.any { it.day == date && it.confirmedBleeding }
-        val elapsedCycle = !recordedBleeding && unconfirmedStart?.let { start ->
-            date > start.plusDays(maxOf(prediction.averagePeriodLength - 1, prediction.uncertaintyDays).toLong())
-        } == true
+        val elapsedCycle = hasElapsedCycle(backup, prediction, date, referenceDate)
         val overduePrediction = estimates.firstOrNull { estimate ->
             backup.settings.canPredictPeriods && estimate.origin == EstimateOrigin.CURRENT && estimate.start < date &&
                 date <= maxOf(estimate.endExclusive.minusDays(1), estimate.latestStart ?: estimate.start)

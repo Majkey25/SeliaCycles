@@ -163,14 +163,15 @@ class DailyFertilityTest {
             history.settings.cycleLengthOverride, history.settings.periodLengthOverride, history.settings.activePeriodStart,
         )
         val estimates = CycleInsights.calendarPeriodEstimates(history, snapshots, referenceDate)
-        val central = CycleInsights.fertilityEstimates(history, snapshots, referenceDate)
+        val calendar = CalendarTracks(CycleContent(history, snapshots, referenceDate), showFertility = true)
         val start = maxOf(DayLog.MIN_DATE, referenceDate.minusDays(35))
         val end = minOf(DayLog.MAX_DATE, referenceDate.plusDays(65))
         generateSequence(start) { it.plusDays(1) }.takeWhile { it <= end }.forEach { date ->
             val level = DailyFertility.forDate(date, history, prediction, estimates, referenceDate)
+            val tracks = calendar.forDay(date)
             val expected = when {
-                central.any { date == it.ovulation } -> DailyFertilityLevel.ESTIMATED_OVULATION
-                central.any { date in it.fertileStart..it.fertileEnd } -> DailyFertilityLevel.FERTILE_WINDOW
+                tracks.ovulation -> DailyFertilityLevel.ESTIMATED_OVULATION
+                tracks.fertile -> DailyFertilityLevel.FERTILE_WINDOW
                 else -> null
             }
             if (expected != null) assertEquals(expected, level, "Daily/calendar mismatch on $date at $referenceDate")

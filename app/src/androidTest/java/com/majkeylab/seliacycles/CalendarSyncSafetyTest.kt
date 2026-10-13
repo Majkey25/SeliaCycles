@@ -100,13 +100,16 @@ class CalendarSyncSafetyTest {
             rows[id] = ContentValues(requireNotNull(values))
             return ContentUris.withAppendedId(uri, id)
         }
+        private fun eventId(uri: Uri, selectionArgs: Array<out String>?): Long =
+            uri.lastPathSegment?.toLongOrNull() ?: requireNotNull(selectionArgs).first().toLong()
+
         override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int {
-            rows[ContentUris.parseId(uri)]?.putAll(requireNotNull(values)) ?: return 0
+            rows[eventId(uri, selectionArgs)]?.putAll(requireNotNull(values)) ?: return 0
             return 1
         }
         override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int {
             if (failDelete) throw SecurityException("Simulated provider deletion failure")
-            return if (rows.remove(ContentUris.parseId(uri)) != null) 1 else 0
+            return if (rows.remove(eventId(uri, selectionArgs)) != null) 1 else 0
         }
     }
 }

@@ -47,6 +47,15 @@ class CalendarUiModelTest {
     }
 
     @Test
+    fun `period editor keeps weekday alignment at the earliest supported date`() {
+        val days = CalendarPaging.periodEditorDays(DayLog.MIN_DATE, DayOfWeek.SUNDAY)
+
+        assertEquals(DayOfWeek.SUNDAY, days.first().dayOfWeek)
+        assertTrue(DayLog.MIN_DATE in days)
+        assertEquals(28, days.size)
+    }
+
+    @Test
     fun `pager maps the supported month range without drift`() {
         val current = YearMonth.of(2026, 8)
 
@@ -71,6 +80,60 @@ class CalendarUiModelTest {
         assertTrue(tracks.fertile)
         assertTrue(tracks.ovulation)
         assertTrue(tracks.predictedOverlap)
+    }
+
+    @Test
+    fun `expired cycle hides fertility in day detail and calendar until a real start is recorded`() {
+        val today = LocalDate.of(2026, 9, 12)
+        val first = LocalDate.of(2026, 8, 1)
+        val backup = CycleBackup((0L..4L).map { DayLog(first.plusDays(it), true, flow = Flow.UNKNOWN) })
+        val content = CycleContent(backup = backup, referenceDate = today)
+        val calendar = CalendarTracks(content, showFertility = true)
+
+        assertEquals(FertilityStatus.UNAVAILABLE, content.todayInsight.fertilityStatus)
+        assertEquals(DailyFertilityLevel.UNAVAILABLE,
+            DailyFertility.forDate(today, backup, content.prediction, content.periodEstimates, today))
+        assertFalse(calendar.forDay(today).fertile)
+        assertFalse(calendar.forDay(today).ovulation)
+        val futureOvulation = LocalDate.of(2026, 10, 10)
+        assertTrue(calendar.forDay(futureOvulation).ovulation)
+        assertEquals(DailyFertilityLevel.ESTIMATED_OVULATION,
+            DailyFertility.forDate(futureOvulation, backup, content.prediction, content.periodEstimates, today))
+        assertEquals(DailyFertilityLevel.POSSIBLE,
+            DailyFertility.forDate(LocalDate.of(2026, 10, 1), backup, content.prediction, content.periodEstimates, today))
+
+        val actual = LocalDate.of(2026, 8, 29)
+        val restored = content.copy(backup = backup.copy(logs = backup.logs +
+            (0L..4L).map { DayLog(actual.plusDays(it), true, flow = Flow.UNKNOWN) }))
+        assertEquals(FertilityStatus.OVULATION, restored.todayInsight.fertilityStatus)
+        assertEquals(DailyFertilityLevel.ESTIMATED_OVULATION,
+            DailyFertility.forDate(today, restored.backup, restored.prediction, restored.periodEstimates, today))
+        assertTrue(CalendarTracks(restored, showFertility = true).forDay(today).ovulation)
+    }
+
+    @Test
+    fun `disabled predictions cannot restore future calendar snapshots but keep history`() {
+        val today = LocalDate.of(2026, 9, 5)
+        val future = LocalDate.of(2026, 9, 26)
+        val historical = LocalDate.of(2026, 8, 29)
+        val snapshots = listOf(historical, future).associate { start ->
+            YearMonth.from(start) to ForecastSnapshot(YearMonth.from(start), start,
+                start.minusDays(2), start.plusDays(2), 5, false)
+        }
+        val logs = listOf(LocalDate.of(2026, 8, 1), LocalDate.of(2026, 9, 1))
+            .map { DayLog(it, true, flow = Flow.UNKNOWN) }
+        val settings = listOf(AppSettings(predictionsEnabled = false)) +
+            listOf(LifeSituation.PREGNANT, LifeSituation.MENOPAUSE).map {
+                AppSettings(profile = UserProfile(lifeSituation = it))
+            }
+
+        settings.forEach {
+            val content = CycleContent(CycleBackup(logs, it), snapshots, today)
+            val calendar = CalendarTracks(content, showFertility = true)
+            assertEquals(CalendarPeriodLayer.NONE, calendar.forDay(future).period)
+            assertEquals(CalendarPeriodLayer.PREDICTED, calendar.forDay(historical).period)
+            assertEquals(CalendarPeriodLayer.RECORDED, calendar.forDay(LocalDate.of(2026, 9, 1)).period)
+        }
     }
 
     @Test
@@ -120,5 +183,34 @@ class CalendarUiModelTest {
         assertEquals(reference, state.referenceDate)
         assertEquals(LocalDate.of(2026, 7, 29), state.prediction.nextPeriodStart)
         assertEquals(CyclePhase.MENSTRUAL, state.todayInsight.phase)
+    }
+
+    @Test
+    fun `paused predictions retain elapsed current month snapshots without a recorded start`() {
+        val historical = LocalDate.of(2026, 9, 10)
+        val future = LocalDate.of(2026, 10, 8)
+        val snapshots = listOf(historical, future).associate { start ->
+            YearMonth.from(start) to ForecastSnapshot(YearMonth.from(start), start,
+                start.minusDays(2), start.plusDays(2), 5, false)
+        }
+        val logs = (0L..4L).map { DayLog(LocalDate.of(2026, 8, 13).plusDays(it), true, flow = Flow.UNKNOWN) }
+        val settings = listOf(
+            AppSettings(predictionsEnabled = false),
+            AppSettings(profile = UserProfile(lifeSituation = LifeSituation.PREGNANT)),
+        )
+
+        settings.forEach {
+            val content = CycleContent(CycleBackup(logs, it), snapshots, LocalDate.of(2026, 9, 19))
+            assertEquals(listOf(historical), content.periodEstimates.map(PeriodEstimate::start))
+            val calendar = CalendarTracks(content, showFertility = true)
+            assertEquals(CalendarPeriodLayer.PREDICTED, calendar.forDay(historical).period)
+            assertEquals(CalendarPeriodLayer.NONE, calendar.forDay(future).period)
+
+            val before = content.copy(referenceDate = LocalDate.of(2026, 9, 5))
+            assertTrue(before.periodEstimates.isEmpty())
+            assertEquals(CalendarPeriodLayer.NONE, CalendarTracks(before, showFertility = true).forDay(historical).period)
+            val nextMonth = content.copy(referenceDate = LocalDate.of(2026, 10, 1))
+            assertEquals(listOf(historical), nextMonth.periodEstimates.map(PeriodEstimate::start))
+        }
     }
 }

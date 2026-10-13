@@ -1,6 +1,6 @@
 # Google Play declarations
 
-Current source reference: code 31, version 0.9.0-beta.23. Repository declarations rechecked October 5, 2026. Earlier artifact checks remain dated below.
+Current source reference: code 33, version 0.9.0-beta.25. Source and signed-artifact permissions rechecked October 13, 2026. Saved Play form checks remain dated below.
 
 ## Data safety
 
@@ -39,6 +39,12 @@ Current source reference: code 31, version 0.9.0-beta.23. Repository declaration
 - Contains ads: **No**.
 
 Recheck these answers after every dependency or feature change.
+
+## October 13 artifact check
+
+The signed code 33 APK has no Internet, advertising-ID, or Health Connect permission. Appearance presets, separate light/dark colors and text size remain local. No billing, advertising, analytics or account service was added.
+
+The manifest now explicitly selects full backup with `fullBackupOnly=true`. Existing transfer-only backup checks and cloud-exclusion rules are retained. Instrumentation checks the compiled flag and rules; an actual transfer between two phones was not performed. The calendar provider remains responsible for any account synchronization.
 
 ## October 4 calendar cleanup change
 

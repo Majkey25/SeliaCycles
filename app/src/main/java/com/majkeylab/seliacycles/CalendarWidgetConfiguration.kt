@@ -49,11 +49,16 @@ class CalendarWidgetConfiguration : AppCompatActivity() {
                 var failed by remember { mutableStateOf(false) }
                 val scope = rememberCoroutineScope()
                 LaunchedEffect(selected) {
+                    val profileId = selected
                     settings = null
                     failed = false
                     try {
                         settings = withContext(Dispatchers.IO) {
-                            CycleStore(this@CalendarWidgetConfiguration, selected).use { it.load().settings }
+                            synchronized(LocalProfiles.lock) {
+                                require(LocalProfiles(this@CalendarWidgetConfiguration).profiles().any { it.id == profileId }) { "Unknown local profile" }
+                                check(getDatabasePath(profileDatabaseName(profileId)).exists()) { "Profile database unavailable" }
+                                CycleStore(this@CalendarWidgetConfiguration, profileId).use { it.load().settings }
+                            }
                         }
                     } catch (error: Exception) {
                         if (error is CancellationException) throw error
@@ -61,7 +66,7 @@ class CalendarWidgetConfiguration : AppCompatActivity() {
                     }
                 }
                 val appearance = settings ?: AppSettings()
-                SeliaCyclesTheme(appearance.theme, appearance.palette, appearance.customPalette) {
+                SeliaCyclesTheme(appearance) {
                     Surface(Modifier.fillMaxSize()) {
                         Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)) {

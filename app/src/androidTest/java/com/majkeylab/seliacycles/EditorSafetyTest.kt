@@ -127,6 +127,19 @@ class EditorSafetyTest {
         }
     }
 
+    @Test fun strongPainAdviceIsVisibleBeforeOpeningSelfCare() {
+        CycleStore(context).use { it.saveLog(original.copy(painLevel = 8)) }
+        ActivityScenario.launch(MainActivity::class.java).use {
+            openCalendar()
+            val date = today.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(context.resources.configuration.locales[0]))
+            compose.onNodeWithContentDescription(date, substring = true).performClick()
+            compose.onNodeWithText(text(R.string.care_alert_pain)).performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.self_care_title)).performScrollTo().performClick()
+            compose.onAllNodesWithText(text(R.string.care_alert_pain)).onLast().assertIsDisplayed()
+            assertEquals(8, savedToday()?.painLevel)
+        }
+    }
+
     private fun openInformation() {
         openCalendar()
         val date = today.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(context.resources.configuration.locales[0]))

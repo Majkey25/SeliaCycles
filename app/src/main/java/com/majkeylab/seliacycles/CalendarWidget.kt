@@ -121,15 +121,18 @@ class CalendarWidget : AppWidgetProvider() {
         internal fun loadViews(context: Context, id: Int): RemoteViews {
             val prefs = preferences(context)
             val profileId = prefs.getString("profile_$id", null)
-            val profile = LocalProfiles(context).profiles().firstOrNull { it.id == profileId }
-                ?: return emptyViews(context, id, R.string.widget_choose_profile)
-            // Missing/deleted profiles must never fall back to another person's records.
-            if (!context.getDatabasePath(profileDatabaseName(profile.id)).exists()) {
-                return emptyViews(context, id, R.string.widget_unavailable)
+            val (profile, backup, snapshots) = synchronized(LocalProfiles.lock) {
+                val profile = LocalProfiles(context).profiles().firstOrNull { it.id == profileId }
+                    ?: return emptyViews(context, id, R.string.widget_choose_profile)
+                // Missing/deleted profiles must never fall back to another person's records.
+                if (!context.getDatabasePath(profileDatabaseName(profile.id)).exists()) {
+                    return emptyViews(context, id, R.string.widget_unavailable)
+                }
+                CycleStore(context, profile.id).use { store ->
+                    Triple(profile, store.load(), store.loadForecastSnapshots().associateBy(ForecastSnapshot::month))
+                }
             }
-            val content = CycleStore(context, profile.id).use { store ->
-                CycleContent(store.load(), store.loadForecastSnapshots().associateBy(ForecastSnapshot::month))
-            }
+            val content = CycleContent(backup, snapshots)
             return calendarWidgetViews(context, id, profile, content, shownMonth(context, id), prefs.getBoolean("details_$id", false), appearance(context, id))
         }
 

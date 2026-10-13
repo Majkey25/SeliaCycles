@@ -24,13 +24,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 internal fun nextContraceptionReminder(settings: AppSettings, now: ZonedDateTime, handledToday: Boolean,
-    pendingDay: LocalDate? = null): ZonedDateTime? {
+    pendingDay: LocalDate? = null, notificationsEnabled: Boolean = true): ZonedDateTime? {
     if (!settings.contraceptionReminderEnabled || settings.profile.lifeSituation != LifeSituation.HORMONAL_CONTRACEPTION) return null
     val time = LocalTime.ofSecondOfDay(settings.contraceptionReminderMinute * 60L)
     val today = now.toLocalDate().atTime(time).atZone(now.zone)
-    return if (handledToday || pendingDay != now.toLocalDate() && !today.isAfter(now)) {
+    return if (handledToday || (!notificationsEnabled || pendingDay != now.toLocalDate()) && !today.isAfter(now)) {
         now.toLocalDate().plusDays(1).atTime(time).atZone(now.zone)
     } else today
+}
+
+internal fun isContraceptionReminderDue(reminderMinute: Int, now: ZonedDateTime): Boolean {
+    val scheduled = now.toLocalDate().atTime(LocalTime.ofSecondOfDay(reminderMinute * 60L)).atZone(now.zone)
+    return !now.isBefore(scheduled)
 }
 
 /** One local alarm per profile. Re-read settings at delivery; alarms never record a dose. */
@@ -40,18 +45,24 @@ class ContraceptionReminder : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val profiles = LocalProfiles(context).profiles()
-                val id = intent.getStringExtra(ReminderWorker.PROFILE_ID_EXTRA)
-                if (intent.action == ACTION_REMIND && profiles.any { it.id == id }) {
-                    val profileId = requireNotNull(id)
-                    val backup = CycleStore(context, profileId).use { it.load() }
-                    deliver(context, profileId, backup, intent)
-                    sync(context, backup, profileId)
-                } else if (intent.action in setOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_TIME_CHANGED,
-                        Intent.ACTION_TIMEZONE_CHANGED, Intent.ACTION_MY_PACKAGE_REPLACED,
-                        AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED)) {
-                    profiles.forEach { profile ->
-                        CycleStore(context, profile.id).use { sync(context, it.load(), profile.id) }
+                synchronized(LocalProfiles.lock) {
+                    val profiles = LocalProfiles(context).profiles()
+                    val id = intent.getStringExtra(ReminderWorker.PROFILE_ID_EXTRA)
+                    if (intent.action == ACTION_REMIND && profiles.any { it.id == id }) {
+                        val profileId = requireNotNull(id)
+                        if (context.getDatabasePath(profileDatabaseName(profileId)).exists()) {
+                            val backup = CycleStore(context, profileId).use { it.load() }
+                            deliver(context, profileId, backup, intent)
+                            sync(context, backup, profileId)
+                        }
+                    } else if (intent.action in setOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_TIME_CHANGED,
+                            Intent.ACTION_TIMEZONE_CHANGED, Intent.ACTION_MY_PACKAGE_REPLACED,
+                            AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED)) {
+                        profiles.forEach { profile ->
+                            if (context.getDatabasePath(profileDatabaseName(profile.id)).exists()) {
+                                CycleStore(context, profile.id).use { sync(context, it.load(), profile.id) }
+                            }
+                        }
                     }
                 }
             } catch (error: Exception) {
@@ -94,8 +105,13 @@ class ContraceptionReminder : BroadcastReceiver() {
         }
 
         @SuppressLint("ScheduleExactAlarm") // Permission checked; revoked access falls back to an inexact alarm.
-        fun sync(context: Context, backup: CycleBackup, profileId: String) {
+        fun sync(context: Context, backup: CycleBackup, profileId: String): Unit = synchronized(LocalProfiles.lock) {
             requireValidProfileId(profileId)
+            if (LocalProfiles(context).profiles().none { it.id == profileId } ||
+                !context.getDatabasePath(profileDatabaseName(profileId)).exists()) {
+                cancel(context, profileId)
+                return@synchronized
+            }
             val now = ZonedDateTime.now()
             val log = backup.logs.firstOrNull { it.day == now.toLocalDate() }
             val handled = log?.contraception != null ||
@@ -104,10 +120,11 @@ class ContraceptionReminder : BroadcastReceiver() {
             val pendingDay = prefs.getLong(PENDING_DAY, Long.MIN_VALUE).takeUnless { it == Long.MIN_VALUE }
                 ?.takeIf { prefs.getInt(PENDING_MINUTE, -1) == backup.settings.contraceptionReminderMinute }
                 ?.let(LocalDate::ofEpochDay)
-            val next = nextContraceptionReminder(backup.settings, now, handled, pendingDay)
-            if (next == null || !NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+            val next = nextContraceptionReminder(backup.settings, now, handled, pendingDay,
+                notificationsEnabled = reminderNotificationsEnabled(context, CHANNEL))
+            if (next == null) {
                 cancel(context, profileId)
-                return
+                return@synchronized
             }
             if (log?.contraception != null) NotificationManagerCompat.from(context).cancel(profileId, NOTIFICATION)
             val intent = alarmIntent(context, profileId).putExtra(DAY, next.toLocalDate().toEpochDay())
@@ -126,20 +143,21 @@ class ContraceptionReminder : BroadcastReceiver() {
         }
 
         private fun deliver(context: Context, profileId: String, backup: CycleBackup, intent: Intent) {
-            val today = LocalDate.now()
+            val now = ZonedDateTime.now()
+            val today = now.toLocalDate()
             val settings = backup.settings
             if (!settings.contraceptionReminderEnabled || settings.profile.lifeSituation != LifeSituation.HORMONAL_CONTRACEPTION ||
                 intent.getLongExtra(DAY, Long.MIN_VALUE) != today.toEpochDay() ||
                 intent.getIntExtra(MINUTE, -1) != settings.contraceptionReminderMinute ||
-                LocalTime.now().toSecondOfDay() < settings.contraceptionReminderMinute * 60 ||
+                !isContraceptionReminderDue(settings.contraceptionReminderMinute, now) ||
                 backup.logs.any { it.day == today && it.contraception != null } ||
                 preferences(context, profileId).getLong(LAST_DAY, Long.MIN_VALUE) == today.toEpochDay()) return
             if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
                 PackageManager.PERMISSION_GRANTED) return
-            if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
             context.getSystemService(NotificationManager::class.java).createNotificationChannel(
                 NotificationChannel(CHANNEL, context.getString(R.string.contraception_reminder), NotificationManager.IMPORTANCE_DEFAULT)
                     .apply { lockscreenVisibility = NotificationCompat.VISIBILITY_PRIVATE })
+            if (!reminderNotificationsEnabled(context, CHANNEL)) return
             val open = Intent(context, MainActivity::class.java).setData("selia://local-profile/$profileId".toUri())
                 .putExtra(ReminderWorker.PROFILE_ID_EXTRA, profileId)
             val notification = NotificationCompat.Builder(context, CHANNEL).setSmallIcon(R.drawable.ic_notification)

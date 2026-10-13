@@ -3,7 +3,6 @@ package com.majkeylab.seliacycles
 import android.Manifest
 import android.content.ContentProviderOperation
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
@@ -139,6 +138,7 @@ class CalendarMirror(private val context: Context, private val profileId: String
                 val operations = ArrayList(batch.map { event ->
                     // Guard the row again at deletion, including nullable metadata and the calendar ID.
                     val fields = listOf(
+                        BaseColumns._ID to event.id.toString(),
                         CalendarContract.Events.CALENDAR_ID to event.calendarId.toString(),
                         CalendarContract.Events.TITLE to event.title,
                         CalendarContract.Events.DTSTART to event.startMillis.toString(),
@@ -151,10 +151,8 @@ class CalendarMirror(private val context: Context, private val profileId: String
                         CalendarContract.Events.RDATE to event.recurrenceDates,
                         CalendarContract.Events.DELETED to "0",
                     )
-                    ContentProviderOperation.newDelete(ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, event.id))
-                        .withSelection(fields.joinToString(" AND ") { (column, value) ->
-                            if (value == null) "$column IS NULL" else "$column = ?"
-                        }, fields.mapNotNull { it.second }.toTypedArray())
+                    ContentProviderOperation.newDelete(CalendarContract.Events.CONTENT_URI)
+                        .withMatchingFields(fields)
                         .withExpectedCount(1).build()
                 })
                 val results = resolver.applyBatch(CalendarContract.AUTHORITY, operations)
@@ -266,26 +264,39 @@ class CalendarMirror(private val context: Context, private val profileId: String
         val desired = calendarId?.let { CalendarMirrorPlanner.plan(backup, snapshots) }.orEmpty()
         val operations = ArrayList<ContentProviderOperation>()
         val existing = existingEvents(desired, calendarId, backup.settings.partnerViewEnabled)
-        val descriptions = existing.associate { it.id to it.description }
+        val existingById = existing.associateBy(StoredMirrorEvent::id)
         CalendarMirrorDiff.plan(desired, existing).forEach { mutation ->
             operations += when (mutation) {
                 is MirrorMutation.Insert -> ContentProviderOperation.newInsert(CalendarContract.Events.CONTENT_URI)
                     .withValues(eventValues(requireNotNull(calendarId), mutation.event, backup.settings.partnerViewEnabled))
                     .build()
-                is MirrorMutation.Update -> ContentProviderOperation.newUpdate(
-                    ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, mutation.id),
-                ).withValues(eventValues(requireNotNull(calendarId), mutation.event, backup.settings.partnerViewEnabled, descriptions[mutation.id]))
-                    .withSelection(if (descriptions[mutation.id] == null) "${CalendarContract.Events.DESCRIPTION} IS NULL"
-                        else "${CalendarContract.Events.DESCRIPTION} = ?", descriptions[mutation.id]?.let { arrayOf(it) })
-                    .withExpectedCount(1).build()
-                is MirrorMutation.Delete -> ContentProviderOperation.newDelete(
-                    ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, mutation.id),
-                ).build()
+                is MirrorMutation.Update -> {
+                    val stored = existingById.getValue(mutation.id)
+                    ContentProviderOperation.newUpdate(CalendarContract.Events.CONTENT_URI)
+                        .withValues(eventValues(requireNotNull(calendarId), mutation.event, backup.settings.partnerViewEnabled, stored.description))
+                        .withMatchingEvent(stored).withExpectedCount(1).build()
+                }
+                is MirrorMutation.Delete -> ContentProviderOperation.newDelete(CalendarContract.Events.CONTENT_URI)
+                    .withMatchingEvent(existingById.getValue(mutation.id)).withExpectedCount(1).build()
             }
         }
         if (operations.isEmpty()) return
         check(resolver.applyBatch(CalendarContract.AUTHORITY, operations).size == operations.size)
     }
+
+    private fun ContentProviderOperation.Builder.withMatchingEvent(event: StoredMirrorEvent) = withMatchingFields(listOf(
+        BaseColumns._ID to event.id.toString(),
+        CalendarContract.Events.CALENDAR_ID to requireNotNull(event.calendarId).toString(),
+        CalendarContract.Events.CUSTOM_APP_PACKAGE to event.appPackage,
+        CalendarContract.Events.CUSTOM_APP_URI to event.appUri,
+        CalendarContract.Events.DESCRIPTION to event.description,
+        CalendarContract.Events.DELETED to "0",
+    ))
+
+    private fun ContentProviderOperation.Builder.withMatchingFields(fields: List<Pair<String, String?>>) =
+        withSelection(fields.joinToString(" AND ") { (column, value) ->
+            if (value == null) "$column IS NULL" else "$column = ?"
+        }, fields.mapNotNull { it.second }.toTypedArray())
 
     private fun existingEvents(
         desired: List<MirrorEvent>,
@@ -314,6 +325,9 @@ class CalendarMirror(private val context: Context, private val profileId: String
                         key = key,
                         current = desiredEvent?.takeIf { values != null && cursor.matches(values) },
                         description = cursor.getString(4),
+                        calendarId = cursor.getLong(2),
+                        appPackage = cursor.getString(12),
+                        appUri = cursor.getString(1),
                     ))
                 }
             }

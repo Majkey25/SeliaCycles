@@ -2,6 +2,7 @@ package com.majkeylab.seliacycles
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.DataInputStream
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.test.Test
@@ -11,6 +12,28 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class MyCalendarExportTest {
+    @Test
+    fun `appearance version four round trips while older payloads keep their versions`() {
+        val original = SeliaTransfer(CycleBackup(emptyList(), AppSettings()), emptyList())
+        val appearance = original.copy(backup = original.backup.copy(settings = AppSettings(
+            palette = AppPalette.MINT, darkPalette = AppPalette.AMOLED, textScalePercent = 130,
+            customPalette = CustomPalette(backgroundRgb = 0xFAFAFA, surfaceRgb = 0xF0F0F0, textRgb = 0x222222),
+        )))
+        val day = LocalDate.of(2026, 10, 7)
+        val versions = listOf(original,
+            original.copy(backup = original.backup.copy(logs = listOf(DayLog(day, bleeding = true, flow = Flow.UNKNOWN, automaticBleeding = true)))),
+            original.copy(backup = original.backup.copy(settings = AppSettings(contraceptionReminderEnabled = true))),
+            appearance)
+        versions.forEachIndexed { index, transfer ->
+            val bytes = SeliaBackupCodec.encode(transfer)
+            DataInputStream(ByteArrayInputStream(bytes)).use { input ->
+                input.readInt()
+                assertEquals(index + 1, input.readInt())
+            }
+            assertEquals(transfer, SeliaBackupCodec.decode(bytes))
+        }
+    }
+
     @Test
     fun `maximum supported history fits the backup entry limit`() {
         val logs = List(CycleBackup.MAX_LOGS) { index ->

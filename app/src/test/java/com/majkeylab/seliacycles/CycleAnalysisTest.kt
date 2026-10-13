@@ -74,6 +74,20 @@ class CycleAnalysisTest {
     }
 
     @Test
+    fun `history keeps last six valid cycles despite invalid final intervals`() {
+        val first = LocalDate.of(2025, 1, 1)
+        val validStarts = (0L..8L).map { first.plusDays(it * 28) }
+        val starts = validStarts + listOf(validStarts.last().plusDays(15), validStarts.last().plusDays(106))
+        val bleeding = starts.flatMap { start -> (0L..2L).map(start::plusDays) }.toSet()
+
+        val history = CycleAnalysis.recentHistory(starts, bleeding, lutealPhaseDays = 19)
+
+        assertEquals(validStarts.slice(2..7), history.map(CycleHistorySample::start))
+        assertEquals(List(6) { 28 }, history.map(CycleHistorySample::cycleDays))
+        assertEquals(List(6) { 3 }, history.map(CycleHistorySample::periodDays))
+    }
+
+    @Test
     fun `accuracy summarizes saved windows against recorded starts`() {
         val january = ForecastSnapshot(
             month = YearMonth.of(2026, 1),
@@ -117,6 +131,56 @@ class CycleAnalysisTest {
             CycleAnalysis.predictionAccuracy(
                 periodStarts = listOf(LocalDate.of(2026, 2, 1)),
                 snapshots = mapOf(snapshot.month to snapshot),
+            ),
+        )
+    }
+
+    @Test
+    fun `accuracy counts a recorded start once using the earliest matching estimate`() {
+        val january = ForecastSnapshot(
+            month = YearMonth.of(2026, 1),
+            periodStart = LocalDate.of(2026, 1, 31),
+            earliestStart = LocalDate.of(2026, 1, 29),
+            latestStart = LocalDate.of(2026, 2, 2),
+            periodLength = 5,
+            reconstructed = false,
+        )
+        val february = ForecastSnapshot(
+            month = YearMonth.of(2026, 2),
+            periodStart = LocalDate.of(2026, 2, 15),
+            earliestStart = LocalDate.of(2026, 2, 1),
+            latestStart = LocalDate.of(2026, 3, 1),
+            periodLength = 5,
+            reconstructed = false,
+        )
+
+        assertEquals(
+            PredictionAccuracySummary(sampleCount = 1, averageErrorDays = 8, withinWindowCount = 0),
+            CycleAnalysis.predictionAccuracy(
+                periodStarts = listOf(LocalDate.of(2026, 2, 8)),
+                snapshots = mapOf(february.month to february, january.month to january),
+            ),
+        )
+    }
+
+    @Test
+    fun `accuracy selects six distinct starts before limiting recent samples`() {
+        val exact = (1..6).map { month ->
+            val start = LocalDate.of(2026, month, 1)
+            ForecastSnapshot(YearMonth.from(start), start, start, start, 5, false)
+        }
+        val july = LocalDate.of(2026, 7, 31)
+        val august = LocalDate.of(2026, 8, 2)
+        val snapshots = exact + listOf(
+            ForecastSnapshot(YearMonth.from(july), july, july, july, 5, false),
+            ForecastSnapshot(YearMonth.from(august), august, august, august, 5, false),
+        )
+
+        assertEquals(
+            PredictionAccuracySummary(sampleCount = 6, averageErrorDays = 0, withinWindowCount = 5),
+            CycleAnalysis.predictionAccuracy(
+                periodStarts = exact.map(ForecastSnapshot::periodStart) + LocalDate.of(2026, 8, 1),
+                snapshots = snapshots.associateBy(ForecastSnapshot::month),
             ),
         )
     }

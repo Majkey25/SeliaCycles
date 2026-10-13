@@ -2,6 +2,8 @@ package com.majkeylab.seliacycles
 
 import android.content.Context
 import android.database.Cursor
+import android.database.CursorWindow
+import android.database.sqlite.SQLiteCursor
 import android.database.sqlite.SQLiteDatabase
 import java.io.ByteArrayOutputStream
 import java.io.FilterInputStream
@@ -279,6 +281,7 @@ class MyCalendarImporter(context: Context) {
         null,
         null,
         "date ASC",
+        (MAX_SOURCE_ROWS + 1).toString(),
     ).use { cursor ->
         buildList {
             while (cursor.moveToNext()) {
@@ -296,6 +299,7 @@ class MyCalendarImporter(context: Context) {
         null,
         null,
         "date ASC",
+        (MAX_SOURCE_ROWS + 1).toString(),
     ).use { cursor ->
         buildList {
             while (cursor.moveToNext()) {
@@ -320,6 +324,14 @@ class MyCalendarImporter(context: Context) {
     }
 
     private fun requireColumns(database: SQLiteDatabase, table: String, required: Set<String>) {
+        val isTable = database.rawQuery(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND rootpage > 0 AND name = ? COLLATE NOCASE",
+            arrayOf(table),
+        ).use(Cursor::moveToFirst)
+        if (!isTable) throw MyCalendarFormatException(
+            "Unsupported My Calendar database",
+            failure = MyCalendarFailure.UNSUPPORTED,
+        )
         val actual = database.rawQuery("PRAGMA table_info($table)", null).use { cursor ->
             buildSet { while (cursor.moveToNext()) add(cursor.getString(1)) }
         }
@@ -331,11 +343,14 @@ class MyCalendarImporter(context: Context) {
 
     private fun readSeliaTransfer(database: SQLiteDatabase): SeliaTransfer? {
         val exists = database.rawQuery(
-            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'SeliaBackup'",
+            "SELECT 1 FROM sqlite_master WHERE name = 'SeliaBackup' COLLATE NOCASE",
             null,
         ).use(Cursor::moveToFirst)
         if (!exists) return null
-        return database.query("SeliaBackup", arrayOf("version", "payload"), null, null, null, null, null).use { cursor ->
+        requireColumns(database, "SeliaBackup", setOf("version", "payload"))
+        return database.query("SeliaBackup", arrayOf("version", "payload"), null, null, null, null, null, "2").use { cursor ->
+            // The bounded payload can exceed Android's default cursor window.
+            (cursor as SQLiteCursor).window = CursorWindow("SeliaBackup", SeliaBackupCodec.MAX_BYTES.toLong() + 1_024)
             if (!cursor.moveToFirst() || cursor.getInt(0) != 1) {
                 throw MyCalendarFormatException("Unsupported Selia backup", failure = MyCalendarFailure.UNSUPPORTED)
             }

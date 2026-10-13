@@ -1,7 +1,14 @@
 package com.majkeylab.seliacycles
 
 import android.graphics.Bitmap
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
@@ -12,6 +19,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToKey
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
@@ -25,6 +34,7 @@ import java.time.format.FormatStyle
 import java.util.UUID
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -142,6 +152,117 @@ class ProfileUiTest {
             capture("profile-icons.png")
             assertEquals(emptyList<DayLog>(), model.state.value.backup.logs)
             CycleStore(context).use { assertEquals(originalLogs, it.load().logs) }
+        }
+    }
+
+    @Test
+    fun failedProfileCanReturnToHealthyCalendarWithoutRepairingItsDatabase() {
+        val damaged = LocalProfiles(context).create(profileName)
+        CycleStore(context, damaged.id).use {
+            it.saveLog(DayLog(today, note = "Preserve damaged profile data"))
+            it.saveSettings(AppSettings(cycleLengthOverride = 43))
+            it.writableDatabase.execSQL("UPDATE settings SET theme = 'INVALID_TEST_THEME' WHERE id = 1")
+        }
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            lateinit var viewModel: MainViewModel
+            scenario.onActivity { viewModel = ViewModelProvider(it)[MainViewModel::class.java] }
+            awaitProfile(viewModel, LocalProfiles.DEFAULT_ID, UiMode.STANDARD)
+            compose.onNodeWithText(text(R.string.profile_default_name)).performClick()
+            compose.onNodeWithText(profileName).performClick()
+            compose.waitUntil(15_000) {
+                viewModel.state.value.let { !it.loading && !it.busy && it.loadFailed && it.activeProfile.id == damaged.id }
+            }
+            compose.onNodeWithText(text(R.string.profile_retry_load)).assertIsDisplayed()
+            compose.onNode(hasText(profileName) and hasClickAction()).assertIsEnabled().performClick()
+            compose.onNodeWithText(text(R.string.profile_default_name)).assertIsEnabled().performClick()
+            awaitProfile(viewModel, LocalProfiles.DEFAULT_ID, UiMode.STANDARD)
+            assertFalse(viewModel.state.value.loadFailed)
+            assertEquals(originalLogs, viewModel.state.value.backup.logs)
+            compose.onAllNodesWithText(text(R.string.nav_calendar)).onLast().performClick()
+            compose.onNodeWithText(text(R.string.calendar_add_period)).performScrollTo().assertIsDisplayed()
+            CycleStore(context, damaged.id).use { store ->
+                store.readableDatabase.rawQuery("SELECT theme FROM settings WHERE id = 1", null).use {
+                    check(it.moveToFirst())
+                    assertEquals("INVALID_TEST_THEME", it.getString(0))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun calendarMonthFocusFilterAndScrollSurviveHistoryAndSettings() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            lateinit var viewModel: MainViewModel
+            scenario.onActivity { viewModel = ViewModelProvider(it)[MainViewModel::class.java] }
+            awaitProfile(viewModel, LocalProfiles.DEFAULT_ID, UiMode.STANDARD)
+            compose.onAllNodesWithText(text(R.string.nav_calendar)).onLast().performClick()
+            compose.onNodeWithContentDescription(text(R.string.previous_month)).performClick()
+            compose.waitForIdle()
+            val month = YearMonth.from(today).minusMonths(1)
+            val locale = context.resources.configuration.locales[0]
+            val monthLabel = month.format(DateTimeFormatter.ofPattern("LLLL yyyy", locale))
+                .replaceFirstChar { it.titlecase(locale) }
+            val page = SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange) and
+                hasAnyDescendant(hasText(monthLabel))
+            val focused = month.atDay(15)
+            compose.onNode(hasContentDescription(format(focused, FormatStyle.LONG), substring = true) and hasAnyAncestor(page))
+                .performScrollTo().performClick()
+            compose.onNodeWithText(text(R.string.close)).performClick()
+            compose.onNodeWithContentDescription(text(R.string.calendar_filter)).performClick()
+            compose.onNodeWithText(text(R.string.note)).performClick().assertIsSelected()
+            compose.onNodeWithText(text(R.string.close)).performClick()
+            compose.onNode(hasText(text(R.string.month_overview)) and hasAnyAncestor(page)).performScrollTo()
+            val scroll = compose.onNode(page).assertIsDisplayed().fetchSemanticsNode()
+                .config[SemanticsProperties.VerticalScrollAxisRange].value()
+            listOf(R.string.nav_history, R.string.nav_settings).forEach { destination ->
+                compose.onAllNodesWithText(text(destination)).onLast().performClick()
+                compose.onAllNodesWithText(text(R.string.nav_calendar)).onLast().performClick()
+                compose.waitForIdle()
+                val restoredScroll = compose.onNode(page).assertIsDisplayed().fetchSemanticsNode()
+                    .config[SemanticsProperties.VerticalScrollAxisRange].value()
+                assertEquals("Calendar scroll changed after ${text(destination)}", scroll, restoredScroll, 1f)
+                compose.onNode(hasContentDescription(format(focused, FormatStyle.LONG), substring = true) and
+                    hasContentDescription(text(R.string.calendar_selected), substring = true) and hasAnyAncestor(page))
+                    .assertExists()
+                compose.onNodeWithContentDescription(text(R.string.calendar_filter)).performClick()
+                compose.onNodeWithText(text(R.string.note)).assertIsSelected()
+                compose.onNodeWithText(text(R.string.close)).performClick()
+            }
+        }
+    }
+
+    @Test
+    fun longHistoryKeepsMatchingInfoAcrossRecreationAndScrollsToOldestStart() {
+        val logs = (0L until 400L).map {
+            DayLog(today.minusDays(5L + it * 28L), bleeding = true, flow = Flow.UNKNOWN)
+        }.sortedBy(DayLog::day)
+        val actualStart = logs.last().day
+        CycleStore(context).use { store ->
+            store.replace(CycleBackup(logs, store.load().settings))
+            store.saveForecastSnapshots(listOf(ForecastSnapshot(
+                YearMonth.from(actualStart), actualStart, actualStart.minusDays(1), actualStart.plusDays(1), 5, false,
+            )))
+        }
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            lateinit var viewModel: MainViewModel
+            scenario.onActivity { viewModel = ViewModelProvider(it)[MainViewModel::class.java] }
+            awaitProfile(viewModel, LocalProfiles.DEFAULT_ID, UiMode.STANDARD)
+            assertEquals(400, viewModel.state.value.prediction.periodStarts.size)
+            compose.onAllNodesWithText(text(R.string.nav_history)).onLast().performClick()
+            compose.onNode(hasText(text(R.string.history_heading)) and
+                hasAnyAncestor(SemanticsMatcher.keyIsDefined(SemanticsActions.ScrollToIndex))).assertIsDisplayed()
+            val list = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsActions.ScrollToIndex))
+            list.performScrollToNode(hasText(text(R.string.prediction_accuracy_summary)))
+            compose.onNodeWithText(text(R.string.prediction_accuracy_summary)).performClick()
+            compose.onNodeWithText(text(R.string.accuracy_matching_info)).assertIsDisplayed()
+            scenario.recreate()
+            compose.onNodeWithText(text(R.string.accuracy_matching_info)).assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.close)).performClick()
+            compose.onNodeWithText(text(R.string.accuracy_matching_info)).assertDoesNotExist()
+            val oldest = logs.first().day
+            compose.onNodeWithText(format(oldest, FormatStyle.MEDIUM)).assertDoesNotExist()
+            list.performScrollToKey(oldest.toEpochDay())
+            compose.onNodeWithText(format(oldest, FormatStyle.MEDIUM)).assertIsDisplayed()
         }
     }
 

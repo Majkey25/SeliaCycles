@@ -112,7 +112,7 @@ class GuidanceAndFertilityTest {
             calendar()
             openDay(today)
             compose.onNodeWithText(text(R.string.self_care_title)).performScrollTo().performClick()
-            compose.onNodeWithText(text(R.string.care_alert_pain)).performScrollTo().assertIsDisplayed()
+            compose.onAllNodesWithText(text(R.string.care_alert_pain)).onLast().performScrollTo().assertIsDisplayed()
             compose.onNodeWithText(text(R.string.care_more)).assertDoesNotExist()
             compose.onNodeWithText(text(R.string.self_care_movement)).assertDoesNotExist()
         }

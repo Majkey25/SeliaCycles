@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ProfileSwitcher(state: AppState, onSelect: (String) -> Unit, onManage: () -> Unit, onCreate: () -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val enabled = !state.busy && !state.loading && !state.loadFailed
+    val enabled = !state.busy && !state.loading
     Box {
         TextButton(onClick = { expanded = true }, enabled = enabled) {
             Icon(profileIconVector(state.activeProfile.icon), contentDescription = stringResource(R.string.profiles_title))
@@ -86,11 +86,12 @@ fun ProfileSwitcher(state: AppState, onSelect: (String) -> Unit, onManage: () ->
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.profile_create)) },
                 leadingIcon = { Icon(Icons.Outlined.Add, contentDescription = null) },
-                enabled = state.profiles.size < LocalProfiles.MAX_PROFILES,
+                enabled = !state.loadFailed && state.profiles.size < LocalProfiles.MAX_PROFILES,
                 onClick = { expanded = false; onCreate() },
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.profile_manage)) },
+                enabled = !state.loadFailed,
                 onClick = { expanded = false; onManage() },
             )
         }
