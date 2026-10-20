@@ -91,7 +91,7 @@ class LocalProfiles(context: Context) {
             LocalProfile(
                 id = id,
                 name = preferences.getString("name_$id", "").orEmpty(),
-                mode = UiMode.valueOf(preferences.getString("mode_$id", UiMode.STANDARD.name)!!),
+                mode = UiMode.entries.firstOrNull { it.name == preferences.getString("mode_$id", null) } ?: UiMode.STANDARD,
                 icon = ProfileIcon.entries.firstOrNull { it.name == preferences.getString("icon_$id", null) } ?: ProfileIcon.PERSON,
             )
         }
