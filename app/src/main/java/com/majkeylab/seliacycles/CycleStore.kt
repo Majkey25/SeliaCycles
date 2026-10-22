@@ -219,13 +219,14 @@ class CycleStore(context: Context, profileId: String = LocalProfiles.DEFAULT_ID)
         replaceDayLogs(merged.values.toList())
     }
 
-    fun mergeTransfer(transfer: SeliaTransfer) = writableDatabase.runInTransaction {
+    fun mergeTransfer(transfer: SeliaTransfer, restoreSettings: Boolean) = writableDatabase.runInTransaction {
         val currentSettings = readSettings(this)
         val merged = readLogs(this).associateByTo(mutableMapOf(), DayLog::day)
         transfer.backup.logs.forEach { log -> merged[log.day] = merged[log.day]?.let { mergeDayLogs(it, log) } ?: log }
         if (merged.size > CycleBackup.MAX_LOGS) throw IllegalArgumentException("Too many imported records")
         replaceDayLogs(merged.values.toList())
-        val settings = mergedTransferSettings(currentSettings, transfer.backup.settings).normalized()
+        val settings = if (restoreSettings) mergedTransferSettings(currentSettings, transfer.backup.settings).normalized()
+            else currentSettings
         check(update("settings", settingsValues(settings), "id = 1", null) == 1)
         transfer.snapshots.forEach { snapshot ->
             val selectionArgs = arrayOf(snapshot.month.toEpochMonth().toString())

@@ -304,8 +304,8 @@ class CalendarWidgetTest {
             assertEquals(25, CalendarWidget.appearance(context, id).opacityPercent)
             assertNotNull(CalendarWidget.appearance(context, id).backgroundRgb)
             // Keep the same intent identity when the PendingIntent delivers onNewIntent.
-            val launch = Intent(context, MainActivity::class.java).setData("selia://widget/$id/${profile.id}/$today".toUri())
-            ActivityScenario.launch<MainActivity>(launch).use { scenario ->
+            val launch = Intent(context, ProfileActivity::class.java).setData("selia://widget/$id/${profile.id}/$today".toUri())
+            ActivityScenario.launch<ProfileActivity>(launch).use { scenario ->
                 lateinit var hostView: AppWidgetHostView
                 lateinit var viewModel: MainViewModel
                 scenario.onActivity { activity ->

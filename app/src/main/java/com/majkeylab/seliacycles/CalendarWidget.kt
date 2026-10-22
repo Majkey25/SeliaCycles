@@ -145,7 +145,7 @@ class CalendarWidget : AppWidgetProvider() {
         )
 
         internal fun openDay(context: Context, id: Int, profileId: String, day: LocalDate): PendingIntent = PendingIntent.getActivity(
-            context, 0, Intent(context, MainActivity::class.java)
+            context, 0, Intent(context, ProfileActivity::class.java)
                 .setData("selia://widget/$id/$profileId/$day".toUri())
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 .putExtra(ReminderWorker.PROFILE_ID_EXTRA, profileId).putExtra(DAY_EXTRA, day.toString()),

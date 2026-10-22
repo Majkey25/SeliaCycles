@@ -63,7 +63,8 @@ internal fun calendarMirrorSelectionFile(profileId: String): String {
 
 class CalendarMirror(private val context: Context, private val profileId: String = LocalProfiles.DEFAULT_ID) {
     private val resolver: ContentResolver = context.contentResolver
-    private val customUriPrefix = calendarMirrorUriPrefix(profileId)
+    private val legacyUriPrefix = calendarMirrorUriPrefix(profileId)
+    private val customUriPrefix = "$legacyUriPrefix${context.packageName}/"
     private val selectionFile = File(context.noBackupFilesDir, calendarMirrorSelectionFile(profileId))
     private val enabledFile = AtomicFile(File(context.noBackupFilesDir, "${selectionFile.name}-enabled"))
     private val legacyTitles by lazy {
@@ -170,7 +171,7 @@ class CalendarMirror(private val context: Context, private val profileId: String
             "${CalendarContract.Events.CALENDAR_ID} = ? AND ${CalendarContract.Events.DELETED} = 0 AND " +
                 "(((${CalendarContract.Events.CUSTOM_APP_PACKAGE} = ? OR ${CalendarContract.Events.CUSTOM_APP_PACKAGE} IS NULL OR ${CalendarContract.Events.CUSTOM_APP_PACKAGE} = '') AND ${CalendarContract.Events.CUSTOM_APP_URI} LIKE ?) OR " +
                 "${CalendarContract.Events.DESCRIPTION} LIKE ? OR ${CalendarContract.Events.TITLE} IN (${titles.joinToString { "?" }}))",
-            (listOf(calendarId.toString(), context.packageName, "$customUriPrefix%", "%$REFERENCE_PREFIX$profileId:%") + titles).toTypedArray(),
+            (listOf(calendarId.toString(), context.packageName, "$legacyUriPrefix%", "%$REFERENCE_PREFIX%$profileId:%") + titles).toTypedArray(),
             "${CalendarContract.Events.DTSTART} ASC, ${BaseColumns._ID} ASC",
         )?.use { cursor -> buildList {
             while (cursor.moveToNext()) {
@@ -179,8 +180,10 @@ class CalendarMirror(private val context: Context, private val profileId: String
                 val description = cursor.getString(4)
                 val pkg = cursor.getString(12)
                 val owned = ownedKey(pkg, uri, description) != null
-                val legacy = !owned && (pkg.isNullOrBlank() || pkg == context.packageName) && uri.isNullOrBlank() &&
-                    !description.orEmpty().contains(REFERENCE_PREFIX) &&
+                // Unscoped references may be reviewed manually, but never establish automatic ownership.
+                val legacyReference = pkg.isNullOrBlank() && ownedKey(context.packageName, uri, description) != null
+                val legacy = !owned && (pkg.isNullOrBlank() || pkg == context.packageName) &&
+                    (legacyReference || uri.isNullOrBlank() && !description.orEmpty().contains(REFERENCE_PREFIX)) &&
                     title in legacyTitles && cursor.getInt(8) == 1 && cursor.getLong(6) > cursor.getLong(5) &&
                     cursor.getString(13).isNullOrBlank() && cursor.getString(14).isNullOrBlank()
                 if (owned || legacy) {
@@ -197,12 +200,24 @@ class CalendarMirror(private val context: Context, private val profileId: String
         // A non-link token survives normal line-break/HTML changes without a Google-specific API.
         val references = description.orEmpty().split(REFERENCE_PREFIX).drop(1)
             .map { it.substringBefore(']', "") }
-        if (references.any { !it.startsWith("$profileId:") }) return null
-        val markerKey = references.distinct().singleOrNull()?.removePrefix("$profileId:")
+        val namespace = "${context.packageName}:$profileId:"
+        val markerKeys = references.map {
+            when {
+                it.startsWith(namespace) -> it.removePrefix(namespace)
+                pkg == context.packageName && it.startsWith("$profileId:") -> it.removePrefix("$profileId:")
+                else -> return null
+            }
+        }
+        val markerKey = markerKeys.distinct().singleOrNull()
+        // Unscoped legacy metadata cannot establish ownership after the provider drops its package.
+        if (pkg.isNullOrBlank() && markerKey == null && uri?.startsWith(customUriPrefix) != true) return null
         val reference = uri?.takeIf { it.isNotBlank() } ?: markerKey?.let { "$customUriPrefix$it" } ?: return null
-        if (!reference.startsWith(customUriPrefix)) return null
-        val key = reference.removePrefix(customUriPrefix)
-        if (references.isNotEmpty() && references.any { it != "$profileId:$key" }) return null
+        val key = when {
+            reference.startsWith(customUriPrefix) -> reference.removePrefix(customUriPrefix)
+            pkg == context.packageName && reference.startsWith(legacyUriPrefix) -> reference.removePrefix(legacyUriPrefix)
+            else -> return null
+        }
+        if (markerKeys.any { it != key }) return null
         val parts = key.split('/', limit = 2)
         if (parts.size != 2 || MirrorEventKind.entries.none { it.name.lowercase() == parts[0] }) return null
         val day = runCatching { LocalDate.parse(parts[1]) }.getOrNull() ?: return null
@@ -310,7 +325,7 @@ class CalendarMirror(private val context: Context, private val profileId: String
             "${CalendarContract.Events.DELETED} = 0 AND ((" +
                 "(${CalendarContract.Events.CUSTOM_APP_PACKAGE} = ? OR ${CalendarContract.Events.CUSTOM_APP_PACKAGE} IS NULL OR ${CalendarContract.Events.CUSTOM_APP_PACKAGE} = '') AND ${CalendarContract.Events.CUSTOM_APP_URI} LIKE ?) OR " +
                 "${CalendarContract.Events.DESCRIPTION} LIKE ?)",
-            arrayOf(context.packageName, "$customUriPrefix%", "%$REFERENCE_PREFIX$profileId:%"),
+            arrayOf(context.packageName, "$legacyUriPrefix%", "%$REFERENCE_PREFIX%$profileId:%"),
             null,
         )?.use { cursor ->
             buildList {
@@ -365,8 +380,8 @@ class CalendarMirror(private val context: Context, private val profileId: String
             MirrorEventKind.ESTIMATED -> context.getString(R.string.estimate_notice)
             MirrorEventKind.FERTILE, MirrorEventKind.OVULATION -> context.getString(R.string.fertility_estimate_notice)
         }
-        val text = existingDescription ?: notice
-        val marker = "$REFERENCE_PREFIX$profileId:${event.key}]"
+        val marker = "$REFERENCE_PREFIX${context.packageName}:$profileId:${event.key}]"
+        val text = existingDescription?.replace("$REFERENCE_PREFIX$profileId:${event.key}]", marker) ?: notice
         put(CalendarContract.Events.DESCRIPTION, if (text.contains(marker)) text else {
             listOf(text, marker).filter(String::isNotEmpty).joinToString("\n\n")
         })

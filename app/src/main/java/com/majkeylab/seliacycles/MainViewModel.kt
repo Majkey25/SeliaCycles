@@ -353,11 +353,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun confirmMyCalendarImport() {
+    fun confirmMyCalendarImport(restoreSettings: Boolean) {
         val preview = _state.value.myCalendarPreview ?: return
         _state.value = _state.value.copy(myCalendarPreview = null)
         runStoreAction(R.string.my_calendar_import_complete) {
-            preview.seliaTransfer?.let(store::mergeTransfer) ?: store.mergeImported(preview.logs)
+            preview.seliaTransfer?.let { store.mergeTransfer(it, restoreSettings) } ?: store.mergeImported(preview.logs)
         }
     }
 

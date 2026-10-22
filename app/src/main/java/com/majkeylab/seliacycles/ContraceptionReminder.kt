@@ -158,7 +158,7 @@ class ContraceptionReminder : BroadcastReceiver() {
                 NotificationChannel(CHANNEL, context.getString(R.string.contraception_reminder), NotificationManager.IMPORTANCE_DEFAULT)
                     .apply { lockscreenVisibility = NotificationCompat.VISIBILITY_PRIVATE })
             if (!reminderNotificationsEnabled(context, CHANNEL)) return
-            val open = Intent(context, MainActivity::class.java).setData("selia://local-profile/$profileId".toUri())
+            val open = Intent(context, ProfileActivity::class.java).setData("selia://local-profile/$profileId".toUri())
                 .putExtra(ReminderWorker.PROFILE_ID_EXTRA, profileId)
             val notification = NotificationCompat.Builder(context, CHANNEL).setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(context.getString(R.string.contraception_reminder))

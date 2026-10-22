@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0-beta.26 - 2026-10-22
+
+- Make settings restoration from My Calendar imports an explicit choice while preserving existing sharing and reminder consent.
+- Bind calendar copies to the app variant; keep ambiguous older copies available only through reviewed manual cleanup.
+- Restrict widget and reminder profile routing to a private activity.
+- Pin CI and Pages actions to immutable revisions.
+
 ## 0.9.0-beta.25 - 2026-10-13
 
 ### Added
