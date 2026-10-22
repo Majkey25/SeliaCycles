@@ -80,7 +80,7 @@ class ReminderWorker(context: Context, parameters: WorkerParameters) : Coroutine
 
         createChannel()
         if (!reminderNotificationsEnabled(applicationContext, CHANNEL_ID)) return@synchronized Result.success()
-        val intent = Intent(applicationContext, MainActivity::class.java)
+        val intent = Intent(applicationContext, ProfileActivity::class.java)
             .setData("selia://local-profile/$profileId".toUri())
             .putExtra(PROFILE_ID_EXTRA, profileId)
         val pendingIntent = PendingIntent.getActivity(

@@ -73,6 +73,46 @@ class LegacyCalendarCleanupTest {
         assertFalse(CalendarMirror(context).calendarSyncEnabled())
     }
 
+    @Test fun providerNormalizationCannotTransferOwnershipBetweenAppVariants() = withCalendar { context, provider ->
+        val otherVariant = object : ContextWrapper(context) {
+            override fun getPackageName() = "com.majkeylab.seliacycles"
+        }
+        val backup = CycleBackup(listOf(DayLog(LocalDate.now(), bleeding = true, flow = Flow.LIGHT)))
+        val production = CalendarMirror(otherVariant)
+        production.connect(1, backup, emptyMap())
+        val productionIds = provider.ids()
+        provider.db.execSQL("UPDATE events SET customAppPackage=NULL,customAppUri=NULL")
+
+        val qa = CalendarMirror(context)
+        qa.connect(1, backup, emptyMap())
+        assertTrue(provider.ids().size > productionIds.size)
+        qa.disconnect()
+        assertEquals(productionIds, provider.ids())
+        assertTrue(qa.previewCleanup(1).events.isEmpty())
+        production.disconnect()
+        assertTrue(provider.ids().isEmpty())
+    }
+
+    @Test fun ambiguousLegacyCopiesRequireExplicitReviewedDeletion() = withCalendar { context, provider ->
+        val mirror = CalendarMirror(context)
+        val backup = CycleBackup(listOf(DayLog(LocalDate.now(), bleeding = true, flow = Flow.LIGHT)))
+        mirror.connect(1, backup, emptyMap())
+        val ids = provider.ids()
+        provider.db.execSQL("UPDATE events SET customAppPackage=NULL," +
+            "customAppUri=replace(customAppUri, ?, ''),description=replace(description, ?, '')",
+            arrayOf("${context.packageName}/", "${context.packageName}:"))
+
+        mirror.disconnect()
+
+        assertEquals(ids, provider.ids())
+        val foreign = provider.seed("Selia · Recorded period", appPackage = "com.majkeylab.seliacycles")
+        val preview = mirror.previewCleanup(1)
+        assertEquals(ids, preview.events.mapTo(mutableSetOf()) { it.id })
+        assertTrue(preview.events.all { it.legacy })
+        mirror.deletePreviewedEvents(preview, ids)
+        assertEquals(setOf(foreign), provider.ids())
+    }
+
     @Test fun ownershipMarkerKeepsNotesAddedInTheCalendar() = withCalendar { context, provider ->
         val backup = CycleBackup(listOf(DayLog(LocalDate.now(), bleeding = true, flow = Flow.LIGHT)))
         val mirror = CalendarMirror(context)

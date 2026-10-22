@@ -104,7 +104,7 @@ class CycleAcceptanceTest {
             MyCalendarExporter(context).write(SeliaTransfer(before, listOf(snapshot)), exported)
             val parsed = MyCalendarImporter(context).inspect(ByteArrayInputStream(exported.toByteArray()))
             val transfer = requireNotNull(parsed.seliaTransfer)
-            store.mergeTransfer(transfer.copy(backup = transfer.backup.copy(settings = transfer.backup.settings.copy(partnerViewEnabled = true))))
+            store.mergeTransfer(transfer.copy(backup = transfer.backup.copy(settings = transfer.backup.settings.copy(partnerViewEnabled = true))), restoreSettings = true)
             assertEquals(before.logs, store.load().logs)
             assertEquals(listOf(snapshot), store.loadForecastSnapshots())
             assertFalse(store.load().settings.partnerViewEnabled)

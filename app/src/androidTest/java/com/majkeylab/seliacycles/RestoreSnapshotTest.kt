@@ -35,7 +35,7 @@ class RestoreSnapshotTest {
             snapshot(localOriginal.month, 12, true),
             snapshot(conflictingOriginal.month, 12, false),
             addedOriginal,
-        )))
+        )), restoreSettings = true)
 
         assertEquals(listOf(restoredOriginal, localOriginal, conflictingOriginal, addedOriginal), store.loadForecastSnapshots())
         assertEquals(backup.logs, store.load().logs)
@@ -58,7 +58,7 @@ class RestoreSnapshotTest {
             listOf(reconstructed.copy(reconstructed = false)),
         )
 
-        assertThrows(SQLiteConstraintException::class.java) { store.mergeTransfer(incoming) }
+        assertThrows(SQLiteConstraintException::class.java) { store.mergeTransfer(incoming, restoreSettings = true) }
 
         assertEquals(before, store.load())
         assertEquals(listOf(reconstructed), store.loadForecastSnapshots())
@@ -73,6 +73,18 @@ class RestoreSnapshotTest {
         store.saveForecastSnapshots(listOf(snapshot(month, 15, true), added))
 
         assertEquals(listOf(original, added), store.loadForecastSnapshots())
+    }
+
+    @Test fun importKeepsLocalSettingsWithoutRestoreConsent() = withStore { store ->
+        val current = AppSettings(cycleLength = 27, predictionsEnabled = false)
+        store.replace(CycleBackup(settings = current))
+        val incoming = CycleBackup(listOf(DayLog(LocalDate.now().minusDays(1), note = "Imported record")),
+            AppSettings(cycleLength = 31, partnerViewEnabled = true, reminderEnabled = true))
+
+        store.mergeTransfer(SeliaTransfer(incoming, emptyList()), restoreSettings = false)
+
+        assertEquals(current, store.load().settings)
+        assertEquals(incoming.logs, store.load().logs)
     }
 
     @Test fun readingDuringPeriodWritesKeepsLogsAndSettingsFromTheSameSnapshot() = withStore { store ->

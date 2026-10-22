@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
 import androidx.core.content.ContextCompat
 
-class MainActivity : AppCompatActivity() {
+open class MainActivity : AppCompatActivity() {
     private val viewModel by lazy { ViewModelProvider(this)[MainViewModel::class.java] }
     private val dateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) { viewModel.refreshForToday() }
@@ -68,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun routeProfile(intent: Intent) {
+        if (this !is ProfileActivity) return
         val id = intent.getStringExtra(ReminderWorker.PROFILE_ID_EXTRA) ?: return
         val day = intent.getStringExtra(CalendarWidget.DAY_EXTRA)?.let {
             runCatching { java.time.LocalDate.parse(it) }.getOrNull()
@@ -75,3 +76,5 @@ class MainActivity : AppCompatActivity() {
         if (day != null) viewModel.openCalendar(id, day) else viewModel.selectProfile(id)
     }
 }
+
+class ProfileActivity : MainActivity()

@@ -2403,15 +2403,16 @@ private fun PredictionSettingsPreview(state: AppState) {
 private fun MyCalendarPreviewDialog(
     preview: MyCalendarPreview,
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
+    onConfirm: (Boolean) -> Unit,
 ) {
+    var restoreSettings by remember(preview) { mutableStateOf(false) }
     val locale = currentLocale()
     val formatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.my_calendar_preview_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(pluralStringResource(
                     R.plurals.my_calendar_preview_body,
                     preview.logs.size,
@@ -2427,9 +2428,12 @@ private fun MyCalendarPreviewDialog(
                     ))
                 }
                 Text(stringResource(R.string.my_calendar_merge_notice), style = MaterialTheme.typography.bodySmall)
+                if (preview.seliaTransfer != null) {
+                    SwitchRow(R.string.my_calendar_restore_settings, restoreSettings) { restoreSettings = it }
+                }
             }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.merge_import)) } },
+        confirmButton = { TextButton(onClick = { onConfirm(restoreSettings) }) { Text(stringResource(R.string.merge_import)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

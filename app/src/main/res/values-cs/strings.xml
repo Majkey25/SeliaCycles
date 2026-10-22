@@ -331,6 +331,7 @@
     <plurals name="my_calendar_preview_body"><item quantity="one">Nalezen %1$d zapsaný den od %2$s do %3$s.</item><item quantity="few">Nalezeny %1$d zapsané dny od %2$s do %3$s.</item><item quantity="many">Nalezeno %1$d zapsaného dne od %2$s do %3$s.</item><item quantity="other">Nalezeno %1$d zapsaných dnů od %2$s do %3$s.</item></plurals>
     <plurals name="my_calendar_unsupported_details"><item quantity="one">%1$d zdrojový údaj je zachován v poznámce, protože Selia nemá odpovídající sledování.</item><item quantity="few">%1$d zdrojové údaje jsou zachovány v poznámce, protože Selia nemá odpovídající sledování.</item><item quantity="many">%1$d zdrojového údaje je zachováno v poznámce, protože Selia nemá odpovídající sledování.</item><item quantity="other">%1$d zdrojových údajů je zachováno v poznámce, protože Selia nemá odpovídající sledování.</item></plurals>
     <string name="my_calendar_merge_notice">Import přidá chybějící historii. Existující hodnoty Selia mají ve stejný den přednost.</string>
+    <string name="my_calendar_restore_settings">Také obnovit nastavení z tohoto souboru včetně profilu, předpovědí, vzhledu a časů připomínek. Zachovat stávající souhlas se sdílením s partnerem a připomínkami.</string>
     <string name="merge_import">Importovat data</string>
     <string name="my_calendar_import_complete">Data byla importována.</string>
     <string name="my_calendar_export_complete">Záloha .pc byla exportována.</string>
