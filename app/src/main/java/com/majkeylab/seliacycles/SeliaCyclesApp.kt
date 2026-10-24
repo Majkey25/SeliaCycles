@@ -206,7 +206,9 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.delay
 
 private const val PRIVACY_POLICY_URL = "https://majkey25.github.io/SeliaCycles/"
-private const val SUPPORT_URL = "https://www.buymeacoffee.com/majkey"
+private val SUPPORT_URL = if (BuildConfig.EXTERNAL_DONATIONS_ENABLED) "https://www.buymeacoffee.com/majkey" else ""
+private val SOURCE_CODE_URL = "https://github.com/Majkey25/SeliaCycles" +
+    if (BuildConfig.EXTERNAL_DONATIONS_ENABLED) "" else "/tree/main/app/src"
 
 private enum class Screen(
     @param:StringRes val label: Int,
@@ -2346,12 +2348,14 @@ private fun SettingsScreen(
                         context.startActivity(Intent(Intent.ACTION_VIEW, "$PRIVACY_POLICY_URL$legalPage#cookies".toUri()))
                     }
                     SettingsLink(Icons.Outlined.Code, R.string.source_code) {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, "https://github.com/Majkey25/SeliaCycles".toUri()))
+                        context.startActivity(Intent(Intent.ACTION_VIEW, SOURCE_CODE_URL.toUri()))
                     }
                     SettingsLink(Icons.Outlined.Security, R.string.privacy) { onInfo(InfoDialog.PRIVACY) }
                     SettingsLink(Icons.Outlined.MonitorHeart, R.string.about_cycle) { onInfo(InfoDialog.CYCLE) }
-                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                    SupportButton()
+                    if (BuildConfig.EXTERNAL_DONATIONS_ENABLED) {
+                        HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                        SupportButton()
+                    }
                 }
             }
         }
@@ -3153,6 +3157,7 @@ private fun SelfCareAlertText(alert: SelfCareAlert) {
 
 @Composable
 private fun SupportButton() {
+    if (!BuildConfig.EXTERNAL_DONATIONS_ENABLED) return
     val context = LocalContext.current
     val notice = stringResource(R.string.support_notice)
     Button(
