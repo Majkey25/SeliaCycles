@@ -38,11 +38,16 @@ class LegalLinksTest {
                 compose.onAllNodesWithText(settings).onLast().performClick()
                 compose.onNodeWithText(context.getString(R.string.section_about)).performScrollTo().performClick()
                 val page = if (context.resources.configuration.locales[0].language in listOf("cs", "sk")) "legal-cs.html" else "legal.html"
+                val legalBase = if (BuildConfig.EXTERNAL_DONATIONS_ENABLED) {
+                    "https://majkey25.github.io/SeliaCycles/"
+                } else {
+                    "https://majkey25.github.io/SeliaCycles/play/"
+                }
                 for ((label, url) in listOf(
-                    R.string.privacy_policy to "https://majkey25.github.io/SeliaCycles/",
-                    R.string.terms_of_use to "https://majkey25.github.io/SeliaCycles/$page#terms",
-                    R.string.refund_policy to "https://majkey25.github.io/SeliaCycles/$page#refunds",
-                    R.string.cookies_policy to "https://majkey25.github.io/SeliaCycles/$page#cookies",
+                    R.string.privacy_policy to legalBase,
+                    R.string.terms_of_use to "$legalBase$page#terms",
+                    R.string.refund_policy to "$legalBase$page#refunds",
+                    R.string.cookies_policy to "$legalBase$page#cookies",
                     R.string.source_code to ("https://github.com/Majkey25/SeliaCycles" +
                         if (BuildConfig.EXTERNAL_DONATIONS_ENABLED) "" else "/tree/main/app/src"),
                 )) {
