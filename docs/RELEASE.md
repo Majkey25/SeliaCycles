@@ -23,10 +23,14 @@ Record the APK hashes and instrumentation result before publishing. Remove only 
 Keep the upload keystore and its properties file outside the repository. The properties file must contain `storeFile`, `storePassword`, `keyAlias`, and `keyPassword`.
 
 ```powershell
-.\gradlew.bat :app:bundleRelease --console=plain -PseliaCyclesKeystoreProperties=C:\secure\selia-cycles-keystore.properties
+.\gradlew.bat :app:bundleRelease --console=plain -PdistributionChannel=play -PseliaCyclesKeystoreProperties=C:\secure\selia-cycles-keystore.properties
 ```
 
 Verify `app/build/outputs/bundle/release/app-release.aab` with `jarsigner -verify` before upload.
+
+Release builds default to the Google Play channel and contain no external donation action. For a GitHub release APK, run `:app:assembleRelease -PdistributionChannel=github` with the same signing properties. Do not attach the Play AAB as the GitHub installation APK. Bundling the GitHub channel fails rather than producing a donation-enabled Play bundle.
+
+Debug and QA builds keep the GitHub support button unless `-PdistributionChannel=play` is explicit. Build and run `LegalLinksTest` on both channels to check that legal links remain available and donations appear only outside Play.
 
 ## Publish a closed test
 

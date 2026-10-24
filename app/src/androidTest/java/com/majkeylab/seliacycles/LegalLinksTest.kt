@@ -43,13 +43,23 @@ class LegalLinksTest {
                     R.string.terms_of_use to "https://majkey25.github.io/SeliaCycles/$page#terms",
                     R.string.refund_policy to "https://majkey25.github.io/SeliaCycles/$page#refunds",
                     R.string.cookies_policy to "https://majkey25.github.io/SeliaCycles/$page#cookies",
-                    R.string.source_code to "https://github.com/Majkey25/SeliaCycles",
+                    R.string.source_code to ("https://github.com/Majkey25/SeliaCycles" +
+                        if (BuildConfig.EXTERNAL_DONATIONS_ENABLED) "" else "/tree/main/app/src"),
                 )) {
                     compose.onNodeWithText(context.getString(label)).performScrollTo().performClick()
                     compose.waitForIdle()
                     assertEquals(url, opened.last())
                 }
                 assertEquals(5, opened.size)
+                val support = compose.onNodeWithText(context.getString(R.string.support_app))
+                if (BuildConfig.EXTERNAL_DONATIONS_ENABLED) {
+                    support.performScrollTo().performClick()
+                    compose.waitForIdle()
+                    assertEquals("https://www.buymeacoffee.com/majkey", opened.last())
+                    assertEquals(6, opened.size)
+                } else {
+                    support.assertDoesNotExist()
+                }
             }
         } finally {
             instrumentation.removeMonitor(monitor)

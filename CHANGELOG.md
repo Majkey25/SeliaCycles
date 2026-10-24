@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.0-beta.27 - 2026-10-24
+
+- Remove external donation actions from Google Play builds while preserving them in GitHub APKs.
+- Open the source directory directly from Play builds, keeping privacy and help links available.
+
 ## 0.9.0-beta.26 - 2026-10-22
 
 - Make settings restoration from My Calendar imports an explicit choice while preserving existing sharing and reminder consent.

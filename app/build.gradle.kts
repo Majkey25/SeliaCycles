@@ -11,6 +11,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+val distributionChannel = providers.gradleProperty("distributionChannel").orNull
+require(distributionChannel == null || distributionChannel in setOf("play", "github")) {
+    "distributionChannel must be play or github"
+}
+
 android {
     namespace = "com.majkeylab.seliacycles"
     compileSdk = 36
@@ -19,9 +24,10 @@ android {
         applicationId = "com.majkeylab.seliacycles"
         minSdk = 29
         targetSdk = 36
-        versionCode = 34
-        versionName = "0.9.0-beta.26"
+        versionCode = 35
+        versionName = "0.9.0-beta.27"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("boolean", "EXTERNAL_DONATIONS_ENABLED", (distributionChannel == "github").toString())
     }
 
     signingConfigs {
@@ -36,6 +42,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "EXTERNAL_DONATIONS_ENABLED", (distributionChannel != "play").toString())
+        }
         create("qa") {
             initWith(getByName("debug"))
             applicationIdSuffix = ".qa"
@@ -60,6 +69,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     androidResources {
@@ -73,6 +83,11 @@ android {
         unitTests.isIncludeAndroidResources = true
     }
     testBuildType = "qa"
+}
+
+tasks.matching { it.name == "packageReleaseBundle" }.configureEach {
+    val githubChannel = distributionChannel == "github"
+    doFirst { check(!githubChannel) { "Google Play bundles must use distributionChannel=play" } }
 }
 
 kotlin {
