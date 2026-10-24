@@ -34,7 +34,7 @@ Current source reference: code 33, version 0.9.0-beta.25. Source and signed-arti
 
 - Category: **Health & Fitness**.
 - Target audience: **18 and over**, as saved in Play Console and verified October 5, 2026.
-- Privacy policy URL: `https://majkey25.github.io/SeliaCycles/`.
+- Privacy policy URL: `https://majkey25.github.io/SeliaCycles/play/`.
 - Contact email: `majkeylab@gmail.com`.
 - Contains ads: **No**.
 
