@@ -205,7 +205,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.delay
 
-private const val PRIVACY_POLICY_URL = "https://majkey25.github.io/SeliaCycles/"
+private val PRIVACY_POLICY_URL = "https://majkey25.github.io/SeliaCycles/" +
+    if (BuildConfig.EXTERNAL_DONATIONS_ENABLED) "" else "play/"
 private val SUPPORT_URL = if (BuildConfig.EXTERNAL_DONATIONS_ENABLED) "https://www.buymeacoffee.com/majkey" else ""
 private val SOURCE_CODE_URL = "https://github.com/Majkey25/SeliaCycles" +
     if (BuildConfig.EXTERNAL_DONATIONS_ENABLED) "" else "/tree/main/app/src"
