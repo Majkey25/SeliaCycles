@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0-beta.29 - 2026-10-31
+
+- Use the current AndroidX window API for edge-to-edge layout while retaining theme-aware system bar icons and keyboard insets.
+
 ## 0.9.0-beta.28 - 2026-10-31
 
 - Keep period and fertility band colours consistent across month boundaries in the app and widget.
