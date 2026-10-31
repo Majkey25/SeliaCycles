@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import kotlin.math.roundToInt
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -77,6 +78,27 @@ class CalendarAccessibilityTest {
             val marker = pixels[bounds.center.x.roundToInt(), y]
             val background = pixels[(bounds.center.x - 14f * density).roundToInt(), y]
             assertTrue("Marker contrast: ${contrast(marker, background)}", contrast(marker, background) >= 3f)
+        }
+    }
+
+    @Test fun recordedBandKeepsItsColourAcrossTheMonthBoundary() {
+        val first = today.withDayOfMonth(1)
+        CycleStore(context).use { store ->
+            store.replace(store.load().copy(logs = (0L..4L).map {
+                DayLog(first.minusDays(2).plusDays(it), bleeding = true, flow = Flow.UNKNOWN)
+            }))
+        }
+        ActivityScenario.launch(MainActivity::class.java).use {
+            openCalendar()
+            val previous = compose.onNodeWithContentDescription(date(first.minusDays(1)), substring = true)
+                .fetchSemanticsNode().boundsInRoot
+            val current = compose.onNodeWithContentDescription(date(first), substring = true)
+                .fetchSemanticsNode().boundsInRoot
+            val pixels = compose.onRoot().captureToImage().toPixelMap()
+            val belowNumber = 13 * context.resources.displayMetrics.density
+            val previousColour = pixels[previous.center.x.roundToInt(), (previous.center.y + belowNumber).roundToInt()]
+            val currentColour = pixels[current.center.x.roundToInt(), (current.center.y + belowNumber).roundToInt()]
+            assertEquals(previousColour, currentColour)
         }
     }
 

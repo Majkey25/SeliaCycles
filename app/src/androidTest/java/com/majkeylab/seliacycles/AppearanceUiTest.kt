@@ -37,6 +37,19 @@ class AppearanceUiTest {
         }
     }
 
+    @Test fun returningToSettingsRestoresTheScrollPosition() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            openAppearance()
+            val reset = compose.onNodeWithText(context.getString(R.string.appearance_reset))
+            reset.performScrollTo().assertIsDisplayed()
+            compose.onAllNodesWithText(context.getString(R.string.nav_calendar)).onLast().performClick()
+            compose.onAllNodesWithText(context.getString(R.string.nav_settings)).onLast().performClick()
+            reset.assertIsDisplayed()
+            scenario.recreate()
+            reset.assertIsDisplayed()
+        }
+    }
+
     @Test fun pairedThemesPersistAcrossActivityRecreation() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             openAppearance()

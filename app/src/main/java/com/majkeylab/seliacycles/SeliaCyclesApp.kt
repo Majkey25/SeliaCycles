@@ -42,6 +42,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -433,6 +434,7 @@ private fun ProfileApp(state: AppState, viewModel: MainViewModel) {
     }
 
     Scaffold(
+        modifier = Modifier.imePadding(),
         topBar = {
             Box(Modifier.fillMaxWidth().statusBarsPadding(), contentAlignment = Alignment.Center) {
                 Box(Modifier.widthIn(max = 600.dp).fillMaxWidth()) {
@@ -1346,12 +1348,15 @@ private fun CalendarScreen(
         pageCount = { CalendarPaging.pageCount },
     )
     val scope = rememberCoroutineScope()
-    var overviewExpanded by rememberSaveable { mutableStateOf(false) }
+    var overviewPage by rememberSaveable { mutableStateOf<Int?>(null) }
     var focusedDay by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     var showFilters by remember { mutableStateOf(false) }
     var selectedFilters by rememberSaveable { mutableStateOf(emptySet<TrackerFilter>()) }
+    var showOriginalForecasts by rememberSaveable { mutableStateOf(false) }
     val availableFilters = remember(state.backup.logs) { TrackerFilter.availableFilters(state.backup.logs) }
-    val tracks = remember(state.content, state.showFertility) { CalendarTracks(state.content, state.showFertility) }
+    val tracks = remember(state.content, state.showFertility, showOriginalForecasts) {
+        CalendarTracks(state.content, state.showFertility, showOriginalForecasts)
+    }
     val tracksFor: (LocalDate) -> CalendarDayTracks = tracks::forDay
     val periodColor = calendarPeriodColor(LocalAppPalette.current, state.backup.settings.customPalette,
         MaterialTheme.colorScheme.background)
@@ -1365,11 +1370,10 @@ private fun CalendarScreen(
         targetDay?.takeIf { it in DayLog.MIN_DATE..DayLog.MAX_DATE }?.let { day ->
             pagerState.scrollToPage(CalendarPaging.pageFor(YearMonth.from(day)))
             focusedDay = day
-            overviewExpanded = false
+            overviewPage = null
             onTargetConsumed()
         }
     }
-    LaunchedEffect(pagerState.settledPage) { overviewExpanded = false }
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
@@ -1409,8 +1413,8 @@ private fun CalendarScreen(
                 state = state,
                 shownMonth = CalendarPaging.monthFor(page),
                 focusedDay = focusedDay,
-                overviewExpanded = overviewExpanded,
-                onToggleOverview = { overviewExpanded = !overviewExpanded },
+                overviewExpanded = overviewPage == page,
+                onToggleOverview = { overviewPage = if (overviewPage == page) null else page },
                 onPrevious = { scope.launch { pagerState.animateScrollToPage(page - 1) } },
                 onNext = { scope.launch { pagerState.animateScrollToPage(page + 1) } },
                 previousEnabled = page > 0,
@@ -1420,6 +1424,8 @@ private fun CalendarScreen(
                 periodColor = periodColor,
                 onPeriodColor = onPeriodColor,
                 entryColor = entryColor,
+                showOriginalForecasts = showOriginalForecasts,
+                onOriginalForecastsChange = { showOriginalForecasts = it },
                 onEditPeriod = onEditPeriod,
                 onDayClick = { day ->
                     focusedDay = day
@@ -1508,6 +1514,8 @@ private fun CalendarMonthPage(
     periodColor: Color,
     onPeriodColor: Color,
     entryColor: Color,
+    showOriginalForecasts: Boolean,
+    onOriginalForecastsChange: (Boolean) -> Unit,
     onDayClick: (LocalDate) -> Unit,
     onEditPeriod: (LocalDate) -> Unit,
 ) {
@@ -1620,6 +1628,8 @@ private fun CalendarMonthPage(
         }
         if (legendExpanded) {
             Column(Modifier.padding(bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SwitchRow(R.string.month_saved_prediction, showOriginalForecasts, Icons.Outlined.History,
+                    onChange = onOriginalForecastsChange)
                 LegendItem(
                     periodColor,
                     stringResource(R.string.recorded_legend),
@@ -1698,25 +1708,26 @@ private fun CalendarDay(
     modifier: Modifier,
 ) {
     val predictedPeriodColor = calendarPredictedPeriodColor(periodColor)
-    val decorationAlpha = if (inShownMonth) 1f else 0.42f
     val surface = MaterialTheme.colorScheme.background
     val fertileBackground = when {
-        tracks.fertile -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.20f * decorationAlpha)
-        possibleFertile -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.08f * decorationAlpha)
+        tracks.fertile -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.20f)
+        possibleFertile -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.08f)
         else -> Color.Transparent
     }
-    val ovulationColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f * decorationAlpha)
+    val ovulationColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
     val periodBackground = when (tracks.period) {
         CalendarPeriodLayer.RECORDED -> periodColor
         CalendarPeriodLayer.PREDICTED -> predictedPeriodColor
         CalendarPeriodLayer.NONE -> Color.Transparent
-    }.let { it.copy(alpha = it.alpha * decorationAlpha) }
+    }
     val dayBackground = (if (tracks.ovulation) ovulationColor else Color.Transparent)
         .compositeOver(periodBackground).compositeOver(fertileBackground).compositeOver(surface)
     val foreground = when (tracks.period) {
         CalendarPeriodLayer.RECORDED -> onPeriodColor
         CalendarPeriodLayer.PREDICTED, CalendarPeriodLayer.NONE -> MaterialTheme.colorScheme.onSurface
-    }.let { if (inShownMonth) it else MaterialTheme.colorScheme.onSurfaceVariant }.readableOn(dayBackground)
+    }.let {
+        if (!inShownMonth && tracks.period == CalendarPeriodLayer.NONE) MaterialTheme.colorScheme.onSurfaceVariant else it
+    }.readableOn(dayBackground)
     val periodShape = RoundedCornerShape(
         topStartPercent = if (periodConnectPrevious) 0 else 50,
         bottomStartPercent = if (periodConnectPrevious) 0 else 50,
@@ -2169,9 +2180,8 @@ private fun SettingsScreen(
     val context = LocalContext.current
     var pageName by rememberSaveable { mutableStateOf<String?>(null) }
     val page = pageName?.let(SettingsPage::valueOf)
-    val scrollState = rememberScrollState()
+    val scrollState = rememberSaveable(pageName, saver = ScrollState.Saver) { ScrollState(0) }
     BackHandler(enabled = page != null) { pageName = null }
-    LaunchedEffect(pageName) { scrollState.scrollTo(0) }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(scrollState).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),

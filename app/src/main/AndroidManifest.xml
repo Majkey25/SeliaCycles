@@ -22,6 +22,7 @@
         android:theme="@style/Theme.Cyklus">
         <activity
             android:name=".MainActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,7 +30,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ProfileActivity" android:exported="false" />
+        <activity android:name=".ProfileActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
 
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
@@ -60,7 +61,7 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/calendar_widget_info" />
         </receiver>
-        <activity android:name=".CalendarWidgetConfiguration" android:exported="true">
+        <activity android:name=".CalendarWidgetConfiguration" android:exported="true" android:windowSoftInputMode="adjustResize">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
         </activity>
     </application>

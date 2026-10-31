@@ -10,6 +10,42 @@ import java.time.LocalDate
 
 class CalendarUiModelTest {
     @Test
+    fun `overdue live prediction remains visible after crossing a month boundary`() {
+        val start = LocalDate.of(2026, 9, 1)
+        val expected = start.plusDays(28)
+        val month = YearMonth.from(expected)
+        val backup = CycleBackup((0L..4L).map { DayLog(start.plusDays(it), bleeding = true, flow = Flow.UNKNOWN) })
+        val snapshots = mapOf(month to ForecastSnapshot(month, expected, expected.minusDays(2), expected.plusDays(2), 5, false))
+
+        listOf(LocalDate.of(2026, 9, 30), LocalDate.of(2026, 10, 1)).forEach { reference ->
+            val calendar = CalendarTracks(CycleContent(backup, snapshots, reference), showFertility = true)
+            assertEquals(CalendarPeriodLayer.PREDICTED, calendar.forDay(expected).period)
+            assertEquals(CalendarPeriodLayer.PREDICTED, calendar.forDay(expected.plusDays(4)).period)
+        }
+    }
+
+    @Test
+    fun `original forecasts are opt in and do not hide the latest prediction`() {
+        val today = LocalDate.of(2026, 9, 5)
+        val originalStart = LocalDate.of(2026, 8, 29)
+        val month = YearMonth.from(originalStart)
+        val content = CycleContent(
+            CycleBackup(listOf(DayLog(LocalDate.of(2026, 9, 1), bleeding = true, flow = Flow.UNKNOWN))),
+            mapOf(month to ForecastSnapshot(month, originalStart, originalStart.minusDays(2),
+                originalStart.plusDays(2), 5, false)), today,
+        )
+        val standard = CalendarTracks(content, showFertility = true)
+        val comparison = CalendarTracks(content, showFertility = true, showOriginalForecasts = true)
+
+        assertEquals(CalendarPeriodLayer.NONE, standard.forDay(originalStart).period)
+        assertEquals(CalendarPeriodLayer.PREDICTED, comparison.forDay(originalStart).period)
+        val next = content.prediction.nextPeriodStart!!
+        assertEquals(CalendarPeriodLayer.PREDICTED, standard.forDay(next).period)
+        assertEquals(CalendarPeriodLayer.PREDICTED, comparison.forDay(next).period)
+        assertEquals(CalendarPeriodLayer.RECORDED, standard.forDay(LocalDate.of(2026, 9, 1)).period)
+    }
+
+    @Test
     fun `status copies reuse cycle calculations but changed inputs recalculate`() {
         val today = LocalDate.of(2026, 9, 1)
         val content = CycleContent(
@@ -129,7 +165,7 @@ class CalendarUiModelTest {
 
         settings.forEach {
             val content = CycleContent(CycleBackup(logs, it), snapshots, today)
-            val calendar = CalendarTracks(content, showFertility = true)
+            val calendar = CalendarTracks(content, showFertility = true, showOriginalForecasts = true)
             assertEquals(CalendarPeriodLayer.NONE, calendar.forDay(future).period)
             assertEquals(CalendarPeriodLayer.PREDICTED, calendar.forDay(historical).period)
             assertEquals(CalendarPeriodLayer.RECORDED, calendar.forDay(LocalDate.of(2026, 9, 1)).period)
@@ -202,7 +238,7 @@ class CalendarUiModelTest {
         settings.forEach {
             val content = CycleContent(CycleBackup(logs, it), snapshots, LocalDate.of(2026, 9, 19))
             assertEquals(listOf(historical), content.periodEstimates.map(PeriodEstimate::start))
-            val calendar = CalendarTracks(content, showFertility = true)
+            val calendar = CalendarTracks(content, showFertility = true, showOriginalForecasts = true)
             assertEquals(CalendarPeriodLayer.PREDICTED, calendar.forDay(historical).period)
             assertEquals(CalendarPeriodLayer.NONE, calendar.forDay(future).period)
 
