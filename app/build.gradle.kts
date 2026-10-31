@@ -24,8 +24,8 @@ android {
         applicationId = "com.majkeylab.seliacycles"
         minSdk = 29
         targetSdk = 36
-        versionCode = 37
-        versionName = "0.9.0-beta.29"
+        versionCode = 38
+        versionName = "0.9.0-beta.30"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "EXTERNAL_DONATIONS_ENABLED", (distributionChannel == "github").toString())
     }
@@ -83,6 +83,11 @@ android {
         unitTests.isIncludeAndroidResources = true
     }
     testBuildType = "qa"
+}
+
+// shortcut: release does not use path iteration; recheck after Compose changes.
+configurations.matching { it.name == "releaseRuntimeClasspath" }.configureEach {
+    exclude(group = "androidx.graphics", module = "graphics-path")
 }
 
 tasks.matching { it.name == "packageReleaseBundle" }.configureEach {

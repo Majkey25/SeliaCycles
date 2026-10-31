@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0-beta.30 - 2026-10-31
+
+- Remove the unused native path iterator dependency from optimized release bundles.
+
 ## 0.9.0-beta.29 - 2026-10-31
 
 - Use the current AndroidX window API for edge-to-edge layout while retaining theme-aware system bar icons and keyboard insets.
