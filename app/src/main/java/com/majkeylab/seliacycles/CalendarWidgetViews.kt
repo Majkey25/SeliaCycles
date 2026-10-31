@@ -75,21 +75,20 @@ internal fun calendarWidgetViews(
             week.forEachIndexed { column, day ->
                 val state = if (details) tracks.forDay(day) else CalendarDayTracks(CalendarPeriodLayer.NONE, false, false, false)
                 val inMonth = YearMonth.from(day) == month
-                val opacity = if (inMonth) 1f else 0.42f
                 val recorded = state.period == CalendarPeriodLayer.RECORDED
                 val periodFill = when (state.period) {
                     CalendarPeriodLayer.RECORDED -> period
                     CalendarPeriodLayer.PREDICTED -> calendarPredictedPeriodColor(period)
                     CalendarPeriodLayer.NONE -> Color.Transparent
-                }.let { it.copy(alpha = it.alpha * opacity) }
-                val fertilityFill = if (state.fertile) colors.tertiary.copy(alpha = 0.20f * opacity) else Color.Transparent
+                }
+                val fertilityFill = if (state.fertile) colors.tertiary.copy(alpha = 0.20f) else Color.Transparent
                 fun foreground(scheme: ColorScheme): Color {
                     val schemePeriod = calendarPeriodColor(settings.paletteFor(scheme === darkColors), settings.customPalette, scheme.surface)
                     val schemePeriodFill = schemePeriod.copy(alpha = periodFill.alpha)
-                    val fertile = if (state.fertile) scheme.tertiary.copy(alpha = 0.20f * opacity) else Color.Transparent
-                    val ovulation = if (state.ovulation) scheme.primary.copy(alpha = 0.20f * opacity) else Color.Transparent
+                    val fertile = if (state.fertile) scheme.tertiary.copy(alpha = 0.20f) else Color.Transparent
+                    val ovulation = if (state.ovulation) scheme.primary.copy(alpha = 0.20f) else Color.Transparent
                     val background = ovulation.compositeOver(schemePeriodFill).compositeOver(fertile).compositeOver(scheme.surface)
-                    val text = if (!inMonth) scheme.onSurfaceVariant else if (recorded) schemePeriod.contrastColor() else scheme.onSurface
+                    val text = if (recorded) schemePeriod.contrastColor() else if (!inMonth) scheme.onSurfaceVariant else scheme.onSurface
                     // Keep explicit text colors on wallpaper; opaque period bands still need readable dates.
                     return if (appearance.textRgb != null && !recorded) text else text.readableOn(background)
                 }
@@ -114,7 +113,7 @@ internal fun calendarWidgetViews(
                     band(R.id.widget_fertile, fertilityFill) { tracks.forDay(it).fertile }
                     color(R.id.widget_fertile, "setColorFilter") { it.tertiary }
                     color(R.id.widget_ovulation, "setColorFilter") { it.primary }
-                    setInt(R.id.widget_ovulation, "setImageAlpha", if (state.ovulation) (51 * opacity).toInt() else 0)
+                    setInt(R.id.widget_ovulation, "setImageAlpha", if (state.ovulation) 51 else 0)
                     color(R.id.widget_today_ring, "setColorFilter") { it.primary }
                     setViewVisibility(R.id.widget_today_ring, if (day == content.referenceDate) View.VISIBLE else View.GONE)
                     paletteColor(R.id.widget_note) { palette, scheme ->

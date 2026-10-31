@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0-beta.28 - 2026-10-31
+
+- Keep period and fertility band colours consistent across month boundaries in the app and widget.
+- Show original forecasts only when enabled in the calendar explanation, while retaining current and overdue predictions.
+- Keep settings scroll position across navigation and recreation; scope the expanded overview to its month.
+- Resize input screens for the keyboard and keep form actions reachable.
+- Enable optimized resource shrinking for release builds.
+
 ## 0.9.0-beta.27 - 2026-10-24
 
 - Remove external donation actions from Google Play builds while preserving them in GitHub APKs.

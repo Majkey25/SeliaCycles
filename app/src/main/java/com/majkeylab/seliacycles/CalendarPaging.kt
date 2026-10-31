@@ -62,13 +62,16 @@ internal fun calendarDayTracks(
 )
 
 /** Shared calendar markings for the app and the home-screen widget. */
-internal class CalendarTracks(content: CycleContent, showFertility: Boolean) {
+internal class CalendarTracks(content: CycleContent, showFertility: Boolean, showOriginalForecasts: Boolean = false) {
     private val recorded = content.backup.logs.filter(DayLog::bleeding).mapTo(mutableSetOf(), DayLog::day)
     private val recordedMonths = content.prediction.periodStarts.mapTo(mutableSetOf(), YearMonth::from)
-    private val predicted = (content.periodEstimates.flatMap { estimate ->
+    private val estimates = if (showOriginalForecasts) content.periodEstimates else
+        CycleInsights.calendarPeriodEstimates(content.backup, emptyMap(), content.referenceDate)
+    private val predicted = (estimates.flatMap { estimate ->
         generateSequence(estimate.start) { it.plusDays(1) }.takeWhile { it < estimate.endExclusive }.toList()
     } + content.forecastSnapshots.values.filter {
-        it.month in recordedMonths && (content.backup.settings.canPredictPeriods || it.periodStart <= content.referenceDate)
+        showOriginalForecasts && it.month in recordedMonths &&
+            (content.backup.settings.canPredictPeriods || it.periodStart <= content.referenceDate)
     }.flatMap { snapshot ->
         (0L until snapshot.periodLength.toLong()).map(snapshot.periodStart::plusDays)
     }).toSet()
