@@ -47,7 +47,7 @@ Reference: [R8 configuration for AGP 8.13](https://developer.android.com/topic/p
 
 ## Verification
 
-* 214 JVM tests passed. Debug lint completed with no errors and 11 version/dependency warnings.
+* 214 JVM tests passed. Debug lint completed with no errors and 11 warnings about available updates and existing resource/icon notices.
 * Huawei YAL-L21, Android 10 / API 29: 96 full QA tests passed in 165.541 seconds. The focused 28-test run and final two keyboard tests also passed. Screenshots confirmed the field and Save action remained above the open keyboard. Settings restoration, calendar band colours, profiles, widgets, imports and save failures were exercised.
 * QA used an isolated `.qa` package and synthetic records. Personal app data was not accessed or overwritten.
 * One QA cold-start sample was 1,735 ms. Calendar PSS was 113,323 KiB, with 135 KiB swap PSS. These are debugging-build samples, not production RSS or P90 compliance measurements.
