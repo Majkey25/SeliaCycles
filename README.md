@@ -66,7 +66,7 @@ Each widget also has its own background transparency and optional background, te
 
 Backups containing automatically filled days require Selia Cycles beta.18 or newer for lossless restore. Earlier backups remain supported. The compatible external calendar records contain confirmed bleeding; the Selia payload also preserves automatically filled days.
 
-Requirements: JDK 17 and Android SDK 36.
+Requirements: JDK 17 and Android SDK 37.
 
 ```bash
 ./gradlew testDebugUnitTest lintDebug assembleDebug bundleRelease --console=plain
