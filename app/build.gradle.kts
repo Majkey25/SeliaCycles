@@ -1,4 +1,5 @@
-import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import com.android.build.api.variant.HasHostTestsBuilder
+import com.android.build.api.variant.HostTestBuilder
 import java.util.Properties
 
 val releaseSigningPropertiesPath = providers.gradleProperty("seliaCyclesKeystoreProperties").orNull
@@ -85,10 +86,10 @@ android {
     testBuildType = "qa"
 }
 
-extensions.configure<ApplicationAndroidComponentsExtension> {
+androidComponents {
     // Keep debug JVM tests while device tests use the isolated QA build.
     beforeVariants(selector().withBuildType("debug")) { variant ->
-        variant.enableUnitTest = true
+        (variant as HasHostTestsBuilder).hostTests.getValue(HostTestBuilder.UNIT_TEST_TYPE).enable = true
     }
 }
 
