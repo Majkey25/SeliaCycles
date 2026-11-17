@@ -119,7 +119,7 @@ dependencies {
     implementation("com.github.skydoves:colorpicker-compose:1.3.0")
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation(kotlin("test"))
+    testImplementation(kotlin("test-junit"))
     testImplementation("org.robolectric:robolectric:4.18")
     androidTestImplementation(composeBom)
     androidTestImplementation("androidx.test:runner:1.7.0")
