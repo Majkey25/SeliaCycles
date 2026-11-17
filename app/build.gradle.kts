@@ -84,6 +84,13 @@ android {
     testBuildType = "qa"
 }
 
+androidComponents {
+    // Keep debug JVM tests while device tests use the isolated QA build.
+    beforeVariants(selector().withBuildType("debug")) { variant ->
+        variant.enableUnitTest = true
+    }
+}
+
 tasks.matching { it.name == "packageReleaseBundle" }.configureEach {
     val githubChannel = distributionChannel == "github"
     doFirst { check(!githubChannel) { "Google Play bundles must use distributionChannel=play" } }

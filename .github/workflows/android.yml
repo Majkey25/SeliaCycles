@@ -78,4 +78,6 @@ jobs:
             app/build/reports/androidTests/
             app/build/outputs/androidTest-results/
             app/build/qa-captures/
+            app/build/outputs/apk/qa/*.apk
+            app/build/outputs/apk/androidTest/qa/*.apk
           if-no-files-found: warn
